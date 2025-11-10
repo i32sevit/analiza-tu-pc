@@ -1,0 +1,43 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>AnalizaPC</title>
+</head>
+<body>
+  <h1>AnalizaPC</h1>
+  <button id="btn">Detectar y analizar</button>
+  <pre id="out"></pre>
+
+  <script>
+    const si = require('systeminformation');
+    const axios = require('axios');
+
+    const out = document.getElementById('out');
+    document.getElementById('btn').onclick = async () => {
+      out.innerText = 'Detectando hardware...';
+      try {
+        const cpu = await si.cpu();
+        const mem = await si.mem();
+        const disk = await si.diskLayout();
+        const gpu = (await si.graphics()).controllers[0] || {};
+        const data = {
+          cpu_model: cpu.brand,
+          cpu_speed_ghz: parseFloat(cpu.speed) || 1.0,
+          cores: cpu.cores || 1,
+          ram_gb: +(mem.total / (1024**3)).toFixed(2),
+          disk_type: disk[0] ? disk[0].type : 'UNKNOWN',
+          gpu_model: gpu.model || '',
+          gpu_vram_gb: gpu.vram ? gpu.vram/1024 : 0
+        };
+        out.innerText = 'Enviando datos al backend (aun no configurado)...\n' + JSON.stringify(data, null, 2);
+
+        // const res = await axios.post('https://tu-backend-url/api/analyze', data);
+        // out.innerText = JSON.stringify(res.data, null, 2);
+      } catch (e) {
+        out.innerText = 'Error: ' + e.toString();
+      }
+    };
+  </script>
+</body>
+</html>
