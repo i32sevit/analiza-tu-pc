@@ -66,10 +66,17 @@ def score_system(info: dict):
 
 def create_pdf_report(sysinfo: dict, result: dict):
     """
-    Crea un reporte PDF con los resultados del análisis
+    Crea un reporte PDF SIN caracteres especiales - VERSIÓN CORREGIDA
     """
     pdf = FPDF()
     pdf.add_page()
+    
+    # Función para limpiar texto
+    def clean_text(text):
+        if not text:
+            return "N/A"
+        # Remover caracteres problemáticos
+        return text.encode('ascii', 'ignore').decode('ascii')
     
     # Título
     pdf.set_font("Arial", "B", 16)
@@ -90,15 +97,16 @@ def create_pdf_report(sysinfo: dict, result: dict):
     pdf.set_font("Arial", "B", 12)
     pdf.cell(0, 8, "Hardware detectado:", ln=True)
     pdf.set_font("Arial", "", 10)
-    pdf.cell(0, 6, f"CPU: {sysinfo.get('cpu_model', 'N/A')} ({sysinfo.get('cores', 1)} núcleos)", ln=True)
+    
+    pdf.cell(0, 6, f"CPU: {clean_text(sysinfo.get('cpu_model', 'N/A'))} ({sysinfo.get('cores', 1)} nucleos)", ln=True)
     pdf.cell(0, 6, f"RAM: {sysinfo.get('ram_gb', 0)} GB", ln=True)
-    pdf.cell(0, 6, f"GPU: {sysinfo.get('gpu_model', 'N/A')} ({sysinfo.get('gpu_vram_gb', 0)} GB VRAM)", ln=True)
-    pdf.cell(0, 6, f"Almacenamiento: {sysinfo.get('disk_type', 'N/A')}", ln=True)
+    pdf.cell(0, 6, f"GPU: {clean_text(sysinfo.get('gpu_model', 'N/A'))} ({sysinfo.get('gpu_vram_gb', 0)} GB VRAM)", ln=True)
+    pdf.cell(0, 6, f"Almacenamiento: {clean_text(sysinfo.get('disk_type', 'N/A'))}", ln=True)
     pdf.ln(5)
     
     # Scores por perfil
     pdf.set_font("Arial", "B", 12)
-    pdf.cell(0, 8, "Adecuación por perfiles:", ln=True)
+    pdf.cell(0, 8, "Adecuacion por perfiles:", ln=True)
     pdf.set_font("Arial", "", 10)
     
     for profile, score in result['scores'].items():
@@ -106,7 +114,7 @@ def create_pdf_report(sysinfo: dict, result: dict):
     
     pdf.ln(10)
     pdf.set_font("Arial", "I", 8)
-    pdf.cell(0, 6, "Generado por AnalizaPC - Sistema de análisis gratuito", ln=True)
+    pdf.cell(0, 6, "Generado por AnalizaPC - Sistema de analisis gratuito", ln=True)
     
     # Guardar localmente
     timestamp = int(datetime.datetime.now().timestamp())
