@@ -108,7 +108,7 @@
                        '\n\n🔄 Enviando al servidor para análisis...';
 
         // Enviar al backend
-        const res = await axios.post('http://localhost:8000/api/analyze', data);
+        const res = await axios.post('https://analizatupc-backend.onrender.com/api/analyze', data);
         
         let resultText = '✅ ¡Análisis completado!\n\n';
         resultText += `🎯 PERFIL PRINCIPAL: ${res.data.result.main_profile} (${res.data.result.main_score}%)\n\n`;
