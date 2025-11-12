@@ -1,14 +1,23 @@
-# Imagen base optimizada para FastAPI
-FROM tiangolo/uvicorn-gunicorn-fastapi:python3.11
+# Usar imagen base de Python
+FROM python:3.9-slim
 
-# Copiar archivos del backend al contenedor
-COPY . /app
+# Establecer directorio de trabajo
+WORKDIR /app
+
+# Copiar requirements primero (para aprovechar cache de Docker)
+COPY requirements.txt .
 
 # Instalar dependencias
-RUN pip install --upgrade pip setuptools wheel && \
-    pip install -r /app/requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Puerto interno (OpenShift redirige a él)
-ENV PORT=8080
+# Copiar el código de la aplicación
+COPY . .
 
-# Comando principal (ya incluido en esta imagen)
+# Exponer el puerto
+EXPOSE 8000
+
+# Variable de entorno para producción
+ENV PYTHONUNBUFFERED=1
+
+# Comando para ejecutar la aplicación
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

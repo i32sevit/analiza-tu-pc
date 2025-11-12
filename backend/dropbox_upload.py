@@ -1,8 +1,10 @@
-import dropbox, os
+import dropbox
+import os
+from datetime import datetime
 
 def upload_to_dropbox(access_token, local_file_path, dropbox_path):
     """
-    Sube un archivo a Dropbox
+    Sube un archivo a Dropbox - versión simplificada
     """
     try:
         dbx = dropbox.Dropbox(access_token)

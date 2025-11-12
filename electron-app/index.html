@@ -1,49 +1,150 @@
-<!DOCTYPE html>
-<html lang="es">
+<!doctype html>
+<html>
 <head>
-  <meta charset="UTF-8">
-  <title>AnalizaTuPc</title>
+  <meta charset="utf-8"/>
+  <title>AnalizaPC</title>
   <style>
-    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; min-height: 100vh;}
-    .container { max-width: 600px; margin: 0 auto; background: rgba(255,255,255,0.1); padding: 30px; border-radius: 15px; backdrop-filter: blur(10px);}
-    h1 { text-align: center; margin-bottom: 20px; }
-    label { display: block; margin-top: 10px; font-weight: bold; }
-    input { width: 100%; padding: 8px; margin-top: 5px; border-radius: 5px; border: none; }
-    button { padding: 15px; font-size: 16px; margin-top: 20px; width: 100%; border-radius: 8px; border: none; background: #4CAF50; cursor: pointer; transition: 0.3s; }
-    button:hover { background: #45a049; }
-    pre { background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; margin-top: 20px; max-height: 400px; overflow-y: auto; white-space: pre-wrap; font-family: monospace; }
+    body { 
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+      padding: 20px; 
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: rgba(255,255,255,0.1);
+      padding: 30px;
+      border-radius: 15px;
+      backdrop-filter: blur(10px);
+    }
+    h1 { 
+      text-align: center; 
+      margin-bottom: 30px;
+      font-size: 2.5em;
+    }
+    button { 
+      padding: 15px 30px; 
+      font-size: 18px; 
+      margin: 20px 0; 
+      background: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      width: 100%;
+      transition: background 0.3s;
+    }
+    button:hover {
+      background: #45a049;
+    }
+    button:disabled {
+      background: #cccccc;
+      cursor: not-allowed;
+    }
+    pre { 
+      background: rgba(0,0,0,0.3); 
+      padding: 20px; 
+      border-radius: 8px; 
+      white-space: pre-wrap;
+      font-family: 'Courier New', monospace;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    .url-box {
+      background: rgba(255,255,255,0.2);
+      padding: 10px;
+      border-radius: 5px;
+      margin: 10px 0;
+      word-break: break-all;
+    }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>🖥️ AnalizaTuPc</h1>
-
-    <label for="cpu_model">CPU Modelo:</label>
-    <input type="text" id="cpu_model" placeholder="Ej: Intel i7-10700K">
-
-    <label for="cpu_speed_ghz">Velocidad CPU (GHz):</label>
-    <input type="number" step="0.1" id="cpu_speed_ghz" placeholder="Ej: 3.8">
-
-    <label for="cores">Núcleos CPU:</label>
-    <input type="number" id="cores" placeholder="Ej: 8">
-
-    <label for="ram_gb">RAM (GB):</label>
-    <input type="number" id="ram_gb" placeholder="Ej: 16">
-
-    <label for="disk_type">Tipo de Disco:</label>
-    <input type="text" id="disk_type" placeholder="HDD, SSD o NVMe">
-
-    <label for="gpu_model">GPU Modelo:</label>
-    <input type="text" id="gpu_model" placeholder="Ej: NVIDIA GTX 1660">
-
-    <label for="gpu_vram_gb">VRAM GPU (GB):</label>
-    <input type="number" step="0.1" id="gpu_vram_gb" placeholder="Ej: 6">
-
-    <button id="btn">🔍 Analizar PC</button>
-
-    <pre id="out">Introduce los datos y presiona "Analizar PC"...</pre>
+    <h1>🖥️ AnalizaPC</h1>
+    <button id="btn">🔍 Detectar y analizar hardware</button>
+    <pre id="out">Presiona el botón para comenzar el análisis de tu sistema...</pre>
   </div>
 
-  <script src="renderer.js"></script>
+  <script>
+    const si = require('systeminformation');
+    const axios = require('axios');
+
+    const out = document.getElementById('out');
+    const btn = document.getElementById('btn');
+
+    btn.onclick = async () => {
+      btn.disabled = true;
+      out.innerText = '🔄 Detectando hardware...\n\nPor favor espera, esto puede tomar unos segundos.';
+      
+      try {
+        // Recopilar información del sistema
+        out.innerText = '🔍 Obteniendo información de CPU...';
+        const cpu = await si.cpu();
+        
+        out.innerText += '\n🔍 Obteniendo información de RAM...';
+        const mem = await si.mem();
+        
+        out.innerText += '\n🔍 Obteniendo información de almacenamiento...';
+        const disk = await si.diskLayout();
+        
+        out.innerText += '\n🔍 Obteniendo información de GPU...';
+        const graphics = await si.graphics();
+        const gpu = graphics.controllers[0] || {};
+        
+        const data = {
+          cpu_model: cpu.brand,
+          cpu_speed_ghz: parseFloat(cpu.speed) || 1.0,
+          cores: cpu.cores || 1,
+          ram_gb: +(mem.total / (1024**3)).toFixed(2),
+          disk_type: disk[0] ? disk[0].type : 'UNKNOWN',
+          gpu_model: gpu.model || '',
+          gpu_vram_gb: gpu.vram ? gpu.vram/1024 : 0
+        };
+
+        out.innerText = '📊 Datos del sistema detectados:\n' + JSON.stringify(data, null, 2) + 
+                       '\n\n🔄 Enviando al servidor para análisis...';
+
+        // Enviar al backend
+        const res = await axios.post('https://analizatupc-backend.onrender.com/api/analyze', data);
+        
+        let resultText = '✅ ¡Análisis completado!\n\n';
+        resultText += `🎯 PERFIL PRINCIPAL: ${res.data.result.main_profile} (${res.data.result.main_score}%)\n\n`;
+        resultText += '📈 ADECUACIÓN POR PERFILES:\n';
+        
+        Object.entries(res.data.result.scores).forEach(([profile, score]) => {
+          resultText += `• ${profile}: ${(score * 100).toFixed(1)}%\n`;
+        });
+        
+        resultText += '\n📎 ENLACES DE DESCARGA:\n';
+        if (res.data.pdf_url) {
+          resultText += `📄 PDF: ${res.data.pdf_url}\n`;
+        }
+        if (res.data.json_url) {
+          resultText += `📊 JSON: ${res.data.json_url}\n`;
+        }
+        
+        if (!res.data.pdf_url && !res.data.json_url) {
+          resultText += '⚠️ Los archivos no se subieron a Dropbox. Verifica la configuración.\n';
+        }
+        
+        resultText += `\n🕐 Fecha: ${new Date().toLocaleString()}`;
+
+        out.innerText = resultText;
+
+      } catch (e) {
+        out.innerText = '❌ Error en el análisis:\n' + e.toString() + 
+                       '\n\n🔧 Solución:\n' +
+                       '1. Asegúrate de que el backend esté ejecutándose\n' +
+                       '2. Verifica que el puerto 8000 esté disponible\n' +
+                       '3. Revisa la conexión a internet';
+        console.error('Error completo:', e);
+      } finally {
+        btn.disabled = false;
+      }
+    };
+  </script>
 </body>
 </html>
