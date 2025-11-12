@@ -5,15 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AnalizaTuPc - Análisis Profesional de Hardware</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #4361ee;
+            --primary: #4cc9f0;
+            --primary-dark: #3a86f8;
             --secondary: #3a0ca3;
-            --success: #4cc9f0;
+            --accent: #7209b7;
+            --success: #00f5d4;
             --warning: #f72585;
-            --dark: #1a1a2e;
-            --light: #f8f9fa;
-            --gray: #6c757d;
+            --dark-1: #0a0f1f;
+            --dark-2: #1a1a2e;
+            --dark-3: #16213e;
+            --light: #e0e0e0;
+            --gray: #8b8b9d;
+            --glass: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
         }
 
         * {
@@ -23,11 +30,12 @@
         }
 
         body {
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(135deg, var(--dark-1) 0%, var(--dark-2) 50%, var(--dark-3) 100%);
             color: var(--light);
             min-height: 100vh;
             line-height: 1.6;
+            overflow-x: hidden;
         }
 
         .container {
@@ -36,72 +44,171 @@
             padding: 20px;
         }
 
+        /* Header mejorado */
         .header {
             text-align: center;
-            margin-bottom: 40px;
-            padding: 30px 0;
+            margin-bottom: 50px;
+            padding: 40px 0 20px;
+            position: relative;
+        }
+
+        .header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 150px;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--primary), transparent);
+        }
+
+        .logo-container {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 80px;
+            height: 80px;
+            background: rgba(76, 201, 240, 0.1);
+            border-radius: 20px;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .logo-container::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--primary), transparent 70%);
+            opacity: 0.3;
         }
 
         .logo {
-            font-size: 3.5rem;
-            margin-bottom: 15px;
-            color: var(--success);
+            font-size: 2.5rem;
+            color: var(--primary);
+            z-index: 1;
         }
 
         .title {
             font-size: 2.8rem;
             font-weight: 700;
             margin-bottom: 10px;
-            background: linear-gradient(45deg, #4cc9f0, #f72585);
+            background: linear-gradient(45deg, var(--primary), var(--success));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
         }
 
         .subtitle {
-            font-size: 1.2rem;
-            color: #adb5bd;
+            font-size: 1.1rem;
+            color: var(--gray);
             max-width: 600px;
             margin: 0 auto;
+            font-weight: 400;
         }
 
+        /* Cards mejoradas con glassmorphism */
         .card {
-            background: rgba(255, 255, 255, 0.05);
+            background: var(--glass);
             backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
             border-radius: 20px;
             padding: 30px;
             margin-bottom: 30px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--glass-border);
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(76, 201, 240, 0.05), transparent 30%);
+            pointer-events: none;
         }
 
         .card:hover {
-            transform: translateY(-5px);
+            transform: translateY(-8px);
             box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+            border-color: rgba(76, 201, 240, 0.2);
         }
 
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .card-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 50px;
+            height: 50px;
+            background: rgba(76, 201, 240, 0.1);
+            border-radius: 12px;
+            margin-right: 15px;
+        }
+
+        .card-icon i {
+            font-size: 1.5rem;
+            color: var(--primary);
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--light);
+        }
+
+        /* Botón mejorado */
         .btn {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
+            gap: 12px;
             padding: 18px 35px;
             font-size: 1.1rem;
             font-weight: 600;
             border: none;
-            border-radius: 12px;
+            border-radius: 14px;
             cursor: pointer;
             transition: all 0.3s ease;
             width: 100%;
-            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            background: linear-gradient(45deg, var(--primary), var(--primary-dark));
             color: white;
             position: relative;
             overflow: hidden;
         }
 
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
         .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(67, 97, 238, 0.4);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(76, 201, 240, 0.4);
+        }
+
+        .btn:hover::before {
+            left: 100%;
         }
 
         .btn:disabled {
@@ -115,47 +222,65 @@
             font-size: 1.2rem;
         }
 
-        .output-container {
-            margin-top: 30px;
+        /* Barra de progreso mejorada */
+        .progress-container {
+            margin: 25px 0;
         }
 
-        .output-title {
+        .progress-header {
             display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 15px;
-            font-size: 1.3rem;
-            color: var(--success);
-        }
-
-        .output-box {
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 12px;
-            padding: 25px;
-            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-            white-space: pre-wrap;
-            max-height: 500px;
-            overflow-y: auto;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            line-height: 1.5;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+            color: var(--gray);
         }
 
         .progress-bar {
-            height: 6px;
+            height: 8px;
             background: rgba(255, 255, 255, 0.1);
-            border-radius: 3px;
-            margin: 20px 0;
+            border-radius: 4px;
             overflow: hidden;
+            position: relative;
         }
 
         .progress-fill {
             height: 100%;
             background: linear-gradient(90deg, var(--primary), var(--success));
-            border-radius: 3px;
+            border-radius: 4px;
             width: 0%;
-            transition: width 0.5s ease;
+            transition: width 0.8s cubic-bezier(0.22, 0.61, 0.36, 1);
+            position: relative;
+            overflow: hidden;
         }
 
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background-image: linear-gradient(
+                -45deg,
+                rgba(255, 255, 255, 0.2) 25%,
+                transparent 25%,
+                transparent 50%,
+                rgba(255, 255, 255, 0.2) 50%,
+                rgba(255, 255, 255, 0.2) 75%,
+                transparent 75%,
+                transparent
+            );
+            background-size: 20px 20px;
+            animation: move 1s linear infinite;
+            opacity: 0.5;
+        }
+
+        @keyframes move {
+            0% { background-position: 0 0; }
+            100% { background-position: 20px 0; }
+        }
+
+        /* Stats grid mejorado */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -164,34 +289,97 @@
         }
 
         .stat-card {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 12px;
-            padding: 20px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 16px;
+            padding: 25px 20px;
             text-align: center;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--glass-border);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--success));
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(76, 201, 240, 0.3);
         }
 
         .stat-icon {
-            font-size: 2rem;
-            margin-bottom: 10px;
-            color: var(--success);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 60px;
+            height: 60px;
+            background: rgba(76, 201, 240, 0.1);
+            border-radius: 16px;
+            margin-bottom: 15px;
+        }
+
+        .stat-icon i {
+            font-size: 1.8rem;
+            color: var(--primary);
         }
 
         .stat-value {
             font-size: 1.5rem;
             font-weight: 700;
             margin: 10px 0;
+            color: var(--light);
         }
 
         .stat-label {
-            color: #adb5bd;
+            color: var(--gray);
             font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        /* Output container mejorado */
+        .output-container {
+            margin-top: 30px;
+        }
+
+        .output-box {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 16px;
+            padding: 25px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            white-space: pre-wrap;
+            max-height: 500px;
+            overflow-y: auto;
+            border: 1px solid var(--glass-border);
+            line-height: 1.5;
+            font-size: 0.95rem;
+            position: relative;
+        }
+
+        .output-box::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .output-box::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
+        }
+
+        .output-box::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 4px;
         }
 
         .url-box {
-            background: rgba(0, 0, 0, 0.3);
+            background: rgba(0, 0, 0, 0.4);
             padding: 15px;
-            border-radius: 8px;
+            border-radius: 10px;
             margin: 10px 0;
             word-break: break-all;
             border-left: 4px solid var(--success);
@@ -200,16 +388,18 @@
         .url-box a {
             color: var(--success);
             text-decoration: none;
+            font-weight: 500;
         }
 
         .url-box a:hover {
             text-decoration: underline;
         }
 
+        /* Loading spinner mejorado */
         .loading-spinner {
             display: inline-block;
-            width: 20px;
-            height: 20px;
+            width: 22px;
+            height: 22px;
             border: 3px solid rgba(255, 255, 255, 0.3);
             border-radius: 50%;
             border-top-color: var(--success);
@@ -220,6 +410,7 @@
             to { transform: rotate(360deg); }
         }
 
+        /* Animaciones */
         .fade-in {
             animation: fadeIn 0.5s ease-in;
         }
@@ -229,12 +420,24 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(76, 201, 240, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(76, 201, 240, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(76, 201, 240, 0); }
+        }
+
+        /* Footer mejorado */
         .footer {
             text-align: center;
             margin-top: 50px;
-            padding: 20px;
-            color: #6c757d;
+            padding: 30px 20px;
+            color: var(--gray);
             font-size: 0.9rem;
+            border-top: 1px solid var(--glass-border);
         }
 
         /* Responsive */
@@ -244,7 +447,7 @@
             }
             
             .title {
-                font-size: 2rem;
+                font-size: 2.2rem;
             }
             
             .card {
@@ -254,28 +457,51 @@
             .stats-grid {
                 grid-template-columns: 1fr;
             }
+            
+            .card-header {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .card-icon {
+                margin-right: 0;
+                margin-bottom: 15px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <header class="header">
-            <div class="logo">
-                <i class="fas fa-desktop"></i>
+            <div class="logo-container">
+                <i class="fas fa-desktop logo"></i>
             </div>
-            <h1 class="title">AnalizaPC</h1>
+            <h1 class="title">AnalizaTuPc</h1>
             <p class="subtitle">Análisis profesional de hardware para determinar el rendimiento de tu equipo en diferentes perfiles de uso</p>
         </header>
 
         <main>
             <div class="card">
-                <button id="btn" class="btn">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <i class="fas fa-rocket"></i>
+                    </div>
+                    <h2 class="card-title">Análisis del Sistema</h2>
+                </div>
+                
+                <button id="btn" class="btn pulse">
                     <i class="fas fa-search"></i>
-                    <span>Iniciar Análisis del Sistema</span>
+                    <span>Iniciar Análisis Completo</span>
                 </button>
                 
-                <div class="progress-bar">
-                    <div class="progress-fill" id="progress"></div>
+                <div class="progress-container">
+                    <div class="progress-header">
+                        <span>Progreso del análisis</span>
+                        <span id="progress-percent">0%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progress"></div>
+                    </div>
                 </div>
                 
                 <div class="stats-grid" id="stats">
@@ -284,9 +510,11 @@
             </div>
 
             <div class="card output-container">
-                <div class="output-title">
-                    <i class="fas fa-terminal"></i>
-                    <span>Resultados del Análisis</span>
+                <div class="card-header">
+                    <div class="card-icon">
+                        <i class="fas fa-chart-bar"></i>
+                    </div>
+                    <h2 class="card-title">Resultados del Análisis</h2>
                 </div>
                 <div class="output-box" id="out">
 Presiona el botón para comenzar el análisis completo de tu sistema.
@@ -314,11 +542,13 @@ Los resultados incluirán una evaluación de rendimiento para diferentes perfile
         const out = document.getElementById('out');
         const btn = document.getElementById('btn');
         const progress = document.getElementById('progress');
+        const progressPercent = document.getElementById('progress-percent');
         const stats = document.getElementById('stats');
 
         // Función para actualizar la barra de progreso
         function updateProgress(percent) {
             progress.style.width = percent + '%';
+            progressPercent.textContent = percent + '%';
         }
 
         // Función para mostrar estadísticas
@@ -360,6 +590,7 @@ Los resultados incluirán una evaluación de rendimiento para diferentes perfile
         btn.onclick = async () => {
             btn.disabled = true;
             btn.innerHTML = '<div class="loading-spinner"></div><span>Analizando sistema...</span>';
+            btn.classList.remove('pulse');
             updateProgress(10);
             
             try {
@@ -425,7 +656,7 @@ Los resultados incluirán una evaluación de rendimiento para diferentes perfile
                     resultText += `• ${profile.padEnd(15)}: ${bar} ${percentage}%\n`;
                 });
                 
-                resultText += '\n📎 ENLACES DE DESCARDA:\n';
+                resultText += '\n📎 ENLACES DE DESCARGA:\n';
                 resultText += '-'.repeat(30) + '\n';
                 
                 if (res.data.pdf_url) {
@@ -461,6 +692,7 @@ Los resultados incluirán una evaluación de rendimiento para diferentes perfile
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fas fa-sync-alt"></i><span>Realizar Nuevo Análisis</span>';
+                btn.classList.add('pulse');
             }
         };
 
