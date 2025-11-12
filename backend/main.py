@@ -1,13 +1,11 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from fpdf import FPDF
-import os, json, datetime
+import os, json, datetime, tempfile
 from dropbox_upload import upload_to_dropbox, create_dropbox_folder_structure
 from dotenv import load_dotenv
 import uvicorn
-from io import BytesIO
 
 # Cargar token de Dropbox
 load_dotenv()
@@ -48,8 +46,7 @@ def score_system(info):
 
     return {"scores": profiles, "main_profile": main_profile, "main_score": round(main_score,1)}
 
-# --- Crear PDF en memoria ---
-def create_pdf_bytes(sysinfo, result):
+def create_pdf(sysinfo, result):
     pdf = FPDF()
     pdf.add_page()
     pdf.set_font("Arial","B",16)
@@ -66,10 +63,15 @@ def create_pdf_bytes(sysinfo, result):
     pdf.cell(0,6,f"GPU: {sysinfo['gpu_model']} ({sysinfo['gpu_vram_gb']} GB VRAM)",ln=True)
     pdf.cell(0,6,f"Disco: {sysinfo['disk_type']}",ln=True)
 
-    pdf_bytes = BytesIO()
-    pdf.output(pdf_bytes)
-    pdf_bytes.seek(0)
-    return pdf_bytes
+    temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
+    pdf.output(temp_file.name)
+    return temp_file.name
+
+def create_json(sysinfo, result):
+    temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".json")
+    with open(temp_file.name, "w") as f:
+        json.dump({"sysinfo": sysinfo, "result": result}, f, indent=2)
+    return temp_file.name
 
 @app.on_event("startup")
 def startup_event():
@@ -80,37 +82,23 @@ def startup_event():
 def analyze(sysinfo: SysInfo):
     info = sysinfo.dict()
     result = score_system(info)
-    
-    # Guardar JSON en disco temporal
-    timestamp = int(datetime.datetime.now().timestamp())
-    json_file = f"report_{timestamp}.json"
-    with open(json_file,"w") as f:
-        json.dump({"sysinfo":info,"result":result}, f, indent=2)
 
-    pdf_bytes = create_pdf_bytes(info, result)
+    pdf_file = create_pdf(info, result)
+    json_file = create_json(info, result)
 
     pdf_url = None
     json_url = None
     if DROPBOX_TOKEN:
-        # Guardar temporalmente PDF para subir a Dropbox
-        temp_pdf_file = f"report_{timestamp}.pdf"
-        with open(temp_pdf_file, "wb") as f:
-            f.write(pdf_bytes.getbuffer())
-        pdf_url,_ = upload_to_dropbox(DROPBOX_TOKEN,temp_pdf_file,f"/AnalizaTuPc/{temp_pdf_file}")
-        json_url,_ = upload_to_dropbox(DROPBOX_TOKEN,json_file,f"/AnalizaTuPc/{json_file}")
-        os.remove(temp_pdf_file)
+        pdf_url,_ = upload_to_dropbox(DROPBOX_TOKEN, pdf_file, f"/AnalizaTuPc/{os.path.basename(pdf_file)}")
+        json_url,_ = upload_to_dropbox(DROPBOX_TOKEN, json_file, f"/AnalizaTuPc/{os.path.basename(json_file)}")
 
-    # Limpiar JSON local
+    # Limpiar archivos locales
+    os.remove(pdf_file)
     os.remove(json_file)
 
-    # Retornar PDF en memoria + URLs Dropbox
-    return StreamingResponse(
-        pdf_bytes,
-        media_type="application/pdf",
-        headers={"Content-Disposition": f"attachment; filename=report_{timestamp}.pdf"}
-    )
+    return {"result": result, "pdf_url": pdf_url, "json_url": json_url}
 
 # --- START SERVER ---
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8080))  # <-- importante para OpenShift
+    port = int(os.environ.get("PORT", 8080))  # importante para OpenShift
     uvicorn.run("main:app", host="0.0.0.0", port=port)
