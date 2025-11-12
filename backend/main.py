@@ -1,11 +1,13 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from fpdf import FPDF
 import os, json, datetime
 from dropbox_upload import upload_to_dropbox, create_dropbox_folder_structure
 from dotenv import load_dotenv
 import uvicorn
+from io import BytesIO
 
 # Cargar token de Dropbox
 load_dotenv()
@@ -46,7 +48,8 @@ def score_system(info):
 
     return {"scores": profiles, "main_profile": main_profile, "main_score": round(main_score,1)}
 
-def create_pdf(sysinfo, result):
+# --- Crear PDF en memoria ---
+def create_pdf_bytes(sysinfo, result):
     pdf = FPDF()
     pdf.add_page()
     pdf.set_font("Arial","B",16)
@@ -62,9 +65,11 @@ def create_pdf(sysinfo, result):
     pdf.cell(0,6,f"RAM: {sysinfo['ram_gb']} GB",ln=True)
     pdf.cell(0,6,f"GPU: {sysinfo['gpu_model']} ({sysinfo['gpu_vram_gb']} GB VRAM)",ln=True)
     pdf.cell(0,6,f"Disco: {sysinfo['disk_type']}",ln=True)
-    filename = f"report_{int(datetime.datetime.now().timestamp())}.pdf"
-    pdf.output(filename)
-    return filename
+
+    pdf_bytes = BytesIO()
+    pdf.output(pdf_bytes)
+    pdf_bytes.seek(0)
+    return pdf_bytes
 
 @app.on_event("startup")
 def startup_event():
@@ -75,24 +80,35 @@ def startup_event():
 def analyze(sysinfo: SysInfo):
     info = sysinfo.dict()
     result = score_system(info)
-    pdf_file = create_pdf(info, result)
-    json_file = pdf_file.replace(".pdf",".json")
-
-    # Guardar JSON
+    
+    # Guardar JSON en disco temporal
+    timestamp = int(datetime.datetime.now().timestamp())
+    json_file = f"report_{timestamp}.json"
     with open(json_file,"w") as f:
-        json.dump({"sysinfo":info,"result":result},f,indent=2)
+        json.dump({"sysinfo":info,"result":result}, f, indent=2)
+
+    pdf_bytes = create_pdf_bytes(info, result)
 
     pdf_url = None
     json_url = None
     if DROPBOX_TOKEN:
-        pdf_url,_ = upload_to_dropbox(DROPBOX_TOKEN,pdf_file,f"/AnalizaTuPc/{pdf_file}")
+        # Guardar temporalmente PDF para subir a Dropbox
+        temp_pdf_file = f"report_{timestamp}.pdf"
+        with open(temp_pdf_file, "wb") as f:
+            f.write(pdf_bytes.getbuffer())
+        pdf_url,_ = upload_to_dropbox(DROPBOX_TOKEN,temp_pdf_file,f"/AnalizaTuPc/{temp_pdf_file}")
         json_url,_ = upload_to_dropbox(DROPBOX_TOKEN,json_file,f"/AnalizaTuPc/{json_file}")
+        os.remove(temp_pdf_file)
 
-    # Limpiar archivos locales
-    os.remove(pdf_file)
+    # Limpiar JSON local
     os.remove(json_file)
 
-    return {"result":result,"pdf_url":pdf_url,"json_url":json_url}
+    # Retornar PDF en memoria + URLs Dropbox
+    return StreamingResponse(
+        pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename=report_{timestamp}.pdf"}
+    )
 
 # --- START SERVER ---
 if __name__ == "__main__":
