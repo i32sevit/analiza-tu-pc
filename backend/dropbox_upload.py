@@ -4,7 +4,7 @@ from datetime import datetime
 
 def upload_to_dropbox(access_token, local_file_path, dropbox_path):
     """
-    Sube un archivo a Dropbox - versión simplificada
+    Sube un archivo a Dropbox
     """
     try:
         dbx = dropbox.Dropbox(access_token)
