@@ -1,150 +1,476 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="es">
 <head>
-  <meta charset="utf-8"/>
-  <title>AnalizaPC</title>
-  <style>
-    body { 
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-      padding: 20px; 
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      min-height: 100vh;
-    }
-    .container {
-      max-width: 800px;
-      margin: 0 auto;
-      background: rgba(255,255,255,0.1);
-      padding: 30px;
-      border-radius: 15px;
-      backdrop-filter: blur(10px);
-    }
-    h1 { 
-      text-align: center; 
-      margin-bottom: 30px;
-      font-size: 2.5em;
-    }
-    button { 
-      padding: 15px 30px; 
-      font-size: 18px; 
-      margin: 20px 0; 
-      background: #4CAF50;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      width: 100%;
-      transition: background 0.3s;
-    }
-    button:hover {
-      background: #45a049;
-    }
-    button:disabled {
-      background: #cccccc;
-      cursor: not-allowed;
-    }
-    pre { 
-      background: rgba(0,0,0,0.3); 
-      padding: 20px; 
-      border-radius: 8px; 
-      white-space: pre-wrap;
-      font-family: 'Courier New', monospace;
-      max-height: 400px;
-      overflow-y: auto;
-    }
-    .url-box {
-      background: rgba(255,255,255,0.2);
-      padding: 10px;
-      border-radius: 5px;
-      margin: 10px 0;
-      word-break: break-all;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AnalizaPC - Análisis Profesional de Hardware</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3a0ca3;
+            --success: #4cc9f0;
+            --warning: #f72585;
+            --dark: #1a1a2e;
+            --light: #f8f9fa;
+            --gray: #6c757d;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            color: var(--light);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 30px 0;
+        }
+
+        .logo {
+            font-size: 3.5rem;
+            margin-bottom: 15px;
+            color: var(--success);
+        }
+
+        .title {
+            font-size: 2.8rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #4cc9f0, #f72585);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: #adb5bd;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 18px 35px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(67, 97, 238, 0.4);
+        }
+
+        .btn:disabled {
+            background: var(--gray);
+            transform: none;
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+
+        .btn i {
+            font-size: 1.2rem;
+        }
+
+        .output-container {
+            margin-top: 30px;
+        }
+
+        .output-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+            color: var(--success);
+        }
+
+        .output-box {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            padding: 25px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            white-space: pre-wrap;
+            max-height: 500px;
+            overflow-y: auto;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            line-height: 1.5;
+        }
+
+        .progress-bar {
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--success));
+            border-radius: 3px;
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 25px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .stat-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            color: var(--success);
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 10px 0;
+        }
+
+        .stat-label {
+            color: #adb5bd;
+            font-size: 0.9rem;
+        }
+
+        .url-box {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            word-break: break-all;
+            border-left: 4px solid var(--success);
+        }
+
+        .url-box a {
+            color: var(--success);
+            text-decoration: none;
+        }
+
+        .url-box a:hover {
+            text-decoration: underline;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--success);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 50px;
+            padding: 20px;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .title {
+                font-size: 2rem;
+            }
+            
+            .card {
+                padding: 20px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
 <body>
-  <div class="container">
-    <h1>🖥️ AnalizaPC</h1>
-    <button id="btn">🔍 Detectar y analizar hardware</button>
-    <pre id="out">Presiona el botón para comenzar el análisis de tu sistema...</pre>
-  </div>
+    <div class="container">
+        <header class="header">
+            <div class="logo">
+                <i class="fas fa-desktop"></i>
+            </div>
+            <h1 class="title">AnalizaPC</h1>
+            <p class="subtitle">Análisis profesional de hardware para determinar el rendimiento de tu equipo en diferentes perfiles de uso</p>
+        </header>
 
-  <script>
-    const si = require('systeminformation');
-    const axios = require('axios');
+        <main>
+            <div class="card">
+                <button id="btn" class="btn">
+                    <i class="fas fa-search"></i>
+                    <span>Iniciar Análisis del Sistema</span>
+                </button>
+                
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress"></div>
+                </div>
+                
+                <div class="stats-grid" id="stats">
+                    <!-- Las estadísticas se llenarán dinámicamente -->
+                </div>
+            </div>
 
-    const out = document.getElementById('out');
-    const btn = document.getElementById('btn');
+            <div class="card output-container">
+                <div class="output-title">
+                    <i class="fas fa-terminal"></i>
+                    <span>Resultados del Análisis</span>
+                </div>
+                <div class="output-box" id="out">
+Presiona el botón para comenzar el análisis completo de tu sistema.
 
-    btn.onclick = async () => {
-      btn.disabled = true;
-      out.innerText = '🔄 Detectando hardware...\n\nPor favor espera, esto puede tomar unos segundos.';
-      
-      try {
-        // Recopilar información del sistema
-        out.innerText = '🔍 Obteniendo información de CPU...';
-        const cpu = await si.cpu();
-        
-        out.innerText += '\n🔍 Obteniendo información de RAM...';
-        const mem = await si.mem();
-        
-        out.innerText += '\n🔍 Obteniendo información de almacenamiento...';
-        const disk = await si.diskLayout();
-        
-        out.innerText += '\n🔍 Obteniendo información de GPU...';
-        const graphics = await si.graphics();
-        const gpu = graphics.controllers[0] || {};
-        
-        const data = {
-          cpu_model: cpu.brand,
-          cpu_speed_ghz: parseFloat(cpu.speed) || 1.0,
-          cores: cpu.cores || 1,
-          ram_gb: +(mem.total / (1024**3)).toFixed(2),
-          disk_type: disk[0] ? disk[0].type : 'UNKNOWN',
-          gpu_model: gpu.model || '',
-          gpu_vram_gb: gpu.vram ? gpu.vram/1024 : 0
+El análisis evaluará:
+• Procesador (CPU)
+• Memoria RAM
+• Almacenamiento
+• Tarjeta gráfica (GPU)
+
+Los resultados incluirán una evaluación de rendimiento para diferentes perfiles de uso.
+                </div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <p>AnalizaPC &copy; 2023 - Herramienta profesional de análisis de hardware</p>
+        </footer>
+    </div>
+
+    <script>
+        const si = require('systeminformation');
+        const axios = require('axios');
+
+        const out = document.getElementById('out');
+        const btn = document.getElementById('btn');
+        const progress = document.getElementById('progress');
+        const stats = document.getElementById('stats');
+
+        // Función para actualizar la barra de progreso
+        function updateProgress(percent) {
+            progress.style.width = percent + '%';
+        }
+
+        // Función para mostrar estadísticas
+        function showStats(data) {
+            if (!data) return;
+            
+            stats.innerHTML = `
+                <div class="stat-card fade-in">
+                    <div class="stat-icon">
+                        <i class="fas fa-microchip"></i>
+                    </div>
+                    <div class="stat-value">${data.cpu_model || 'N/A'}</div>
+                    <div class="stat-label">Procesador</div>
+                </div>
+                <div class="stat-card fade-in">
+                    <div class="stat-icon">
+                        <i class="fas fa-memory"></i>
+                    </div>
+                    <div class="stat-value">${data.ram_gb || '0'} GB</div>
+                    <div class="stat-label">Memoria RAM</div>
+                </div>
+                <div class="stat-card fade-in">
+                    <div class="stat-icon">
+                        <i class="fas fa-hdd"></i>
+                    </div>
+                    <div class="stat-value">${data.disk_type || 'N/A'}</div>
+                    <div class="stat-label">Almacenamiento</div>
+                </div>
+                <div class="stat-card fade-in">
+                    <div class="stat-icon">
+                        <i class="fas fa-gamepad"></i>
+                    </div>
+                    <div class="stat-value">${data.gpu_model || 'Integrada'}</div>
+                    <div class="stat-label">Tarjeta Gráfica</div>
+                </div>
+            `;
+        }
+
+        btn.onclick = async () => {
+            btn.disabled = true;
+            btn.innerHTML = '<div class="loading-spinner"></div><span>Analizando sistema...</span>';
+            updateProgress(10);
+            
+            try {
+                out.innerText = '🔄 Iniciando análisis completo del sistema...\n\n';
+                
+                // Recopilar información del sistema con progreso
+                out.innerText += '🔍 Obteniendo información de CPU...\n';
+                const cpu = await si.cpu();
+                updateProgress(30);
+                
+                out.innerText += '🔍 Obteniendo información de RAM...\n';
+                const mem = await si.mem();
+                updateProgress(50);
+                
+                out.innerText += '🔍 Obteniendo información de almacenamiento...\n';
+                const disk = await si.diskLayout();
+                updateProgress(70);
+                
+                out.innerText += '🔍 Obteniendo información de GPU...\n';
+                const graphics = await si.graphics();
+                const gpu = graphics.controllers[0] || {};
+                updateProgress(90);
+                
+                const data = {
+                    cpu_model: cpu.brand,
+                    cpu_speed_ghz: parseFloat(cpu.speed) || 1.0,
+                    cores: cpu.cores || 1,
+                    ram_gb: +(mem.total / (1024**3)).toFixed(2),
+                    disk_type: disk[0] ? disk[0].type : 'UNKNOWN',
+                    gpu_model: gpu.model || '',
+                    gpu_vram_gb: gpu.vram ? gpu.vram/1024 : 0
+                };
+
+                // Mostrar estadísticas
+                showStats(data);
+                
+                out.innerText += '\n📊 Datos del sistema detectados:\n';
+                out.innerText += `• Procesador: ${data.cpu_model}\n`;
+                out.innerText += `• Velocidad: ${data.cpu_speed_ghz} GHz\n`;
+                out.innerText += `• Núcleos: ${data.cores}\n`;
+                out.innerText += `• RAM: ${data.ram_gb} GB\n`;
+                out.innerText += `• Almacenamiento: ${data.disk_type}\n`;
+                out.innerText += `• Gráficos: ${data.gpu_model}\n`;
+                
+                out.innerText += '\n🔄 Enviando datos al servidor para análisis...\n';
+                updateProgress(95);
+
+                // Enviar al backend
+                const res = await axios.post('https://analizatupc-backend.onrender.com/api/analyze', data);
+                
+                let resultText = '\n✅ ¡ANÁLISIS COMPLETADO!\n\n';
+                resultText += '='.repeat(50) + '\n';
+                resultText += `🎯 PERFIL PRINCIPAL: ${res.data.result.main_profile}\n`;
+                resultText += `📊 PUNTUACIÓN: ${res.data.result.main_score}%\n`;
+                resultText += '='.repeat(50) + '\n\n';
+                
+                resultText += '📈 ADECUACIÓN POR PERFILES:\n';
+                resultText += '-'.repeat(30) + '\n';
+                
+                Object.entries(res.data.result.scores).forEach(([profile, score]) => {
+                    const percentage = (score * 100).toFixed(1);
+                    const bar = '█'.repeat(Math.floor(percentage / 5)) + '░'.repeat(20 - Math.floor(percentage / 5));
+                    resultText += `• ${profile.padEnd(15)}: ${bar} ${percentage}%\n`;
+                });
+                
+                resultText += '\n📎 ENLACES DE DESCARDA:\n';
+                resultText += '-'.repeat(30) + '\n';
+                
+                if (res.data.pdf_url) {
+                    resultText += `📄 Informe PDF: ${res.data.pdf_url}\n`;
+                }
+                if (res.data.json_url) {
+                    resultText += `📊 Datos JSON: ${res.data.json_url}\n`;
+                }
+                
+                if (!res.data.pdf_url && !res.data.json_url) {
+                    resultText += '⚠️ Los archivos no se subieron a Dropbox. Verifica la configuración.\n';
+                }
+                
+                resultText += `\n🕐 Análisis generado: ${new Date().toLocaleString()}`;
+                resultText += `\n\n💡 Recomendación: ${getRecommendation(res.data.result.main_score)}`;
+
+                out.innerText += resultText;
+                updateProgress(100);
+
+            } catch (e) {
+                out.innerText = '❌ ERROR EN EL ANÁLISIS\n\n';
+                out.innerText += 'Descripción del error:\n';
+                out.innerText += e.toString() + '\n\n';
+                
+                out.innerText += '🔧 SOLUCIÓN DE PROBLEMAS:\n';
+                out.innerText += '1. ✅ Verifica tu conexión a internet\n';
+                out.innerText += '2. ✅ Asegúrate de que el servidor esté en ejecución\n';
+                out.innerText += '3. ✅ Comprueba que los puertos necesarios estén disponibles\n';
+                out.innerText += '4. ✅ Revisa la configuración de seguridad/firewall\n';
+                
+                console.error('Error completo:', e);
+                updateProgress(0);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-sync-alt"></i><span>Realizar Nuevo Análisis</span>';
+            }
         };
 
-        out.innerText = '📊 Datos del sistema detectados:\n' + JSON.stringify(data, null, 2) + 
-                       '\n\n🔄 Enviando al servidor para análisis...';
-
-        // Enviar al backend
-        const res = await axios.post('https://analizatupc-backend.onrender.com/api/analyze', data);
-        
-        let resultText = '✅ ¡Análisis completado!\n\n';
-        resultText += `🎯 PERFIL PRINCIPAL: ${res.data.result.main_profile} (${res.data.result.main_score}%)\n\n`;
-        resultText += '📈 ADECUACIÓN POR PERFILES:\n';
-        
-        Object.entries(res.data.result.scores).forEach(([profile, score]) => {
-          resultText += `• ${profile}: ${(score * 100).toFixed(1)}%\n`;
-        });
-        
-        resultText += '\n📎 ENLACES DE DESCARGA:\n';
-        if (res.data.pdf_url) {
-          resultText += `📄 PDF: ${res.data.pdf_url}\n`;
+        // Función para dar recomendaciones basadas en la puntuación
+        function getRecommendation(score) {
+            if (score >= 80) return "Tu equipo tiene un excelente rendimiento para la mayoría de tareas.";
+            if (score >= 60) return "Buen rendimiento general. Considera actualizaciones menores para tareas más exigentes.";
+            if (score >= 40) return "Rendimiento adecuado para tareas básicas. Considera mejoras para uso profesional.";
+            return "Rendimiento limitado. Se recomiendan mejoras de hardware para mejor experiencia.";
         }
-        if (res.data.json_url) {
-          resultText += `📊 JSON: ${res.data.json_url}\n`;
-        }
-        
-        if (!res.data.pdf_url && !res.data.json_url) {
-          resultText += '⚠️ Los archivos no se subieron a Dropbox. Verifica la configuración.\n';
-        }
-        
-        resultText += `\n🕐 Fecha: ${new Date().toLocaleString()}`;
-
-        out.innerText = resultText;
-
-      } catch (e) {
-        out.innerText = '❌ Error en el análisis:\n' + e.toString() + 
-                       '\n\n🔧 Solución:\n' +
-                       '1. Asegúrate de que el backend esté ejecutándose\n' +
-                       '2. Verifica que el puerto 8000 esté disponible\n' +
-                       '3. Revisa la conexión a internet';
-        console.error('Error completo:', e);
-      } finally {
-        btn.disabled = false;
-      }
-    };
-  </script>
+    </script>
 </body>
 </html>
