@@ -63,15 +63,15 @@ def create_pdf(sysinfo, result):
     pdf.cell(0,6,f"GPU: {sysinfo['gpu_model']} ({sysinfo['gpu_vram_gb']} GB VRAM)",ln=True)
     pdf.cell(0,6,f"Disco: {sysinfo['disk_type']}",ln=True)
 
-    temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
-    pdf.output(temp_file.name)
-    return temp_file.name
+    # Usar el directorio temporal del sistema que siempre tiene permisos
+    with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as temp_file:
+        pdf.output(temp_file.name)
+        return temp_file.name
 
 def create_json(sysinfo, result):
-    temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".json")
-    with open(temp_file.name, "w") as f:
-        json.dump({"sysinfo": sysinfo, "result": result}, f, indent=2)
-    return temp_file.name
+    with tempfile.NamedTemporaryFile(suffix=".json", delete=False, mode='w') as temp_file:
+        json.dump({"sysinfo": sysinfo, "result": result}, temp_file, indent=2)
+        return temp_file.name
 
 @app.on_event("startup")
 def startup_event():
@@ -83,20 +83,39 @@ def analyze(sysinfo: SysInfo):
     info = sysinfo.dict()
     result = score_system(info)
 
-    pdf_file = create_pdf(info, result)
-    json_file = create_json(info, result)
+    pdf_file = None
+    json_file = None
+    
+    try:
+        pdf_file = create_pdf(info, result)
+        json_file = create_json(info, result)
 
-    pdf_url = None
-    json_url = None
-    if DROPBOX_TOKEN:
-        pdf_url,_ = upload_to_dropbox(DROPBOX_TOKEN, pdf_file, f"/AnalizaTuPc/{os.path.basename(pdf_file)}")
-        json_url,_ = upload_to_dropbox(DROPBOX_TOKEN, json_file, f"/AnalizaTuPc/{os.path.basename(json_file)}")
+        pdf_url = None
+        json_url = None
+        if DROPBOX_TOKEN:
+            pdf_url,_ = upload_to_dropbox(DROPBOX_TOKEN, pdf_file, f"/AnalizaTuPc/{os.path.basename(pdf_file)}")
+            json_url,_ = upload_to_dropbox(DROPBOX_TOKEN, json_file, f"/AnalizaTuPc/{os.path.basename(json_file)}")
 
-    # Limpiar archivos locales
-    os.remove(pdf_file)
-    os.remove(json_file)
-
-    return {"result": result, "pdf_url": pdf_url, "json_url": json_url}
+        return {"result": result, "pdf_url": pdf_url, "json_url": json_url}
+    
+    except Exception as e:
+        # Log del error para debugging
+        print(f"Error en analyze: {str(e)}")
+        return {"error": f"Error procesando la solicitud: {str(e)}", "result": result}
+    
+    finally:
+        # Limpiar archivos locales de forma segura
+        try:
+            if pdf_file and os.path.exists(pdf_file):
+                os.remove(pdf_file)
+        except Exception as e:
+            print(f"Error eliminando PDF: {e}")
+        
+        try:
+            if json_file and os.path.exists(json_file):
+                os.remove(json_file)
+        except Exception as e:
+            print(f"Error eliminando JSON: {e}")
 
 # --- START SERVER ---
 if __name__ == "__main__":
