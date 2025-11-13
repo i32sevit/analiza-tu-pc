@@ -222,6 +222,16 @@
             font-size: 1.2rem;
         }
 
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--glass-border);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 10px 25px rgba(255, 255, 255, 0.1);
+        }
+
         /* Barra de progreso mejorada */
         .progress-container {
             margin: 25px 0;
@@ -410,6 +420,102 @@
             to { transform: rotate(360deg); }
         }
 
+        /* Tabs para modo automático/manual */
+        .tabs {
+            display: flex;
+            margin-bottom: 25px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+            padding: 5px;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .tab.active {
+            background: rgba(76, 201, 240, 0.2);
+            color: var(--primary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        /* Formulario de entrada manual */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--light);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            color: var(--light);
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(76, 201, 240, 0.2);
+        }
+
+        .form-select {
+            width: 100%;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            color: var(--light);
+            font-size: 1rem;
+            cursor: pointer;
+        }
+
+        .form-select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(76, 201, 240, 0.2);
+        }
+
+        .form-select option {
+            background: var(--dark-2);
+            color: var(--light);
+        }
+
+        .form-select option:disabled {
+            color: var(--gray);
+            font-style: italic;
+        }
+
         /* Animaciones */
         .fade-in {
             animation: fadeIn 0.5s ease-in;
@@ -467,6 +573,10 @@
                 margin-right: 0;
                 margin-bottom: 15px;
             }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
@@ -489,10 +599,199 @@
                     <h2 class="card-title">Análisis del Sistema</h2>
                 </div>
                 
-                <button id="btn" class="btn pulse">
-                    <i class="fas fa-search"></i>
-                    <span>Iniciar Análisis Completo</span>
-                </button>
+                <div class="tabs">
+                    <div class="tab active" data-tab="auto">Detección Automática</div>
+                    <div class="tab" data-tab="manual">Entrada Manual</div>
+                </div>
+                
+                <div class="tab-content active" id="auto-tab">
+                    <button id="btn-auto" class="btn pulse">
+                        <i class="fas fa-search"></i>
+                        <span>Iniciar Análisis Automático</span>
+                    </button>
+                </div>
+                
+                <div class="tab-content" id="manual-tab">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label" for="cpu-model">Modelo de CPU</label>
+                            <select id="cpu-model" class="form-select">
+                                <option value="" disabled selected>Selecciona tu procesador</option>
+                                <optgroup label="Intel Core i9">
+                                    <option value="Intel Core i9-14900K">Intel Core i9-14900K</option>
+                                    <option value="Intel Core i9-13900K">Intel Core i9-13900K</option>
+                                    <option value="Intel Core i9-12900K">Intel Core i9-12900K</option>
+                                    <option value="Intel Core i9-11900K">Intel Core i9-11900K</option>
+                                    <option value="Intel Core i9-10900K">Intel Core i9-10900K</option>
+                                </optgroup>
+                                <optgroup label="Intel Core i7">
+                                    <option value="Intel Core i7-14700K">Intel Core i7-14700K</option>
+                                    <option value="Intel Core i7-13700K">Intel Core i7-13700K</option>
+                                    <option value="Intel Core i7-12700K">Intel Core i7-12700K</option>
+                                    <option value="Intel Core i7-11700K">Intel Core i7-11700K</option>
+                                    <option value="Intel Core i7-10700K">Intel Core i7-10700K</option>
+                                    <option value="Intel Core i7-9700K">Intel Core i7-9700K</option>
+                                </optgroup>
+                                <optgroup label="Intel Core i5">
+                                    <option value="Intel Core i5-14600K">Intel Core i5-14600K</option>
+                                    <option value="Intel Core i5-13600K">Intel Core i5-13600K</option>
+                                    <option value="Intel Core i5-12600K">Intel Core i5-12600K</option>
+                                    <option value="Intel Core i5-11600K">Intel Core i5-11600K</option>
+                                    <option value="Intel Core i5-10600K">Intel Core i5-10600K</option>
+                                    <option value="Intel Core i5-9600K">Intel Core i5-9600K</option>
+                                </optgroup>
+                                <optgroup label="Intel Core i3">
+                                    <option value="Intel Core i3-14100">Intel Core i3-14100</option>
+                                    <option value="Intel Core i3-13100">Intel Core i3-13100</option>
+                                    <option value="Intel Core i3-12100">Intel Core i3-12100</option>
+                                    <option value="Intel Core i3-10100">Intel Core i3-10100</option>
+                                    <option value="Intel Core i3-9100">Intel Core i3-9100</option>
+                                </optgroup>
+                                <optgroup label="AMD Ryzen 9">
+                                    <option value="AMD Ryzen 9 7950X">AMD Ryzen 9 7950X</option>
+                                    <option value="AMD Ryzen 9 7900X">AMD Ryzen 9 7900X</option>
+                                    <option value="AMD Ryzen 9 5950X">AMD Ryzen 9 5950X</option>
+                                    <option value="AMD Ryzen 9 5900X">AMD Ryzen 9 5900X</option>
+                                    <option value="AMD Ryzen 9 3950X">AMD Ryzen 9 3950X</option>
+                                </optgroup>
+                                <optgroup label="AMD Ryzen 7">
+                                    <option value="AMD Ryzen 7 7800X3D">AMD Ryzen 7 7800X3D</option>
+                                    <option value="AMD Ryzen 7 7700X">AMD Ryzen 7 7700X</option>
+                                    <option value="AMD Ryzen 7 5800X3D">AMD Ryzen 7 5800X3D</option>
+                                    <option value="AMD Ryzen 7 5800X">AMD Ryzen 7 5800X</option>
+                                    <option value="AMD Ryzen 7 5700X">AMD Ryzen 7 5700X</option>
+                                    <option value="AMD Ryzen 7 3700X">AMD Ryzen 7 3700X</option>
+                                </optgroup>
+                                <optgroup label="AMD Ryzen 5">
+                                    <option value="AMD Ryzen 5 7600X">AMD Ryzen 5 7600X</option>
+                                    <option value="AMD Ryzen 5 7600">AMD Ryzen 5 7600</option>
+                                    <option value="AMD Ryzen 5 5600X">AMD Ryzen 5 5600X</option>
+                                    <option value="AMD Ryzen 5 5600">AMD Ryzen 5 5600</option>
+                                    <option value="AMD Ryzen 5 5500">AMD Ryzen 5 5500</option>
+                                    <option value="AMD Ryzen 5 3600">AMD Ryzen 5 3600</option>
+                                </optgroup>
+                                <optgroup label="AMD Ryzen 3">
+                                    <option value="AMD Ryzen 3 7300X">AMD Ryzen 3 7300X</option>
+                                    <option value="AMD Ryzen 3 5300G">AMD Ryzen 3 5300G</option>
+                                    <option value="AMD Ryzen 3 3300X">AMD Ryzen 3 3300X</option>
+                                    <option value="AMD Ryzen 3 3100">AMD Ryzen 3 3100</option>
+                                </optgroup>
+                                <optgroup label="Otros Procesadores">
+                                    <option value="Intel Pentium Gold G7400">Intel Pentium Gold G7400</option>
+                                    <option value="Intel Celeron G6900">Intel Celeron G6900</option>
+                                    <option value="AMD Athlon 3000G">AMD Athlon 3000G</option>
+                                    <option value="Apple M3">Apple M3</option>
+                                    <option value="Apple M2">Apple M2</option>
+                                    <option value="Apple M1">Apple M1</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="cpu-speed">Velocidad de CPU (GHz)</label>
+                            <input type="number" id="cpu-speed" class="form-input" placeholder="Ej: 3.8" step="0.1" min="0.1">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="cpu-cores">Núcleos de CPU</label>
+                            <input type="number" id="cpu-cores" class="form-input" placeholder="Ej: 8" min="1">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="ram">Memoria RAM (GB)</label>
+                            <input type="number" id="ram" class="form-input" placeholder="Ej: 16" min="1">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="storage-type">Tipo de Almacenamiento</label>
+                            <select id="storage-type" class="form-select">
+                                <option value="SSD">SSD</option>
+                                <option value="HDD">HDD</option>
+                                <option value="NVMe">NVMe</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="gpu-model">Modelo de GPU</label>
+                            <select id="gpu-model" class="form-select">
+                                <option value="" disabled selected>Selecciona tu tarjeta gráfica</option>
+                                <optgroup label="NVIDIA GeForce RTX 40 Series">
+                                    <option value="NVIDIA GeForce RTX 4090">NVIDIA GeForce RTX 4090</option>
+                                    <option value="NVIDIA GeForce RTX 4080">NVIDIA GeForce RTX 4080</option>
+                                    <option value="NVIDIA GeForce RTX 4070 Ti">NVIDIA GeForce RTX 4070 Ti</option>
+                                    <option value="NVIDIA GeForce RTX 4070">NVIDIA GeForce RTX 4070</option>
+                                    <option value="NVIDIA GeForce RTX 4060 Ti">NVIDIA GeForce RTX 4060 Ti</option>
+                                    <option value="NVIDIA GeForce RTX 4060">NVIDIA GeForce RTX 4060</option>
+                                </optgroup>
+                                <optgroup label="NVIDIA GeForce RTX 30 Series">
+                                    <option value="NVIDIA GeForce RTX 3090 Ti">NVIDIA GeForce RTX 3090 Ti</option>
+                                    <option value="NVIDIA GeForce RTX 3090">NVIDIA GeForce RTX 3090</option>
+                                    <option value="NVIDIA GeForce RTX 3080 Ti">NVIDIA GeForce RTX 3080 Ti</option>
+                                    <option value="NVIDIA GeForce RTX 3080">NVIDIA GeForce RTX 3080</option>
+                                    <option value="NVIDIA GeForce RTX 3070 Ti">NVIDIA GeForce RTX 3070 Ti</option>
+                                    <option value="NVIDIA GeForce RTX 3070">NVIDIA GeForce RTX 3070</option>
+                                    <option value="NVIDIA GeForce RTX 3060 Ti">NVIDIA GeForce RTX 3060 Ti</option>
+                                    <option value="NVIDIA GeForce RTX 3060">NVIDIA GeForce RTX 3060</option>
+                                    <option value="NVIDIA GeForce RTX 3050">NVIDIA GeForce RTX 3050</option>
+                                </optgroup>
+                                <optgroup label="NVIDIA GeForce RTX 20 Series">
+                                    <option value="NVIDIA GeForce RTX 2080 Ti">NVIDIA GeForce RTX 2080 Ti</option>
+                                    <option value="NVIDIA GeForce RTX 2080 Super">NVIDIA GeForce RTX 2080 Super</option>
+                                    <option value="NVIDIA GeForce RTX 2080">NVIDIA GeForce RTX 2080</option>
+                                    <option value="NVIDIA GeForce RTX 2070 Super">NVIDIA GeForce RTX 2070 Super</option>
+                                    <option value="NVIDIA GeForce RTX 2070">NVIDIA GeForce RTX 2070</option>
+                                    <option value="NVIDIA GeForce RTX 2060 Super">NVIDIA GeForce RTX 2060 Super</option>
+                                    <option value="NVIDIA GeForce RTX 2060">NVIDIA GeForce RTX 2060</option>
+                                </optgroup>
+                                <optgroup label="NVIDIA GeForce GTX 16 Series">
+                                    <option value="NVIDIA GeForce GTX 1660 Ti">NVIDIA GeForce GTX 1660 Ti</option>
+                                    <option value="NVIDIA GeForce GTX 1660 Super">NVIDIA GeForce GTX 1660 Super</option>
+                                    <option value="NVIDIA GeForce GTX 1660">NVIDIA GeForce GTX 1660</option>
+                                    <option value="NVIDIA GeForce GTX 1650 Super">NVIDIA GeForce GTX 1650 Super</option>
+                                    <option value="NVIDIA GeForce GTX 1650">NVIDIA GeForce GTX 1650</option>
+                                </optgroup>
+                                <optgroup label="AMD Radeon RX 7000 Series">
+                                    <option value="AMD Radeon RX 7900 XTX">AMD Radeon RX 7900 XTX</option>
+                                    <option value="AMD Radeon RX 7900 XT">AMD Radeon RX 7900 XT</option>
+                                    <option value="AMD Radeon RX 7800 XT">AMD Radeon RX 7800 XT</option>
+                                    <option value="AMD Radeon RX 7700 XT">AMD Radeon RX 7700 XT</option>
+                                    <option value="AMD Radeon RX 7600">AMD Radeon RX 7600</option>
+                                </optgroup>
+                                <optgroup label="AMD Radeon RX 6000 Series">
+                                    <option value="AMD Radeon RX 6950 XT">AMD Radeon RX 6950 XT</option>
+                                    <option value="AMD Radeon RX 6900 XT">AMD Radeon RX 6900 XT</option>
+                                    <option value="AMD Radeon RX 6800 XT">AMD Radeon RX 6800 XT</option>
+                                    <option value="AMD Radeon RX 6800">AMD Radeon RX 6800</option>
+                                    <option value="AMD Radeon RX 6700 XT">AMD Radeon RX 6700 XT</option>
+                                    <option value="AMD Radeon RX 6700">AMD Radeon RX 6700</option>
+                                    <option value="AMD Radeon RX 6600 XT">AMD Radeon RX 6600 XT</option>
+                                    <option value="AMD Radeon RX 6600">AMD Radeon RX 6600</option>
+                                    <option value="AMD Radeon RX 6500 XT">AMD Radeon RX 6500 XT</option>
+                                    <option value="AMD Radeon RX 6400">AMD Radeon RX 6400</option>
+                                </optgroup>
+                                <optgroup label="AMD Radeon RX 5000 Series">
+                                    <option value="AMD Radeon RX 5700 XT">AMD Radeon RX 5700 XT</option>
+                                    <option value="AMD Radeon RX 5700">AMD Radeon RX 5700</option>
+                                    <option value="AMD Radeon RX 5600 XT">AMD Radeon RX 5600 XT</option>
+                                    <option value="AMD Radeon RX 5500 XT">AMD Radeon RX 5500 XT</option>
+                                </optgroup>
+                                <optgroup label="Tarjetas Integradas">
+                                    <option value="Intel Iris Xe Graphics">Intel Iris Xe Graphics</option>
+                                    <option value="Intel UHD Graphics 770">Intel UHD Graphics 770</option>
+                                    <option value="Intel UHD Graphics 750">Intel UHD Graphics 750</option>
+                                    <option value="Intel UHD Graphics 630">Intel UHD Graphics 630</option>
+                                    <option value="AMD Radeon Graphics">AMD Radeon Graphics</option>
+                                    <option value="Apple M3 GPU">Apple M3 GPU</option>
+                                    <option value="Apple M2 GPU">Apple M2 GPU</option>
+                                    <option value="Apple M1 GPU">Apple M1 GPU</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="gpu-vram">VRAM de GPU (GB)</label>
+                            <input type="number" id="gpu-vram" class="form-input" placeholder="Ej: 8" min="0" step="0.5">
+                        </div>
+                    </div>
+                    <button id="btn-manual" class="btn">
+                        <i class="fas fa-chart-bar"></i>
+                        <span>Analizar con Datos Manuales</span>
+                    </button>
+                </div>
                 
                 <div class="progress-container">
                     <div class="progress-header">
@@ -536,14 +835,37 @@ Los resultados incluirán una evaluación de rendimiento para diferentes perfile
     </div>
 
     <script>
-        const si = require('systeminformation');
-        const axios = require('axios');
-
+        // Elementos DOM
         const out = document.getElementById('out');
-        const btn = document.getElementById('btn');
+        const btnAuto = document.getElementById('btn-auto');
+        const btnManual = document.getElementById('btn-manual');
         const progress = document.getElementById('progress');
         const progressPercent = document.getElementById('progress-percent');
         const stats = document.getElementById('stats');
+        const tabs = document.querySelectorAll('.tab');
+        const tabContents = document.querySelectorAll('.tab-content');
+        const cpuModelSelect = document.getElementById('cpu-model');
+        const cpuSpeedInput = document.getElementById('cpu-speed');
+        const cpuCoresInput = document.getElementById('cpu-cores');
+        const gpuModelSelect = document.getElementById('gpu-model');
+        const gpuVramInput = document.getElementById('gpu-vram');
+
+        // Variables para datos del sistema
+        let systemData = null;
+
+        // Configuración de pestañas
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const tabId = tab.getAttribute('data-tab');
+                
+                // Actualizar pestañas activas
+                tabs.forEach(t => t.classList.remove('active'));
+                tabContents.forEach(tc => tc.classList.remove('active'));
+                
+                tab.classList.add('active');
+                document.getElementById(`${tabId}-tab`).classList.add('active');
+            });
+        });
 
         // Función para actualizar la barra de progreso
         function updateProgress(percent) {
@@ -587,42 +909,93 @@ Los resultados incluirán una evaluación de rendimiento para diferentes perfile
             `;
         }
 
-        btn.onclick = async () => {
+        // Función para validar datos manuales
+        function validateManualData() {
+            const cpuModel = cpuModelSelect.value;
+            const cpuSpeed = parseFloat(cpuSpeedInput.value);
+            const cpuCores = parseInt(cpuCoresInput.value);
+            const ram = parseInt(document.getElementById('ram').value);
+            const storageType = document.getElementById('storage-type').value;
+            const gpuModel = gpuModelSelect.value;
+            const gpuVram = parseFloat(gpuVramInput.value) || 0;
+
+            if (!cpuModel) {
+                alert('Por favor, selecciona el modelo de CPU');
+                return false;
+            }
+            
+            if (!cpuSpeed || cpuSpeed <= 0) {
+                alert('Por favor, ingresa una velocidad de CPU válida');
+                return false;
+            }
+            
+            if (!cpuCores || cpuCores <= 0) {
+                alert('Por favor, ingresa un número válido de núcleos de CPU');
+                return false;
+            }
+            
+            if (!ram || ram <= 0) {
+                alert('Por favor, ingresa una cantidad válida de RAM');
+                return false;
+            }
+
+            if (!gpuModel) {
+                alert('Por favor, selecciona el modelo de GPU');
+                return false;
+            }
+
+            return {
+                cpu_model: cpuModel,
+                cpu_speed_ghz: cpuSpeed,
+                cores: cpuCores,
+                ram_gb: ram,
+                disk_type: storageType,
+                gpu_model: gpuModel,
+                gpu_vram_gb: gpuVram
+            };
+        }
+
+        // Función para realizar el análisis
+        async function performAnalysis(data, isManual = false) {
+            const btn = isManual ? btnManual : btnAuto;
+            
             btn.disabled = true;
             btn.innerHTML = '<div class="loading-spinner"></div><span>Analizando sistema...</span>';
-            btn.classList.remove('pulse');
+            if (!isManual) btn.classList.remove('pulse');
             updateProgress(10);
             
             try {
                 out.innerText = '🔄 Iniciando análisis completo del sistema...\n\n';
                 
-                // Recopilar información del sistema con progreso
-                out.innerText += '🔍 Obteniendo información de CPU...\n';
-                const cpu = await si.cpu();
-                updateProgress(30);
-                
-                out.innerText += '🔍 Obteniendo información de RAM...\n';
-                const mem = await si.mem();
-                updateProgress(50);
-                
-                out.innerText += '🔍 Obteniendo información de almacenamiento...\n';
-                const disk = await si.diskLayout();
-                updateProgress(70);
-                
-                out.innerText += '🔍 Obteniendo información de GPU...\n';
-                const graphics = await si.graphics();
-                const gpu = graphics.controllers[0] || {};
-                updateProgress(90);
-                
-                const data = {
-                    cpu_model: cpu.brand,
-                    cpu_speed_ghz: parseFloat(cpu.speed) || 1.0,
-                    cores: cpu.cores || 1,
-                    ram_gb: +(mem.total / (1024**3)).toFixed(2),
-                    disk_type: disk[0] ? disk[0].type : 'UNKNOWN',
-                    gpu_model: gpu.model || '',
-                    gpu_vram_gb: gpu.vram ? gpu.vram/1024 : 0
-                };
+                if (!isManual) {
+                    // Recopilar información del sistema con progreso
+                    out.innerText += '🔍 Obteniendo información de CPU...\n';
+                    const cpu = await si.cpu();
+                    updateProgress(30);
+                    
+                    out.innerText += '🔍 Obteniendo información de RAM...\n';
+                    const mem = await si.mem();
+                    updateProgress(50);
+                    
+                    out.innerText += '🔍 Obteniendo información de almacenamiento...\n';
+                    const disk = await si.diskLayout();
+                    updateProgress(70);
+                    
+                    out.innerText += '🔍 Obteniendo información de GPU...\n';
+                    const graphics = await si.graphics();
+                    const gpu = graphics.controllers[0] || {};
+                    updateProgress(90);
+                    
+                    data = {
+                        cpu_model: cpu.brand,
+                        cpu_speed_ghz: parseFloat(cpu.speed) || 1.0,
+                        cores: cpu.cores || 1,
+                        ram_gb: +(mem.total / (1024**3)).toFixed(2),
+                        disk_type: disk[0] ? disk[0].type : 'UNKNOWN',
+                        gpu_model: gpu.model || '',
+                        gpu_vram_gb: gpu.vram ? gpu.vram/1024 : 0
+                    };
+                }
 
                 // Mostrar estadísticas
                 showStats(data);
@@ -691,10 +1064,12 @@ Los resultados incluirán una evaluación de rendimiento para diferentes perfile
                 updateProgress(0);
             } finally {
                 btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-sync-alt"></i><span>Realizar Nuevo Análisis</span>';
-                btn.classList.add('pulse');
+                btn.innerHTML = isManual 
+                    ? '<i class="fas fa-sync-alt"></i><span>Realizar Nuevo Análisis</span>'
+                    : '<i class="fas fa-sync-alt"></i><span>Realizar Nuevo Análisis</span>';
+                if (!isManual) btn.classList.add('pulse');
             }
-        };
+        }
 
         // Función para dar recomendaciones basadas en la puntuación
         function getRecommendation(score) {
@@ -703,6 +1078,63 @@ Los resultados incluirán una evaluación de rendimiento para diferentes perfile
             if (score >= 40) return "Rendimiento adecuado para tareas básicas. Considera mejoras para uso profesional.";
             return "Rendimiento limitado. Se recomiendan mejoras de hardware para mejor experiencia.";
         }
+
+        // Event listeners
+        btnAuto.onclick = () => performAnalysis(null, false);
+        
+        btnManual.onclick = () => {
+            const data = validateManualData();
+            if (data) {
+                performAnalysis(data, true);
+            }
+        };
+
+        // Auto-completar datos basados en selección de CPU
+        cpuModelSelect.addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            const cpuText = selectedOption.text;
+            
+            // Auto-completar velocidad y núcleos basados en modelo seleccionado
+            if (cpuText.includes('i9') || cpuText.includes('Ryzen 9')) {
+                cpuSpeedInput.value = '3.5';
+                cpuCoresInput.value = '12';
+            } else if (cpuText.includes('i7') || cpuText.includes('Ryzen 7')) {
+                cpuSpeedInput.value = '3.2';
+                cpuCoresInput.value = '8';
+            } else if (cpuText.includes('i5') || cpuText.includes('Ryzen 5')) {
+                cpuSpeedInput.value = '3.0';
+                cpuCoresInput.value = '6';
+            } else if (cpuText.includes('i3') || cpuText.includes('Ryzen 3')) {
+                cpuSpeedInput.value = '2.8';
+                cpuCoresInput.value = '4';
+            } else {
+                cpuSpeedInput.value = '2.5';
+                cpuCoresInput.value = '2';
+            }
+        });
+
+        // Auto-completar VRAM basado en GPU seleccionada
+        gpuModelSelect.addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            const gpuText = selectedOption.text;
+            
+            // Auto-completar VRAM basado en modelo seleccionado
+            if (gpuText.includes('RTX 4090') || gpuText.includes('7900 XTX')) {
+                gpuVramInput.value = '24';
+            } else if (gpuText.includes('RTX 4080') || gpuText.includes('7900 XT')) {
+                gpuVramInput.value = '16';
+            } else if (gpuText.includes('RTX 4070') || gpuText.includes('7800 XT')) {
+                gpuVramInput.value = '12';
+            } else if (gpuText.includes('RTX 4060') || gpuText.includes('7700 XT') || gpuText.includes('7600')) {
+                gpuVramInput.value = '8';
+            } else if (gpuText.includes('RTX 3050') || gpuText.includes('6500 XT')) {
+                gpuVramInput.value = '4';
+            } else if (gpuText.includes('Integrada') || gpuText.includes('UHD') || gpuText.includes('Iris')) {
+                gpuVramInput.value = '0';
+            } else {
+                gpuVramInput.value = '8';
+            }
+        });
     </script>
 </body>
 </html>
