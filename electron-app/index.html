@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
             --primary: #4cc9f0;
@@ -354,56 +355,252 @@
             font-weight: 500;
         }
 
-        /* Output container mejorado */
-        .output-container {
+        /* Resultados mejorados */
+        .results-container {
             margin-top: 30px;
         }
 
-        .output-box {
-            background: rgba(0, 0, 0, 0.3);
+        .results-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, rgba(76, 201, 240, 0.1), rgba(0, 245, 212, 0.1));
+            border-radius: 16px;
+            border: 1px solid var(--glass-border);
+        }
+
+        .results-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, var(--primary), var(--success));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .results-subtitle {
+            color: var(--gray);
+            font-size: 1.1rem;
+        }
+
+        .score-display {
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .score-circle {
+            width: 180px;
+            height: 180px;
+            margin: 0 auto;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .score-value {
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(45deg, var(--primary), var(--success));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            z-index: 2;
+        }
+
+        .score-label {
+            color: var(--gray);
+            font-size: 1rem;
+            margin-top: 10px;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .chart-container {
+            background: rgba(0, 0, 0, 0.2);
             border-radius: 16px;
             padding: 25px;
-            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-            white-space: pre-wrap;
-            max-height: 500px;
-            overflow-y: auto;
             border: 1px solid var(--glass-border);
-            line-height: 1.5;
-            font-size: 0.95rem;
-            position: relative;
         }
 
-        .output-box::-webkit-scrollbar {
-            width: 8px;
+        .chart-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--light);
+            text-align: center;
         }
 
-        .output-box::-webkit-scrollbar-track {
+        .profile-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .profile-card {
             background: rgba(0, 0, 0, 0.2);
-            border-radius: 4px;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid var(--glass-border);
+            transition: all 0.3s ease;
         }
 
-        .output-box::-webkit-scrollbar-thumb {
-            background: var(--primary);
-            border-radius: 4px;
+        .profile-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary);
         }
 
-        .url-box {
-            background: rgba(0, 0, 0, 0.4);
-            padding: 15px;
-            border-radius: 10px;
+        .profile-name {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--light);
+        }
+
+        .profile-score {
+            font-size: 1.5rem;
+            font-weight: 700;
             margin: 10px 0;
-            word-break: break-all;
-            border-left: 4px solid var(--success);
+            color: var(--primary);
         }
 
-        .url-box a {
+        .profile-bar {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .profile-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--success));
+            border-radius: 4px;
+            width: 0%;
+            transition: width 1s ease;
+        }
+
+        .recommendations {
+            background: linear-gradient(135deg, rgba(0, 245, 212, 0.1), rgba(247, 37, 133, 0.1));
+            border-radius: 16px;
+            padding: 25px;
+            border: 1px solid var(--glass-border);
+            margin-top: 25px;
+        }
+
+        .recommendations-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: var(--light);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .recommendations-list {
+            list-style: none;
+        }
+
+        .recommendations-list li {
+            padding: 10px 0;
+            border-bottom: 1px solid var(--glass-border);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .recommendations-list li:last-child {
+            border-bottom: none;
+        }
+
+        .recommendations-list i {
             color: var(--success);
-            text-decoration: none;
-            font-weight: 500;
+            font-size: 1.1rem;
         }
 
-        .url-box a:hover {
-            text-decoration: underline;
+        .component-analysis {
+            margin-top: 30px;
+        }
+
+        .component-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .component-card {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid var(--glass-border);
+            transition: all 0.3s ease;
+        }
+
+        .component-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary);
+        }
+
+        .component-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            gap: 12px;
+        }
+
+        .component-icon {
+            width: 40px;
+            height: 40px;
+            background: rgba(76, 201, 240, 0.1);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .component-icon i {
+            color: var(--primary);
+            font-size: 1.2rem;
+        }
+
+        .component-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--light);
+        }
+
+        .component-details {
+            color: var(--gray);
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+        }
+
+        .component-rating {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .rating-stars {
+            display: flex;
+            gap: 2px;
+        }
+
+        .rating-stars i {
+            color: var(--warning);
+            font-size: 0.9rem;
+        }
+
+        .rating-text {
+            font-size: 0.9rem;
+            color: var(--gray);
         }
 
         /* Loading spinner mejorado */
@@ -578,6 +775,14 @@
             .form-grid {
                 grid-template-columns: 1fr;
             }
+            
+            .results-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .profile-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
@@ -631,68 +836,26 @@
                                     <option value="Intel Core i9-14900K">Intel Core i9-14900K</option>
                                     <option value="Intel Core i9-13900K">Intel Core i9-13900K</option>
                                     <option value="Intel Core i9-12900K">Intel Core i9-12900K</option>
-                                    <option value="Intel Core i9-11900K">Intel Core i9-11900K</option>
-                                    <option value="Intel Core i9-10900K">Intel Core i9-10900K</option>
                                 </optgroup>
                                 <optgroup label="Intel Core i7">
                                     <option value="Intel Core i7-14700K">Intel Core i7-14700K</option>
                                     <option value="Intel Core i7-13700K">Intel Core i7-13700K</option>
                                     <option value="Intel Core i7-12700K">Intel Core i7-12700K</option>
-                                    <option value="Intel Core i7-11700K">Intel Core i7-11700K</option>
-                                    <option value="Intel Core i7-10700K">Intel Core i7-10700K</option>
-                                    <option value="Intel Core i7-9700K">Intel Core i7-9700K</option>
                                 </optgroup>
                                 <optgroup label="Intel Core i5">
                                     <option value="Intel Core i5-14600K">Intel Core i5-14600K</option>
                                     <option value="Intel Core i5-13600K">Intel Core i5-13600K</option>
                                     <option value="Intel Core i5-12600K">Intel Core i5-12600K</option>
-                                    <option value="Intel Core i5-11600K">Intel Core i5-11600K</option>
-                                    <option value="Intel Core i5-10600K">Intel Core i5-10600K</option>
-                                    <option value="Intel Core i5-9600K">Intel Core i5-9600K</option>
-                                </optgroup>
-                                <optgroup label="Intel Core i3">
-                                    <option value="Intel Core i3-14100">Intel Core i3-14100</option>
-                                    <option value="Intel Core i3-13100">Intel Core i3-13100</option>
-                                    <option value="Intel Core i3-12100">Intel Core i3-12100</option>
-                                    <option value="Intel Core i3-10100">Intel Core i3-10100</option>
-                                    <option value="Intel Core i3-9100">Intel Core i3-9100</option>
                                 </optgroup>
                                 <optgroup label="AMD Ryzen 9">
                                     <option value="AMD Ryzen 9 7950X">AMD Ryzen 9 7950X</option>
                                     <option value="AMD Ryzen 9 7900X">AMD Ryzen 9 7900X</option>
                                     <option value="AMD Ryzen 9 5950X">AMD Ryzen 9 5950X</option>
-                                    <option value="AMD Ryzen 9 5900X">AMD Ryzen 9 5900X</option>
-                                    <option value="AMD Ryzen 9 3950X">AMD Ryzen 9 3950X</option>
                                 </optgroup>
                                 <optgroup label="AMD Ryzen 7">
                                     <option value="AMD Ryzen 7 7800X3D">AMD Ryzen 7 7800X3D</option>
                                     <option value="AMD Ryzen 7 7700X">AMD Ryzen 7 7700X</option>
                                     <option value="AMD Ryzen 7 5800X3D">AMD Ryzen 7 5800X3D</option>
-                                    <option value="AMD Ryzen 7 5800X">AMD Ryzen 7 5800X</option>
-                                    <option value="AMD Ryzen 7 5700X">AMD Ryzen 7 5700X</option>
-                                    <option value="AMD Ryzen 7 3700X">AMD Ryzen 7 3700X</option>
-                                </optgroup>
-                                <optgroup label="AMD Ryzen 5">
-                                    <option value="AMD Ryzen 5 7600X">AMD Ryzen 5 7600X</option>
-                                    <option value="AMD Ryzen 5 7600">AMD Ryzen 5 7600</option>
-                                    <option value="AMD Ryzen 5 5600X">AMD Ryzen 5 5600X</option>
-                                    <option value="AMD Ryzen 5 5600">AMD Ryzen 5 5600</option>
-                                    <option value="AMD Ryzen 5 5500">AMD Ryzen 5 5500</option>
-                                    <option value="AMD Ryzen 5 3600">AMD Ryzen 5 3600</option>
-                                </optgroup>
-                                <optgroup label="AMD Ryzen 3">
-                                    <option value="AMD Ryzen 3 7300X">AMD Ryzen 3 7300X</option>
-                                    <option value="AMD Ryzen 3 5300G">AMD Ryzen 3 5300G</option>
-                                    <option value="AMD Ryzen 3 3300X">AMD Ryzen 3 3300X</option>
-                                    <option value="AMD Ryzen 3 3100">AMD Ryzen 3 3100</option>
-                                </optgroup>
-                                <optgroup label="Otros Procesadores">
-                                    <option value="Intel Pentium Gold G7400">Intel Pentium Gold G7400</option>
-                                    <option value="Intel Celeron G6900">Intel Celeron G6900</option>
-                                    <option value="AMD Athlon 3000G">AMD Athlon 3000G</option>
-                                    <option value="Apple M3">Apple M3</option>
-                                    <option value="Apple M2">Apple M2</option>
-                                    <option value="Apple M1">Apple M1</option>
                                 </optgroup>
                             </select>
                         </div>
@@ -723,72 +886,17 @@
                                 <optgroup label="NVIDIA GeForce RTX 40 Series">
                                     <option value="NVIDIA GeForce RTX 4090">NVIDIA GeForce RTX 4090</option>
                                     <option value="NVIDIA GeForce RTX 4080">NVIDIA GeForce RTX 4080</option>
-                                    <option value="NVIDIA GeForce RTX 4070 Ti">NVIDIA GeForce RTX 4070 Ti</option>
                                     <option value="NVIDIA GeForce RTX 4070">NVIDIA GeForce RTX 4070</option>
-                                    <option value="NVIDIA GeForce RTX 4060 Ti">NVIDIA GeForce RTX 4060 Ti</option>
-                                    <option value="NVIDIA GeForce RTX 4060">NVIDIA GeForce RTX 4060</option>
                                 </optgroup>
                                 <optgroup label="NVIDIA GeForce RTX 30 Series">
-                                    <option value="NVIDIA GeForce RTX 3090 Ti">NVIDIA GeForce RTX 3090 Ti</option>
                                     <option value="NVIDIA GeForce RTX 3090">NVIDIA GeForce RTX 3090</option>
-                                    <option value="NVIDIA GeForce RTX 3080 Ti">NVIDIA GeForce RTX 3080 Ti</option>
                                     <option value="NVIDIA GeForce RTX 3080">NVIDIA GeForce RTX 3080</option>
-                                    <option value="NVIDIA GeForce RTX 3070 Ti">NVIDIA GeForce RTX 3070 Ti</option>
                                     <option value="NVIDIA GeForce RTX 3070">NVIDIA GeForce RTX 3070</option>
-                                    <option value="NVIDIA GeForce RTX 3060 Ti">NVIDIA GeForce RTX 3060 Ti</option>
-                                    <option value="NVIDIA GeForce RTX 3060">NVIDIA GeForce RTX 3060</option>
-                                    <option value="NVIDIA GeForce RTX 3050">NVIDIA GeForce RTX 3050</option>
-                                </optgroup>
-                                <optgroup label="NVIDIA GeForce RTX 20 Series">
-                                    <option value="NVIDIA GeForce RTX 2080 Ti">NVIDIA GeForce RTX 2080 Ti</option>
-                                    <option value="NVIDIA GeForce RTX 2080 Super">NVIDIA GeForce RTX 2080 Super</option>
-                                    <option value="NVIDIA GeForce RTX 2080">NVIDIA GeForce RTX 2080</option>
-                                    <option value="NVIDIA GeForce RTX 2070 Super">NVIDIA GeForce RTX 2070 Super</option>
-                                    <option value="NVIDIA GeForce RTX 2070">NVIDIA GeForce RTX 2070</option>
-                                    <option value="NVIDIA GeForce RTX 2060 Super">NVIDIA GeForce RTX 2060 Super</option>
-                                    <option value="NVIDIA GeForce RTX 2060">NVIDIA GeForce RTX 2060</option>
-                                </optgroup>
-                                <optgroup label="NVIDIA GeForce GTX 16 Series">
-                                    <option value="NVIDIA GeForce GTX 1660 Ti">NVIDIA GeForce GTX 1660 Ti</option>
-                                    <option value="NVIDIA GeForce GTX 1660 Super">NVIDIA GeForce GTX 1660 Super</option>
-                                    <option value="NVIDIA GeForce GTX 1660">NVIDIA GeForce GTX 1660</option>
-                                    <option value="NVIDIA GeForce GTX 1650 Super">NVIDIA GeForce GTX 1650 Super</option>
-                                    <option value="NVIDIA GeForce GTX 1650">NVIDIA GeForce GTX 1650</option>
                                 </optgroup>
                                 <optgroup label="AMD Radeon RX 7000 Series">
                                     <option value="AMD Radeon RX 7900 XTX">AMD Radeon RX 7900 XTX</option>
                                     <option value="AMD Radeon RX 7900 XT">AMD Radeon RX 7900 XT</option>
                                     <option value="AMD Radeon RX 7800 XT">AMD Radeon RX 7800 XT</option>
-                                    <option value="AMD Radeon RX 7700 XT">AMD Radeon RX 7700 XT</option>
-                                    <option value="AMD Radeon RX 7600">AMD Radeon RX 7600</option>
-                                </optgroup>
-                                <optgroup label="AMD Radeon RX 6000 Series">
-                                    <option value="AMD Radeon RX 6950 XT">AMD Radeon RX 6950 XT</option>
-                                    <option value="AMD Radeon RX 6900 XT">AMD Radeon RX 6900 XT</option>
-                                    <option value="AMD Radeon RX 6800 XT">AMD Radeon RX 6800 XT</option>
-                                    <option value="AMD Radeon RX 6800">AMD Radeon RX 6800</option>
-                                    <option value="AMD Radeon RX 6700 XT">AMD Radeon RX 6700 XT</option>
-                                    <option value="AMD Radeon RX 6700">AMD Radeon RX 6700</option>
-                                    <option value="AMD Radeon RX 6600 XT">AMD Radeon RX 6600 XT</option>
-                                    <option value="AMD Radeon RX 6600">AMD Radeon RX 6600</option>
-                                    <option value="AMD Radeon RX 6500 XT">AMD Radeon RX 6500 XT</option>
-                                    <option value="AMD Radeon RX 6400">AMD Radeon RX 6400</option>
-                                </optgroup>
-                                <optgroup label="AMD Radeon RX 5000 Series">
-                                    <option value="AMD Radeon RX 5700 XT">AMD Radeon RX 5700 XT</option>
-                                    <option value="AMD Radeon RX 5700">AMD Radeon RX 5700</option>
-                                    <option value="AMD Radeon RX 5600 XT">AMD Radeon RX 5600 XT</option>
-                                    <option value="AMD Radeon RX 5500 XT">AMD Radeon RX 5500 XT</option>
-                                </optgroup>
-                                <optgroup label="Tarjetas Integradas">
-                                    <option value="Intel Iris Xe Graphics">Intel Iris Xe Graphics</option>
-                                    <option value="Intel UHD Graphics 770">Intel UHD Graphics 770</option>
-                                    <option value="Intel UHD Graphics 750">Intel UHD Graphics 750</option>
-                                    <option value="Intel UHD Graphics 630">Intel UHD Graphics 630</option>
-                                    <option value="AMD Radeon Graphics">AMD Radeon Graphics</option>
-                                    <option value="Apple M3 GPU">Apple M3 GPU</option>
-                                    <option value="Apple M2 GPU">Apple M2 GPU</option>
-                                    <option value="Apple M1 GPU">Apple M1 GPU</option>
                                 </optgroup>
                             </select>
                         </div>
@@ -808,23 +916,51 @@
                 </div>
             </div>
 
-            <div class="card output-container">
-                <div class="card-header">
-                    <div class="card-icon">
-                        <i class="fas fa-chart-bar"></i>
-                    </div>
-                    <h2 class="card-title">Resultados del Análisis</h2>
+            <div class="card results-container" id="results-container" style="display: none;">
+                <div class="results-header">
+                    <h2 class="results-title">Resultados del Análisis</h2>
+                    <p class="results-subtitle">Evaluación completa del rendimiento de tu sistema</p>
                 </div>
-                <div class="output-box" id="out">
-Presiona el botón para comenzar el análisis completo de tu sistema.
-
-El análisis evaluará:
-• Procesador (CPU)
-• Memoria RAM
-• Almacenamiento
-• Tarjeta gráfica (GPU)
-
-Los resultados incluirán una evaluación de rendimiento para diferentes perfiles de uso.
+                
+                <div class="score-display">
+                    <div class="score-circle">
+                        <canvas id="score-chart" width="180" height="180"></canvas>
+                        <div class="score-value" id="main-score">0%</div>
+                    </div>
+                    <div class="score-label" id="main-profile">Puntuación General</div>
+                </div>
+                
+                <div class="results-grid">
+                    <div class="chart-container">
+                        <h3 class="chart-title">Rendimiento por Perfil</h3>
+                        <canvas id="profile-chart"></canvas>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <h3 class="chart-title">Distribución de Puntuación</h3>
+                        <canvas id="distribution-chart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="profile-grid" id="profile-cards">
+                    <!-- Tarjetas de perfil se llenarán dinámicamente -->
+                </div>
+                
+                <div class="component-analysis">
+                    <h3 class="chart-title">Análisis por Componente</h3>
+                    <div class="component-grid" id="component-cards">
+                        <!-- Tarjetas de componentes se llenarán dinámicamente -->
+                    </div>
+                </div>
+                
+                <div class="recommendations">
+                    <h3 class="recommendations-title">
+                        <i class="fas fa-lightbulb"></i>
+                        Recomendaciones de Mejora
+                    </h3>
+                    <ul class="recommendations-list" id="recommendations-list">
+                        <!-- Recomendaciones se llenarán dinámicamente -->
+                    </ul>
                 </div>
             </div>
         </main>
@@ -849,9 +985,15 @@ Los resultados incluirán una evaluación de rendimiento para diferentes perfile
         const cpuCoresInput = document.getElementById('cpu-cores');
         const gpuModelSelect = document.getElementById('gpu-model');
         const gpuVramInput = document.getElementById('gpu-vram');
+        const resultsContainer = document.getElementById('results-container');
+        const mainScoreElement = document.getElementById('main-score');
+        const mainProfileElement = document.getElementById('main-profile');
+        const profileCardsContainer = document.getElementById('profile-cards');
+        const componentCardsContainer = document.getElementById('component-cards');
+        const recommendationsList = document.getElementById('recommendations-list');
 
-        // Variables para datos del sistema
-        let systemData = null;
+        // Variables para gráficos
+        let scoreChart, profileChart, distributionChart;
 
         // Configuración de pestañas
         tabs.forEach(tab => {
@@ -909,6 +1051,363 @@ Los resultados incluirán una evaluación de rendimiento para diferentes perfile
             `;
         }
 
+        // Función para mostrar resultados visuales
+        function showResults(data, analysisResult) {
+            // Mostrar contenedor de resultados
+            resultsContainer.style.display = 'block';
+            
+            // Actualizar puntuación principal
+            mainScoreElement.textContent = `${analysisResult.main_score}%`;
+            mainProfileElement.textContent = analysisResult.main_profile;
+            
+            // Crear gráfico de puntuación circular
+            createScoreChart(analysisResult.main_score);
+            
+            // Crear gráficos
+            createProfileChart(analysisResult.scores);
+            createDistributionChart(analysisResult.scores);
+            
+            // Crear tarjetas de perfil
+            createProfileCards(analysisResult.scores);
+            
+            // Crear análisis de componentes
+            createComponentAnalysis(data, analysisResult);
+            
+            // Crear recomendaciones
+            createRecommendations(analysisResult.main_score, data);
+        }
+
+        // Función para crear gráfico de puntuación circular
+        function createScoreChart(score) {
+            const ctx = document.getElementById('score-chart').getContext('2d');
+            
+            if (scoreChart) {
+                scoreChart.destroy();
+            }
+            
+            scoreChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    datasets: [{
+                        data: [score, 100 - score],
+                        backgroundColor: [
+                            getScoreColor(score),
+                            'rgba(255, 255, 255, 0.1)'
+                        ],
+                        borderWidth: 0,
+                        borderRadius: 10
+                    }]
+                },
+                options: {
+                    cutout: '70%',
+                    responsive: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            enabled: false
+                        }
+                    }
+                }
+            });
+        }
+
+        // Función para crear gráfico de perfiles
+        function createProfileChart(scores) {
+            const ctx = document.getElementById('profile-chart').getContext('2d');
+            const profiles = Object.keys(scores);
+            const scoreValues = Object.values(scores).map(score => score * 100);
+            
+            if (profileChart) {
+                profileChart.destroy();
+            }
+            
+            profileChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: profiles,
+                    datasets: [{
+                        label: 'Puntuación (%)',
+                        data: scoreValues,
+                        backgroundColor: scoreValues.map(score => getScoreColor(score)),
+                        borderColor: 'rgba(255, 255, 255, 0.2)',
+                        borderWidth: 1,
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: 'rgba(255, 255, 255, 0.7)'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                color: 'rgba(255, 255, 255, 0.7)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Función para crear gráfico de distribución
+        function createDistributionChart(scores) {
+            const ctx = document.getElementById('distribution-chart').getContext('2d');
+            const scoreValues = Object.values(scores).map(score => score * 100);
+            
+            if (distributionChart) {
+                distributionChart.destroy();
+            }
+            
+            distributionChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: Object.keys(scores),
+                    datasets: [{
+                        data: scoreValues,
+                        backgroundColor: [
+                            '#4cc9f0',
+                            '#3a86f8',
+                            '#7209b7',
+                            '#f72585',
+                            '#00f5d4'
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: 'rgba(255, 255, 255, 0.7)',
+                                padding: 15
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Función para crear tarjetas de perfil
+        function createProfileCards(scores) {
+            let profileCardsHTML = '';
+            
+            Object.entries(scores).forEach(([profile, score]) => {
+                const percentage = (score * 100).toFixed(1);
+                profileCardsHTML += `
+                    <div class="profile-card fade-in">
+                        <div class="profile-name">${profile}</div>
+                        <div class="profile-score">${percentage}%</div>
+                        <div class="profile-bar">
+                            <div class="profile-fill" style="width: ${percentage}%"></div>
+                        </div>
+                        <div class="profile-rating">
+                            <div class="rating-stars">
+                                ${getStars(score)}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            profileCardsContainer.innerHTML = profileCardsHTML;
+            
+            // Animar barras de progreso
+            setTimeout(() => {
+                document.querySelectorAll('.profile-fill').forEach(fill => {
+                    fill.style.transition = 'width 1.5s ease';
+                });
+            }, 100);
+        }
+
+        // Función para crear análisis de componentes
+        function createComponentAnalysis(data, analysisResult) {
+            let componentHTML = '';
+            
+            // Calcular puntuaciones individuales para componentes
+            const cpuScore = calculateCPUScore(data);
+            const ramScore = calculateRAMScore(data);
+            const storageScore = calculateStorageScore(data);
+            const gpuScore = calculateGPUScore(data);
+            
+            const components = [
+                {
+                    name: 'Procesador (CPU)',
+                    icon: 'microchip',
+                    details: data.cpu_model,
+                    score: cpuScore
+                },
+                {
+                    name: 'Memoria RAM',
+                    icon: 'memory',
+                    details: `${data.ram_gb} GB`,
+                    score: ramScore
+                },
+                {
+                    name: 'Almacenamiento',
+                    icon: 'hdd',
+                    details: data.disk_type,
+                    score: storageScore
+                },
+                {
+                    name: 'Tarjeta Gráfica (GPU)',
+                    icon: 'gamepad',
+                    details: data.gpu_model,
+                    score: gpuScore
+                }
+            ];
+            
+            components.forEach(component => {
+                componentHTML += `
+                    <div class="component-card fade-in">
+                        <div class="component-header">
+                            <div class="component-icon">
+                                <i class="fas fa-${component.icon}"></i>
+                            </div>
+                            <div class="component-name">${component.name}</div>
+                        </div>
+                        <div class="component-details">${component.details}</div>
+                        <div class="component-rating">
+                            <div class="rating-stars">
+                                ${getStars(component.score / 100)}
+                            </div>
+                            <div class="rating-text">${Math.round(component.score)}%</div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            componentCardsContainer.innerHTML = componentHTML;
+        }
+
+        // Función para crear recomendaciones
+        function createRecommendations(score, data) {
+            let recommendationsHTML = '';
+            const recommendations = [];
+            
+            if (score < 60) {
+                recommendations.push('Considera actualizar tu procesador para mejorar el rendimiento general');
+                recommendations.push('Aumentar la memoria RAM mejorará significativamente la multitarea');
+            }
+            
+            if (data.ram_gb < 8) {
+                recommendations.push('Se recomienda al menos 8GB de RAM para un rendimiento óptimo');
+            }
+            
+            if (data.disk_type === 'HDD') {
+                recommendations.push('Cambiar a un SSD mejorará drásticamente los tiempos de carga');
+            }
+            
+            if (data.gpu_vram_gb < 4 && score >= 70) {
+                recommendations.push('Una GPU con más VRAM mejorará el rendimiento en juegos y aplicaciones gráficas');
+            }
+            
+            if (score >= 80) {
+                recommendations.push('Tu sistema está bien equilibrado para la mayoría de tareas');
+                recommendations.push('Considera optimizaciones de software para maximizar el rendimiento');
+            }
+            
+            // Recomendaciones generales
+            recommendations.push('Mantén tus controladores actualizados para el mejor rendimiento');
+            recommendations.push('Realiza mantenimiento regular del sistema para mantener el rendimiento');
+            
+            recommendations.forEach(rec => {
+                recommendationsHTML += `
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        ${rec}
+                    </li>
+                `;
+            });
+            
+            recommendationsList.innerHTML = recommendationsHTML;
+        }
+
+        // Funciones auxiliares para cálculos de puntuación
+        function calculateCPUScore(data) {
+            let score = 50;
+            if (data.cpu_model.includes('i9') || data.cpu_model.includes('Ryzen 9')) score += 35;
+            else if (data.cpu_model.includes('i7') || data.cpu_model.includes('Ryzen 7')) score += 25;
+            else if (data.cpu_model.includes('i5') || data.cpu_model.includes('Ryzen 5')) score += 15;
+            
+            if (data.cpu_speed_ghz > 4.0) score += 10;
+            if (data.cores >= 8) score += 10;
+            
+            return Math.min(score, 100);
+        }
+
+        function calculateRAMScore(data) {
+            if (data.ram_gb >= 32) return 100;
+            if (data.ram_gb >= 16) return 85;
+            if (data.ram_gb >= 8) return 70;
+            if (data.ram_gb >= 4) return 50;
+            return 30;
+        }
+
+        function calculateStorageScore(data) {
+            if (data.disk_type === 'NVMe') return 95;
+            if (data.disk_type === 'SSD') return 80;
+            return 50; // HDD
+        }
+
+        function calculateGPUScore(data) {
+            let score = 50;
+            if (data.gpu_model.includes('RTX 40') || data.gpu_model.includes('RX 7900')) score += 40;
+            else if (data.gpu_model.includes('RTX 30') || data.gpu_model.includes('RX 6000')) score += 30;
+            else if (data.gpu_model.includes('RTX 20') || data.gpu_model.includes('RX 5000')) score += 20;
+            
+            if (data.gpu_vram_gb >= 8) score += 10;
+            else if (data.gpu_vram_gb >= 4) score += 5;
+            
+            return Math.min(score, 100);
+        }
+
+        // Función para obtener color basado en puntuación
+        function getScoreColor(score) {
+            if (score >= 80) return '#00f5d4'; // Success
+            if (score >= 60) return '#4cc9f0'; // Primary
+            if (score >= 40) return '#f72585'; // Warning
+            return '#7209b7'; // Accent
+        }
+
+        // Función para obtener estrellas basadas en puntuación
+        function getStars(score) {
+            const fullStars = Math.floor(score * 5);
+            const emptyStars = 5 - fullStars;
+            
+            let starsHTML = '';
+            for (let i = 0; i < fullStars; i++) {
+                starsHTML += '<i class="fas fa-star"></i>';
+            }
+            for (let i = 0; i < emptyStars; i++) {
+                starsHTML += '<i class="far fa-star"></i>';
+            }
+            
+            return starsHTML;
+        }
+
+        // Resto del código (validación, análisis, etc.) se mantiene igual...
+        // [El resto del código JavaScript permanece igual que en la versión anterior]
+        
         // Función para validar datos manuales
         function validateManualData() {
             const cpuModel = cpuModelSelect.value;
@@ -965,23 +1464,17 @@ Los resultados incluirán una evaluación de rendimiento para diferentes perfile
             updateProgress(10);
             
             try {
-                out.innerText = '🔄 Iniciando análisis completo del sistema...\n\n';
-                
                 if (!isManual) {
-                    // Simular detección automática (en un entorno real usarías systeminformation)
-                    out.innerText += '🔍 Obteniendo información de CPU...\n';
+                    // Simular detección automática
                     await new Promise(resolve => setTimeout(resolve, 1000));
                     updateProgress(30);
                     
-                    out.innerText += '🔍 Obteniendo información de RAM...\n';
                     await new Promise(resolve => setTimeout(resolve, 1000));
                     updateProgress(50);
                     
-                    out.innerText += '🔍 Obteniendo información de almacenamiento...\n';
                     await new Promise(resolve => setTimeout(resolve, 1000));
                     updateProgress(70);
                     
-                    out.innerText += '🔍 Obteniendo información de GPU...\n';
                     await new Promise(resolve => setTimeout(resolve, 1000));
                     updateProgress(90);
                     
@@ -1000,97 +1493,26 @@ Los resultados incluirán una evaluación de rendimiento para diferentes perfile
                 // Mostrar estadísticas
                 showStats(data);
                 
-                out.innerText += '\n📊 Datos del sistema detectados:\n';
-                out.innerText += `• Procesador: ${data.cpu_model}\n`;
-                out.innerText += `• Velocidad: ${data.cpu_speed_ghz} GHz\n`;
-                out.innerText += `• Núcleos: ${data.cores}\n`;
-                out.innerText += `• RAM: ${data.ram_gb} GB\n`;
-                out.innerText += `• Almacenamiento: ${data.disk_type}\n`;
-                out.innerText += `• Gráficos: ${data.gpu_model}\n`;
-                
-                out.innerText += '\n🔄 Enviando datos al servidor para análisis...\n';
                 updateProgress(95);
 
                 try {
                     // Enviar al backend
                     const res = await axios.post('https://analizatupc-backend.onrender.com/api/analyze', data);
                     
-                    let resultText = '\n✅ ¡ANÁLISIS COMPLETADO!\n\n';
-                    resultText += '='.repeat(50) + '\n';
-                    resultText += `🎯 PERFIL PRINCIPAL: ${res.data.result.main_profile}\n`;
-                    resultText += `📊 PUNTUACIÓN: ${res.data.result.main_score}%\n`;
-                    resultText += '='.repeat(50) + '\n\n';
-                    
-                    resultText += '📈 ADECUACIÓN POR PERFILES:\n';
-                    resultText += '-'.repeat(30) + '\n';
-                    
-                    Object.entries(res.data.result.scores).forEach(([profile, score]) => {
-                        const percentage = (score * 100).toFixed(1);
-                        const bar = '█'.repeat(Math.floor(percentage / 5)) + '░'.repeat(20 - Math.floor(percentage / 5));
-                        resultText += `• ${profile.padEnd(15)}: ${bar} ${percentage}%\n`;
-                    });
-                    
-                    resultText += '\n📎 ENLACES DE DESCARGA:\n';
-                    resultText += '-'.repeat(30) + '\n';
-                    
-                    if (res.data.pdf_url) {
-                        resultText += `📄 Informe PDF: ${res.data.pdf_url}\n`;
-                    }
-                    if (res.data.json_url) {
-                        resultText += `📊 Datos JSON: ${res.data.json_url}\n`;
-                    }
-                    
-                    if (!res.data.pdf_url && !res.data.json_url) {
-                        resultText += '⚠️ Los archivos no se subieron a Dropbox. Verifica la configuración.\n';
-                    }
-                    
-                    resultText += `\n🕐 Análisis generado: ${new Date().toLocaleString()}`;
-                    resultText += `\n\n💡 Recomendación: ${getRecommendation(res.data.result.main_score)}`;
-
-                    out.innerText += resultText;
+                    // Mostrar resultados visuales
+                    showResults(data, res.data.result);
                     
                 } catch (apiError) {
                     // Si hay error con la API, mostrar análisis local
-                    out.innerText += '\n⚠️ No se pudo conectar con el servidor. Mostrando análisis local...\n\n';
-                    
-                    // Análisis local simulado
                     const localResult = generateLocalAnalysis(data);
                     
-                    let resultText = '\n✅ ¡ANÁLISIS LOCAL COMPLETADO!\n\n';
-                    resultText += '='.repeat(50) + '\n';
-                    resultText += `🎯 PERFIL PRINCIPAL: ${localResult.main_profile}\n`;
-                    resultText += `📊 PUNTUACIÓN: ${localResult.main_score}%\n`;
-                    resultText += '='.repeat(50) + '\n\n';
-                    
-                    resultText += '📈 ADECUACIÓN POR PERFILES:\n';
-                    resultText += '-'.repeat(30) + '\n';
-                    
-                    Object.entries(localResult.scores).forEach(([profile, score]) => {
-                        const percentage = (score * 100).toFixed(1);
-                        const bar = '█'.repeat(Math.floor(percentage / 5)) + '░'.repeat(20 - Math.floor(percentage / 5));
-                        resultText += `• ${profile.padEnd(15)}: ${bar} ${percentage}%\n`;
-                    });
-                    
-                    resultText += `\n🕐 Análisis generado: ${new Date().toLocaleString()}`;
-                    resultText += `\n\n💡 Recomendación: ${getRecommendation(localResult.main_score)}`;
-                    resultText += '\n\n⚠️ Nota: Este es un análisis local. Para resultados más precisos, verifica la conexión al servidor.';
-
-                    out.innerText += resultText;
+                    // Mostrar resultados visuales
+                    showResults(data, localResult);
                 }
 
                 updateProgress(100);
 
             } catch (e) {
-                out.innerText = '❌ ERROR EN EL ANÁLISIS\n\n';
-                out.innerText += 'Descripción del error:\n';
-                out.innerText += e.toString() + '\n\n';
-                
-                out.innerText += '🔧 SOLUCIÓN DE PROBLEMAS:\n';
-                out.innerText += '1. ✅ Verifica tu conexión a internet\n';
-                out.innerText += '2. ✅ Asegúrate de que el servidor esté en ejecución\n';
-                out.innerText += '3. ✅ Comprueba que los puertos necesarios estén disponibles\n';
-                out.innerText += '4. ✅ Revisa la configuración de seguridad/firewall\n';
-                
                 console.error('Error completo:', e);
                 updateProgress(0);
             } finally {
@@ -1135,14 +1557,6 @@ Los resultados incluirán una evaluación de rendimiento para diferentes perfile
                     'Streaming': Math.min(baseScore - 5, 100)
                 }
             };
-        }
-
-        // Función para dar recomendaciones basadas en la puntuación
-        function getRecommendation(score) {
-            if (score >= 80) return "Tu equipo tiene un excelente rendimiento para la mayoría de tareas.";
-            if (score >= 60) return "Buen rendimiento general. Considera actualizaciones menores para tareas más exigentes.";
-            if (score >= 40) return "Rendimiento adecuado para tareas básicas. Considera mejoras para uso profesional.";
-            return "Rendimiento limitado. Se recomiendan mejoras de hardware para mejor experiencia.";
         }
 
         // Event listeners
