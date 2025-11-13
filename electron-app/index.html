@@ -389,22 +389,23 @@
         }
 
         .score-circle {
-            width: 180px;
-            height: 180px;
-            margin: 0 auto;
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        width: 200px; /* Aumenta el tamaño */
+        height: 200px; /* Aumenta el tamaño */
+        margin: 0 auto;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         }
 
         .score-value {
-            font-size: 3rem;
+            font-size: 2.5rem; /* Reduce ligeramente el tamaño de fuente */
             font-weight: 800;
             background: linear-gradient(45deg, var(--primary), var(--success));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             z-index: 2;
+            position: absolute; /* Asegura que esté centrado */
         }
 
         .score-label {
@@ -1079,39 +1080,41 @@
 
         // Función para crear gráfico de puntuación circular
         function createScoreChart(score) {
-            const ctx = document.getElementById('score-chart').getContext('2d');
-            
-            if (scoreChart) {
-                scoreChart.destroy();
-            }
-            
-            scoreChart = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    datasets: [{
-                        data: [score, 100 - score],
-                        backgroundColor: [
-                            getScoreColor(score),
-                            'rgba(255, 255, 255, 0.1)'
-                        ],
-                        borderWidth: 0,
-                        borderRadius: 10
-                    }]
-                },
-                options: {
-                    cutout: '70%',
-                    responsive: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        },
-                        tooltip: {
-                            enabled: false
-                        }
+        const ctx = document.getElementById('score-chart').getContext('2d');
+        
+        if (scoreChart) {
+            scoreChart.destroy();
+        }
+        
+        scoreChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                datasets: [{
+                    data: [score, 100 - score],
+                    backgroundColor: [
+                        getScoreColor(score),
+                        'rgba(255, 255, 255, 0.1)'
+                    ],
+                    borderWidth: 0,
+                    borderRadius: 10,
+                    // Añade espacio entre los segmentos
+                    spacing: 5
+                }]
+            },
+            options: {
+                cutout: '75%', // Aumenta el corte central para más espacio
+                responsive: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        enabled: false
                     }
                 }
-            });
-        }
+            }
+        });
+    }
 
         // Función para crear gráfico de perfiles
         function createProfileChart(scores) {
