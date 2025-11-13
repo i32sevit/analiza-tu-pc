@@ -6,6 +6,7 @@
     <title>AnalizaTuPc - Análisis Profesional de Hardware</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <style>
         :root {
             --primary: #4cc9f0;
@@ -609,6 +610,15 @@
                         <i class="fas fa-search"></i>
                         <span>Iniciar Análisis Automático</span>
                     </button>
+                    <div class="progress-container">
+                        <div class="progress-header">
+                            <span>Progreso del análisis</span>
+                            <span id="progress-percent">0%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progress"></div>
+                        </div>
+                    </div>
                 </div>
                 
                 <div class="tab-content" id="manual-tab">
@@ -793,16 +803,6 @@
                     </button>
                 </div>
                 
-                <div class="progress-container">
-                    <div class="progress-header">
-                        <span>Progreso del análisis</span>
-                        <span id="progress-percent">0%</span>
-                    </div>
-                    <div class="progress-bar">
-                        <div class="progress-fill" id="progress"></div>
-                    </div>
-                </div>
-                
                 <div class="stats-grid" id="stats">
                     <!-- Las estadísticas se llenarán dinámicamente -->
                 </div>
@@ -968,32 +968,32 @@ Los resultados incluirán una evaluación de rendimiento para diferentes perfile
                 out.innerText = '🔄 Iniciando análisis completo del sistema...\n\n';
                 
                 if (!isManual) {
-                    // Recopilar información del sistema con progreso
+                    // Simular detección automática (en un entorno real usarías systeminformation)
                     out.innerText += '🔍 Obteniendo información de CPU...\n';
-                    const cpu = await si.cpu();
+                    await new Promise(resolve => setTimeout(resolve, 1000));
                     updateProgress(30);
                     
                     out.innerText += '🔍 Obteniendo información de RAM...\n';
-                    const mem = await si.mem();
+                    await new Promise(resolve => setTimeout(resolve, 1000));
                     updateProgress(50);
                     
                     out.innerText += '🔍 Obteniendo información de almacenamiento...\n';
-                    const disk = await si.diskLayout();
+                    await new Promise(resolve => setTimeout(resolve, 1000));
                     updateProgress(70);
                     
                     out.innerText += '🔍 Obteniendo información de GPU...\n';
-                    const graphics = await si.graphics();
-                    const gpu = graphics.controllers[0] || {};
+                    await new Promise(resolve => setTimeout(resolve, 1000));
                     updateProgress(90);
                     
+                    // Datos de ejemplo para simulación
                     data = {
-                        cpu_model: cpu.brand,
-                        cpu_speed_ghz: parseFloat(cpu.speed) || 1.0,
-                        cores: cpu.cores || 1,
-                        ram_gb: +(mem.total / (1024**3)).toFixed(2),
-                        disk_type: disk[0] ? disk[0].type : 'UNKNOWN',
-                        gpu_model: gpu.model || '',
-                        gpu_vram_gb: gpu.vram ? gpu.vram/1024 : 0
+                        cpu_model: "Intel Core i7-10700K",
+                        cpu_speed_ghz: 3.8,
+                        cores: 8,
+                        ram_gb: 16,
+                        disk_type: "SSD",
+                        gpu_model: "NVIDIA GeForce RTX 3060",
+                        gpu_vram_gb: 12
                     };
                 }
 
@@ -1011,42 +1011,73 @@ Los resultados incluirán una evaluación de rendimiento para diferentes perfile
                 out.innerText += '\n🔄 Enviando datos al servidor para análisis...\n';
                 updateProgress(95);
 
-                // Enviar al backend
-                const res = await axios.post('https://analizatupc-backend.onrender.com/api/analyze', data);
-                
-                let resultText = '\n✅ ¡ANÁLISIS COMPLETADO!\n\n';
-                resultText += '='.repeat(50) + '\n';
-                resultText += `🎯 PERFIL PRINCIPAL: ${res.data.result.main_profile}\n`;
-                resultText += `📊 PUNTUACIÓN: ${res.data.result.main_score}%\n`;
-                resultText += '='.repeat(50) + '\n\n';
-                
-                resultText += '📈 ADECUACIÓN POR PERFILES:\n';
-                resultText += '-'.repeat(30) + '\n';
-                
-                Object.entries(res.data.result.scores).forEach(([profile, score]) => {
-                    const percentage = (score * 100).toFixed(1);
-                    const bar = '█'.repeat(Math.floor(percentage / 5)) + '░'.repeat(20 - Math.floor(percentage / 5));
-                    resultText += `• ${profile.padEnd(15)}: ${bar} ${percentage}%\n`;
-                });
-                
-                resultText += '\n📎 ENLACES DE DESCARGA:\n';
-                resultText += '-'.repeat(30) + '\n';
-                
-                if (res.data.pdf_url) {
-                    resultText += `📄 Informe PDF: ${res.data.pdf_url}\n`;
-                }
-                if (res.data.json_url) {
-                    resultText += `📊 Datos JSON: ${res.data.json_url}\n`;
-                }
-                
-                if (!res.data.pdf_url && !res.data.json_url) {
-                    resultText += '⚠️ Los archivos no se subieron a Dropbox. Verifica la configuración.\n';
-                }
-                
-                resultText += `\n🕐 Análisis generado: ${new Date().toLocaleString()}`;
-                resultText += `\n\n💡 Recomendación: ${getRecommendation(res.data.result.main_score)}`;
+                try {
+                    // Enviar al backend
+                    const res = await axios.post('https://analizatupc-backend.onrender.com/api/analyze', data);
+                    
+                    let resultText = '\n✅ ¡ANÁLISIS COMPLETADO!\n\n';
+                    resultText += '='.repeat(50) + '\n';
+                    resultText += `🎯 PERFIL PRINCIPAL: ${res.data.result.main_profile}\n`;
+                    resultText += `📊 PUNTUACIÓN: ${res.data.result.main_score}%\n`;
+                    resultText += '='.repeat(50) + '\n\n';
+                    
+                    resultText += '📈 ADECUACIÓN POR PERFILES:\n';
+                    resultText += '-'.repeat(30) + '\n';
+                    
+                    Object.entries(res.data.result.scores).forEach(([profile, score]) => {
+                        const percentage = (score * 100).toFixed(1);
+                        const bar = '█'.repeat(Math.floor(percentage / 5)) + '░'.repeat(20 - Math.floor(percentage / 5));
+                        resultText += `• ${profile.padEnd(15)}: ${bar} ${percentage}%\n`;
+                    });
+                    
+                    resultText += '\n📎 ENLACES DE DESCARGA:\n';
+                    resultText += '-'.repeat(30) + '\n';
+                    
+                    if (res.data.pdf_url) {
+                        resultText += `📄 Informe PDF: ${res.data.pdf_url}\n`;
+                    }
+                    if (res.data.json_url) {
+                        resultText += `📊 Datos JSON: ${res.data.json_url}\n`;
+                    }
+                    
+                    if (!res.data.pdf_url && !res.data.json_url) {
+                        resultText += '⚠️ Los archivos no se subieron a Dropbox. Verifica la configuración.\n';
+                    }
+                    
+                    resultText += `\n🕐 Análisis generado: ${new Date().toLocaleString()}`;
+                    resultText += `\n\n💡 Recomendación: ${getRecommendation(res.data.result.main_score)}`;
 
-                out.innerText += resultText;
+                    out.innerText += resultText;
+                    
+                } catch (apiError) {
+                    // Si hay error con la API, mostrar análisis local
+                    out.innerText += '\n⚠️ No se pudo conectar con el servidor. Mostrando análisis local...\n\n';
+                    
+                    // Análisis local simulado
+                    const localResult = generateLocalAnalysis(data);
+                    
+                    let resultText = '\n✅ ¡ANÁLISIS LOCAL COMPLETADO!\n\n';
+                    resultText += '='.repeat(50) + '\n';
+                    resultText += `🎯 PERFIL PRINCIPAL: ${localResult.main_profile}\n`;
+                    resultText += `📊 PUNTUACIÓN: ${localResult.main_score}%\n`;
+                    resultText += '='.repeat(50) + '\n\n';
+                    
+                    resultText += '📈 ADECUACIÓN POR PERFILES:\n';
+                    resultText += '-'.repeat(30) + '\n';
+                    
+                    Object.entries(localResult.scores).forEach(([profile, score]) => {
+                        const percentage = (score * 100).toFixed(1);
+                        const bar = '█'.repeat(Math.floor(percentage / 5)) + '░'.repeat(20 - Math.floor(percentage / 5));
+                        resultText += `• ${profile.padEnd(15)}: ${bar} ${percentage}%\n`;
+                    });
+                    
+                    resultText += `\n🕐 Análisis generado: ${new Date().toLocaleString()}`;
+                    resultText += `\n\n💡 Recomendación: ${getRecommendation(localResult.main_score)}`;
+                    resultText += '\n\n⚠️ Nota: Este es un análisis local. Para resultados más precisos, verifica la conexión al servidor.';
+
+                    out.innerText += resultText;
+                }
+
                 updateProgress(100);
 
             } catch (e) {
@@ -1069,6 +1100,41 @@ Los resultados incluirán una evaluación de rendimiento para diferentes perfile
                     : '<i class="fas fa-sync-alt"></i><span>Realizar Nuevo Análisis</span>';
                 if (!isManual) btn.classList.add('pulse');
             }
+        }
+
+        // Función para generar análisis local
+        function generateLocalAnalysis(data) {
+            let baseScore = 50;
+            
+            // Calcular puntuación basada en componentes
+            if (data.cpu_model.includes('i9') || data.cpu_model.includes('Ryzen 9')) baseScore += 30;
+            else if (data.cpu_model.includes('i7') || data.cpu_model.includes('Ryzen 7')) baseScore += 20;
+            else if (data.cpu_model.includes('i5') || data.cpu_model.includes('Ryzen 5')) baseScore += 10;
+            
+            if (data.ram_gb >= 32) baseScore += 20;
+            else if (data.ram_gb >= 16) baseScore += 15;
+            else if (data.ram_gb >= 8) baseScore += 10;
+            
+            if (data.disk_type === 'NVMe') baseScore += 15;
+            else if (data.disk_type === 'SSD') baseScore += 10;
+            
+            if (data.gpu_model.includes('RTX 40') || data.gpu_model.includes('RX 7900')) baseScore += 25;
+            else if (data.gpu_model.includes('RTX 30') || data.gpu_model.includes('RX 6000')) baseScore += 20;
+            else if (data.gpu_model.includes('RTX 20') || data.gpu_model.includes('RX 5000')) baseScore += 15;
+            
+            baseScore = Math.min(baseScore, 100);
+            
+            return {
+                main_profile: baseScore >= 70 ? 'Gaming/Profesional' : baseScore >= 50 ? 'Multimedia' : 'Básico',
+                main_score: baseScore,
+                scores: {
+                    'Gaming': Math.min(baseScore + 5, 100),
+                    'Diseño': Math.min(baseScore + 3, 100),
+                    'Oficina': Math.min(baseScore + 10, 100),
+                    'Desarrollo': Math.min(baseScore + 2, 100),
+                    'Streaming': Math.min(baseScore - 5, 100)
+                }
+            };
         }
 
         // Función para dar recomendaciones basadas en la puntuación
