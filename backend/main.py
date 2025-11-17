@@ -66,7 +66,7 @@ def score_system(info: dict):
     }
 
 # -------------------------
-#   PDF PERSONALIZADO
+#   PDF PERSONALIZADO CON ARIAL
 # -------------------------
 class PDF(FPDF):
     def header(self):
@@ -74,29 +74,29 @@ class PDF(FPDF):
         if os.path.exists(logo_path):
             self.image(logo_path, 10, 8, 30)
 
-        self.set_font("Roboto-Bold", size=16)
+        self.set_font("Arial", "B", 16)  # Cambiado a Arial
         self.cell(0, 10, "AnalizaPC - Informe de Sistema", ln=True, align="C")
         self.ln(5)
 
     def footer(self):
         self.set_y(-15)
-        self.set_font("Roboto-Regular", size=8)
+        self.set_font("Arial", "", 8)  # Cambiado a Arial
         self.cell(0, 10, "Generado automáticamente por AnalizaPC", align="C")
 
 # -------------------------
-#   CREACIÓN DEL PDF
+#   CREACIÓN DEL PDF CON ARIAL
 # -------------------------
 def create_pdf_report(sysinfo: dict, result: dict):
     pdf = PDF()
 
-    # Fuentes modernas con soporte UTF-8
-    pdf.add_font("Roboto-Regular", "", "fonts/Roboto-Regular.ttf", uni=True)
-    pdf.add_font("Roboto-Bold", "", "fonts/Roboto-Bold.ttf", uni=True)
+    # ELIMINADO: No necesitas cargar fuentes externas
+    # pdf.add_font("Roboto-Regular", "", "fonts/Roboto-Regular.ttf", uni=True)
+    # pdf.add_font("Roboto-Bold", "", "fonts/Roboto-Bold.ttf", uni=True)
 
     pdf.add_page()
 
     # Fecha
-    pdf.set_font("Roboto-Regular", size=12)
+    pdf.set_font("Arial", "", 12)  # Cambiado a Arial
     pdf.cell(0, 8, f"Fecha: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", ln=True)
 
     pdf.ln(5)
@@ -105,17 +105,17 @@ def create_pdf_report(sysinfo: dict, result: dict):
     pdf.ln(5)
 
     # Perfil principal
-    pdf.set_font("Roboto-Bold", size=14)
+    pdf.set_font("Arial", "B", 14)  # Cambiado a Arial
     pdf.cell(0, 10, "Perfil principal detectado:", ln=True)
 
-    pdf.set_font("Roboto-Regular", size=12)
+    pdf.set_font("Arial", "", 12)  # Cambiado a Arial
     pdf.set_fill_color(230, 230, 230)
     pdf.cell(0, 10, f"  {result['main_profile']}  ({result['main_score']}%)", ln=True, fill=True)
 
     pdf.ln(10)
 
     # Hardware detectado
-    pdf.set_font("Roboto-Bold", size=13)
+    pdf.set_font("Arial", "B", 13)  # Cambiado a Arial
     pdf.cell(0, 10, "Hardware detectado:", ln=True)
 
     items = [
@@ -125,20 +125,20 @@ def create_pdf_report(sysinfo: dict, result: dict):
         ("Almacenamiento", sysinfo.get('disk_type')),
     ]
 
-    pdf.set_font("Roboto-Regular", size=11)
+    pdf.set_font("Arial", "", 11)  # Cambiado a Arial
     for label, value in items:
-        pdf.set_font("Roboto-Bold", size=11)
+        pdf.set_font("Arial", "B", 11)  # Cambiado a Arial
         pdf.cell(50, 8, f"{label}:", border=0)
-        pdf.set_font("Roboto-Regular", size=11)
+        pdf.set_font("Arial", "", 11)  # Cambiado a Arial
         pdf.cell(0, 8, value, ln=True)
 
     pdf.ln(8)
 
     # Scores por perfil
-    pdf.set_font("Roboto-Bold", size=13)
+    pdf.set_font("Arial", "B", 13)  # Cambiado a Arial
     pdf.cell(0, 10, "Adecuación por perfiles:", ln=True)
 
-    pdf.set_font("Roboto-Regular", size=11)
+    pdf.set_font("Arial", "", 11)  # Cambiado a Arial
     pdf.set_fill_color(245, 245, 245)
 
     for profile, score in result['scores'].items():
