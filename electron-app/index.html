@@ -1500,7 +1500,8 @@
 
                 try {
                     // Enviar al backend
-                    const res = await axios.post('https://analizatupc-backend.onrender.com/api/analyze', data);
+                    const API_URL = 'https://analizatupc-backend.onrender.com';
+                    const res = await axios.post(`${API_URL}/api/analyze`, data);
                     
                     // Mostrar resultados visuales
                     showResults(data, res.data.result);
