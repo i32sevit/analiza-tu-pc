@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import axios from 'axios';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -33,6 +34,8 @@ const COLORS = {
   glass: 'rgba(255, 255, 255, 0.05)',
   glassBorder: 'rgba(255, 255, 255, 0.1)'
 };
+
+const API_URL = 'https://analizatupc-backend.onrender.com';
 
 export default function HomeScreen() {
   const [analisis, setAnalisis] = useState<any>(null);
@@ -72,60 +75,80 @@ export default function HomeScreen() {
     ]).start();
   }, []);
 
-  const ejecutarAnalisis = async (esManual = false) => {
-    setCargando(true);
-    setProgreso(0);
-    
-    try {
-      const interval = setInterval(() => {
-        setProgreso(prev => {
-          if (prev >= 90) {
-            clearInterval(interval);
-            return 90;
-          }
-          return prev + 10;
-        });
-      }, 300);
-
-      let datosAnalisis: any;
-      
-      if (esManual) {
-        if (!datosManuales.cpuModel || !datosManuales.ram) {
-          Alert.alert('Error', 'Por favor completa todos los campos requeridos');
-          clearInterval(interval);
-          setCargando(false);
-          return;
+ const ejecutarAnalisis = async (esManual = false) => {
+  setCargando(true);
+  setProgreso(0);
+  
+  let interval: NodeJS.Timeout | null = null;
+  
+  try {
+    interval = setInterval(() => {
+      setProgreso(prev => {
+        if (prev >= 90) {
+          if (interval) clearInterval(interval);
+          return 90;
         }
-        datosAnalisis = datosManuales;
-      } else {
-        datosAnalisis = {
-          cpuModel: "Intel Core i7-10700K",
-          cpuSpeed: "3.8",
-          cpuCores: "8",
-          ram: "16",
-          storageType: "SSD",
-          gpuModel: "NVIDIA GeForce RTX 3060",
-          gpuVram: "12"
-        };
-      }
+        return prev + 10;
+      });
+    }, 300);
 
-      // Simular análisis
-      setTimeout(() => {
-        clearInterval(interval);
-        setProgreso(100);
-        const resultadoLocal = generarAnalisisLocal(datosAnalisis);
-        setAnalisis(resultadoLocal);
-        Alert.alert('✅ Análisis Completado', 'Se ha generado el reporte correctamente');
+    let datosAnalisis: any;
+    
+    if (esManual) {
+      if (!datosManuales.cpuModel || !datosManuales.ram) {
+        Alert.alert('Error', 'Por favor completa todos los campos requeridos');
+        if (interval) clearInterval(interval);
         setCargando(false);
-        setProgreso(0);
-      }, 2000);
-      
-    } catch (error) {
-      console.error('Error:', error);
-      setCargando(false);
-      setProgreso(0);
+        return;
+      }
+      datosAnalisis = datosManuales;
+    } else {
+      datosAnalisis = {
+        cpuModel: "Intel Core i7-10700K",
+        cpuSpeed: "3.8",
+        cpuCores: "8",
+        ram: "16",
+        storageType: "SSD",
+        gpuModel: "NVIDIA GeForce RTX 3060", 
+        gpuVram: "12"
+      };
     }
-  };
+
+    // LLAMADA REAL A TU API EN RENDER
+    console.log('Enviando datos a:', API_URL);
+    const response = await axios.post(`${API_URL}/api/analyze`, datosAnalisis, {
+      timeout: 10000
+    });
+    
+    if (interval) clearInterval(interval);
+    setProgreso(100);
+    setAnalisis(response.data);
+    
+    Alert.alert('✅ Análisis Completado', 'Datos recibidos desde tu servidor Render');
+    
+  } catch (error: any) {
+    console.error('Error conectando con Render:', error);
+    if (interval) clearInterval(interval);
+    
+    // Fallback a análisis local
+    const datosFallback = esManual ? datosManuales : {
+      cpuModel: "Intel Core i7-10700K",
+      cpuSpeed: "3.8",
+      cpuCores: "8",
+      ram: "16",
+      storageType: "SSD",
+      gpuModel: "NVIDIA GeForce RTX 3060",
+      gpuVram: "12"
+    };
+    
+    const resultadoLocal = generarAnalisisLocal(datosFallback);
+    setAnalisis(resultadoLocal);
+    Alert.alert('⚠️ Análisis Local', 'No se pudo conectar con el servidor. Usando análisis local.');
+  } finally {
+    setCargando(false);
+    setProgreso(0);
+  }
+};
 
   const generarAnalisisLocal = (datos: any) => {
     let puntuacionBase = 50;
