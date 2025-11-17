@@ -18,6 +18,31 @@ import axios from 'axios';
 
 const { width: screenWidth } = Dimensions.get('window');
 
+// Interfaces TypeScript
+interface Componente {
+  nombre: string;
+  puntuacion: number;
+  detalles: string;
+}
+
+interface Analisis {
+  main_profile: string;
+  main_score: number;
+  scores: { [key: string]: number };
+  componentes: { [key: string]: Componente };
+  recomendaciones: string[];
+}
+
+interface DatosManuales {
+  cpuModel: string;
+  cpuSpeed: string;
+  cpuCores: string;
+  ram: string;
+  storageType: string;
+  gpuModel: string;
+  gpuVram: string;
+}
+
 // Colores IDÉNTICOS a tu web
 const COLORS = {
   primary: '#4cc9f0',
@@ -38,14 +63,14 @@ const COLORS = {
 const API_URL = 'https://analizatupc-backend.onrender.com';
 
 export default function HomeScreen() {
-  const [analisis, setAnalisis] = useState<any>(null);
+  const [analisis, setAnalisis] = useState<Analisis | null>(null);
   const [cargando, setCargando] = useState(false);
   const [progreso, setProgreso] = useState(0);
   const [pestañaActiva, setPestañaActiva] = useState('auto');
   const [modalVisible, setModalVisible] = useState(false);
   const [componenteSeleccionado, setComponenteSeleccionado] = useState<any>(null);
 
-  const [datosManuales, setDatosManuales] = useState({
+  const [datosManuales, setDatosManuales] = useState<DatosManuales>({
     cpuModel: '',
     cpuSpeed: '',
     cpuCores: '',
@@ -75,82 +100,94 @@ export default function HomeScreen() {
     ]).start();
   }, []);
 
- const ejecutarAnalisis = async (esManual = false) => {
-  setCargando(true);
-  setProgreso(0);
-  
-  let interval: NodeJS.Timeout | null = null;
-  
-  try {
-    interval = setInterval(() => {
-      setProgreso(prev => {
-        if (prev >= 90) {
-          if (interval) clearInterval(interval);
-          return 90;
-        }
-        return prev + 10;
-      });
-    }, 300);
+  const validarDatosManuales = (): boolean => {
+    const { cpuModel, ram, cpuSpeed, cpuCores } = datosManuales;
+    if (!cpuModel.trim() || !ram.trim() || !cpuSpeed.trim() || !cpuCores.trim()) {
+      Alert.alert('Error', 'Por favor completa todos los campos requeridos');
+      return false;
+    }
+    return true;
+  };
 
-    let datosAnalisis: any;
+  const ejecutarAnalisis = async (esManual: boolean = false) => {
+    if (esManual && !validarDatosManuales()) {
+      return;
+    }
+
+    setCargando(true);
+    setProgreso(0);
     
-    if (esManual) {
-      if (!datosManuales.cpuModel || !datosManuales.ram) {
-        Alert.alert('Error', 'Por favor completa todos los campos requeridos');
-        if (interval) clearInterval(interval);
-        setCargando(false);
-        return;
+    let interval: NodeJS.Timeout | null = null;
+    
+    try {
+      interval = setInterval(() => {
+        setProgreso(prev => {
+          if (prev >= 90) {
+            if (interval) clearInterval(interval);
+            return 90;
+          }
+          return prev + 10;
+        });
+      }, 300);
+
+      let datosAnalisis: any;
+      
+      if (esManual) {
+        datosAnalisis = datosManuales;
+      } else {
+        datosAnalisis = {
+          cpuModel: "Intel Core i7-10700K",
+          cpuSpeed: "3.8",
+          cpuCores: "8",
+          ram: "16",
+          storageType: "SSD",
+          gpuModel: "NVIDIA GeForce RTX 3060", 
+          gpuVram: "12"
+        };
       }
-      datosAnalisis = datosManuales;
-    } else {
-      datosAnalisis = {
+
+      // LLAMADA REAL A TU API EN RENDER
+      console.log('Enviando datos a:', API_URL);
+      const response = await axios.post(`${API_URL}/api/analyze`, datosAnalisis, {
+        timeout: 10000,
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+      
+      if (interval) clearInterval(interval);
+      setProgreso(100);
+      setAnalisis(response.data);
+      
+      Alert.alert('✅ Análisis Completado', 'Datos recibidos desde tu servidor Render');
+      
+    } catch (error: any) {
+      console.error('Error conectando con Render:', error);
+      if (interval) clearInterval(interval);
+      
+      // Fallback a análisis local
+      const datosFallback = esManual ? datosManuales : {
         cpuModel: "Intel Core i7-10700K",
         cpuSpeed: "3.8",
         cpuCores: "8",
         ram: "16",
         storageType: "SSD",
-        gpuModel: "NVIDIA GeForce RTX 3060", 
+        gpuModel: "NVIDIA GeForce RTX 3060",
         gpuVram: "12"
       };
+      
+      const resultadoLocal = generarAnalisisLocal(datosFallback);
+      setAnalisis(resultadoLocal);
+      Alert.alert('⚠️ Análisis Local', 'No se pudo conectar con el servidor. Usando análisis local.');
+    } finally {
+      setTimeout(() => {
+        setCargando(false);
+        setProgreso(0);
+      }, 500);
     }
+  };
 
-    // LLAMADA REAL A TU API EN RENDER
-    console.log('Enviando datos a:', API_URL);
-    const response = await axios.post(`${API_URL}/api/analyze`, datosAnalisis, {
-      timeout: 10000
-    });
-    
-    if (interval) clearInterval(interval);
-    setProgreso(100);
-    setAnalisis(response.data);
-    
-    Alert.alert('✅ Análisis Completado', 'Datos recibidos desde tu servidor Render');
-    
-  } catch (error: any) {
-    console.error('Error conectando con Render:', error);
-    if (interval) clearInterval(interval);
-    
-    // Fallback a análisis local
-    const datosFallback = esManual ? datosManuales : {
-      cpuModel: "Intel Core i7-10700K",
-      cpuSpeed: "3.8",
-      cpuCores: "8",
-      ram: "16",
-      storageType: "SSD",
-      gpuModel: "NVIDIA GeForce RTX 3060",
-      gpuVram: "12"
-    };
-    
-    const resultadoLocal = generarAnalisisLocal(datosFallback);
-    setAnalisis(resultadoLocal);
-    Alert.alert('⚠️ Análisis Local', 'No se pudo conectar con el servidor. Usando análisis local.');
-  } finally {
-    setCargando(false);
-    setProgreso(0);
-  }
-};
-
-  const generarAnalisisLocal = (datos: any) => {
+  const generarAnalisisLocal = (datos: DatosManuales): Analisis => {
     let puntuacionBase = 50;
     
     if (datos.cpuModel.includes('i9') || datos.cpuModel.includes('Ryzen 9')) puntuacionBase += 30;
@@ -204,12 +241,14 @@ export default function HomeScreen() {
       recomendaciones: [
         'Mantén tus controladores actualizados para el mejor rendimiento',
         'Realiza mantenimiento regular del sistema',
-        'Considera optimizaciones de software para maximizar el rendimiento'
+        'Considera optimizaciones de software para maximizar el rendimiento',
+        'Monitorea las temperaturas de los componentes bajo carga',
+        'Actualiza el BIOS/UEFI para mejor compatibilidad'
       ]
     };
   };
 
-  const obtenerColorPuntuacion = (score: number) => {
+  const obtenerColorPuntuacion = (score: number): string => {
     if (score >= 80) return COLORS.success;
     if (score >= 60) return COLORS.primary;
     if (score >= 40) return COLORS.warning;
@@ -316,7 +355,7 @@ export default function HomeScreen() {
   const renderEntradaManual = () => (
     <View style={styles.tabContent}>
       <ScrollView style={styles.formContainer} showsVerticalScrollIndicator={false}>
-        <Text style={styles.formLabel}>Modelo de CPU</Text>
+        <Text style={styles.formLabel}>Modelo de CPU *</Text>
         <TextInput
           style={styles.input}
           placeholder="Ej: Intel Core i7-10700K"
@@ -327,7 +366,7 @@ export default function HomeScreen() {
 
         <View style={styles.row}>
           <View style={styles.col}>
-            <Text style={styles.formLabel}>Velocidad (GHz)</Text>
+            <Text style={styles.formLabel}>Velocidad (GHz) *</Text>
             <TextInput
               style={styles.input}
               placeholder="3.8"
@@ -338,7 +377,7 @@ export default function HomeScreen() {
             />
           </View>
           <View style={styles.col}>
-            <Text style={styles.formLabel}>Núcleos</Text>
+            <Text style={styles.formLabel}>Núcleos *</Text>
             <TextInput
               style={styles.input}
               placeholder="8"
@@ -350,7 +389,7 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        <Text style={styles.formLabel}>Memoria RAM (GB)</Text>
+        <Text style={styles.formLabel}>Memoria RAM (GB) *</Text>
         <TextInput
           style={styles.input}
           placeholder="16"
@@ -397,15 +436,18 @@ export default function HomeScreen() {
       </ScrollView>
 
       <TouchableOpacity
-        style={styles.btn}
+        style={[styles.btn, cargando && styles.btnDisabled]}
         onPress={() => ejecutarAnalisis(true)}
+        disabled={cargando}
       >
         <LinearGradient
           colors={[COLORS.primary, COLORS.primaryDark]}
           style={styles.btnGradient}
         >
           <Ionicons name="analytics" size={24} color="white" />
-          <Text style={styles.btnText}>Analizar con Datos Manuales</Text>
+          <Text style={styles.btnText}>
+            {cargando ? 'Analizando...' : 'Analizar con Datos Manuales'}
+          </Text>
         </LinearGradient>
       </TouchableOpacity>
     </View>
@@ -456,7 +498,7 @@ export default function HomeScreen() {
                     tipo: 'perfil', 
                     nombre: perfil, 
                     puntuacion: puntuacionNum 
-                  } as any);
+                  });
                   setModalVisible(true);
                 }}
               >
@@ -483,41 +525,38 @@ export default function HomeScreen() {
         <View style={styles.componentAnalysis}>
           <Text style={styles.sectionTitle}>Análisis por Componente</Text>
           <View style={styles.componentGrid}>
-            {Object.entries(analisis.componentes).map(([tipo, componente]) => {
-              const comp = componente as any;
-              return (
-                <TouchableOpacity
-                  key={tipo}
-                  style={styles.componentCard}
-                  onPress={() => {
-                    setComponenteSeleccionado({ tipo, ...comp } as any);
-                    setModalVisible(true);
-                  }}
-                >
-                  <View style={styles.componentHeader}>
-                    <View style={styles.componentIcon}>
-                      <Ionicons 
-                        name={
-                          tipo === 'cpu' ? 'hardware-chip' :
-                          tipo === 'ram' ? 'layers' :
-                          tipo === 'almacenamiento' ? 'save' : 'game-controller'
-                        } 
-                        size={24} 
-                        color={COLORS.primary} 
-                      />
-                    </View>
-                    <Text style={styles.componentName}>{comp.nombre}</Text>
+            {Object.entries(analisis.componentes).map(([tipo, componente]) => (
+              <TouchableOpacity
+                key={tipo}
+                style={styles.componentCard}
+                onPress={() => {
+                  setComponenteSeleccionado({ tipo, ...componente });
+                  setModalVisible(true);
+                }}
+              >
+                <View style={styles.componentHeader}>
+                  <View style={styles.componentIcon}>
+                    <Ionicons 
+                      name={
+                        tipo === 'cpu' ? 'hardware-chip' :
+                        tipo === 'ram' ? 'layers' :
+                        tipo === 'almacenamiento' ? 'save' : 'game-controller'
+                      } 
+                      size={24} 
+                      color={COLORS.primary} 
+                    />
                   </View>
-                  <Text style={styles.componentDetails}>{comp.detalles}</Text>
-                  <View style={styles.componentRating}>
-                    <View style={styles.ratingStars}>
-                      {obtenerEstrellas(comp.puntuacion)}
-                    </View>
-                    <Text style={styles.ratingText}>{comp.puntuacion}%</Text>
+                  <Text style={styles.componentName}>{componente.nombre}</Text>
+                </View>
+                <Text style={styles.componentDetails}>{componente.detalles}</Text>
+                <View style={styles.componentRating}>
+                  <View style={styles.ratingStars}>
+                    {obtenerEstrellas(componente.puntuacion)}
                   </View>
-                </TouchableOpacity>
-              );
-            })}
+                  <Text style={styles.ratingText}>{componente.puntuacion}%</Text>
+                </View>
+              </TouchableOpacity>
+            ))}
           </View>
         </View>
 
@@ -528,7 +567,7 @@ export default function HomeScreen() {
           </Text>
           <View style={styles.recommendationsList}>
             {analisis.recomendaciones.map((recomendacion: string, index: number) => (
-              <View key={index} style={styles.recommendationItem}>
+              <View key={`recom-${index}`} style={styles.recommendationItem}>
                 <Ionicons name="checkmark-circle" size={20} color={COLORS.success} />
                 <Text style={styles.recommendationText}>{recomendacion}</Text>
               </View>
@@ -631,7 +670,7 @@ export default function HomeScreen() {
   );
 }
 
-// ESTILOS (igual que antes)
+// ESTILOS COMPLETOS (mantener igual)
 const styles = StyleSheet.create({
   container: {
     flex: 1,
