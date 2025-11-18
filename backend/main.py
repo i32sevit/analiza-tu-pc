@@ -79,7 +79,7 @@ class PDF(FPDF):
         # TITULO PRINCIPAL
         self.set_font("Helvetica", "B", 34)
         self.set_text_color(76, 201, 240)
-        self.cell(0, 20, "ANALIZATUPC", ln=True, align="C")
+        self.cell(0, 20, "AnalizaTuPc", ln=True, align="C")
         
         # SUBTITULO
         self.set_font("Helvetica", "I", 16)
