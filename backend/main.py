@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from fpdf import FPDF
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from database import get_db, SystemAnalysis, create_tables, get_next_analysis_id
 import datetime
 import json
@@ -428,7 +429,7 @@ def create_pdf_report(sysinfo: dict, result: dict, analysis_id: int):
     return pdf_filename
 
 # -------------------------
-#   API
+#   API ENDPOINTS
 # -------------------------
 @app.on_event("startup")
 async def startup_event():
@@ -526,6 +527,107 @@ def analyze(sysinfo: SysInfo, db: Session = Depends(get_db)):
         "message": "Análisis completado correctamente",
         "version": "2.0.0"
     }
+
+# ==================== NUEVOS ENDPOINTS DE BASE DE DATOS ====================
+
+@app.get("/api/analyses")
+def get_all_analyses(db: Session = Depends(get_db)):
+    """Obtener todos los análisis"""
+    try:
+        analyses = db.query(SystemAnalysis).order_by(SystemAnalysis.analysis_id.desc()).all()
+        
+        return {
+            "status": "success",
+            "total": len(analyses),
+            "analyses": [
+                {
+                    "analysis_id": a.analysis_id,
+                    "cpu_model": a.cpu_model,
+                    "cpu_speed_ghz": a.cpu_speed_ghz,
+                    "cores": a.cores,
+                    "ram_gb": a.ram_gb,
+                    "gpu_model": a.gpu_model,
+                    "main_profile": a.main_profile,
+                    "main_score": a.main_score,
+                    "pdf_url": a.pdf_url,
+                    "created_at": a.created_at.isoformat() if a.created_at else None
+                }
+                for a in analyses
+            ]
+        }
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+@app.get("/api/analyses/{analysis_id}")
+def get_analysis(analysis_id: int, db: Session = Depends(get_db)):
+    """Obtener un análisis específico por ID"""
+    try:
+        analysis = db.query(SystemAnalysis).filter(SystemAnalysis.analysis_id == analysis_id).first()
+        
+        if not analysis:
+            return {"status": "error", "message": "Análisis no encontrado"}
+        
+        return {
+            "status": "success",
+            "analysis": {
+                "analysis_id": analysis.analysis_id,
+                "cpu_model": analysis.cpu_model,
+                "cpu_speed_ghz": analysis.cpu_speed_ghz,
+                "cores": analysis.cores,
+                "ram_gb": analysis.ram_gb,
+                "disk_type": analysis.disk_type,
+                "gpu_model": analysis.gpu_model,
+                "gpu_vram_gb": analysis.gpu_vram_gb,
+                "main_profile": analysis.main_profile,
+                "main_score": analysis.main_score,
+                "pdf_url": analysis.pdf_url,
+                "json_url": analysis.json_url,
+                "created_at": analysis.created_at.isoformat() if analysis.created_at else None
+            }
+        }
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+@app.get("/api/stats")
+def get_stats(db: Session = Depends(get_db)):
+    """Estadísticas de los análisis"""
+    try:
+        total_analyses = db.query(SystemAnalysis).count()
+        
+        # Análisis por perfil
+        profiles = db.query(SystemAnalysis.main_profile).all()
+        profile_counts = {}
+        for profile in profiles:
+            profile_name = profile[0]
+            profile_counts[profile_name] = profile_counts.get(profile_name, 0) + 1
+        
+        # Promedio de puntuación
+        avg_score = db.query(func.avg(SystemAnalysis.main_score)).scalar()
+        
+        return {
+            "status": "success",
+            "total_analyses": total_analyses,
+            "average_score": round(avg_score, 2) if avg_score else 0,
+            "profiles_distribution": profile_counts
+        }
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+@app.delete("/api/analyses/{analysis_id}")
+def delete_analysis(analysis_id: int, db: Session = Depends(get_db)):
+    """Eliminar un análisis por ID"""
+    try:
+        analysis = db.query(SystemAnalysis).filter(SystemAnalysis.analysis_id == analysis_id).first()
+        
+        if not analysis:
+            return {"status": "error", "message": "Análisis no encontrado"}
+        
+        db.delete(analysis)
+        db.commit()
+        
+        return {"status": "success", "message": f"Análisis {analysis_id} eliminado correctamente"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
 
 if __name__ == "__main__":
     import uvicorn
