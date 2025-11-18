@@ -14,7 +14,7 @@ access_token = os.getenv("DROPBOX_ACCESS_TOKEN")
 
 app = FastAPI(title="AnalizaTuPC API", version="2.0.0")
 
-print("🚀 CARGANDO VERSIÓN CON FUENTES DEL SISTEMA - " + datetime.datetime.now().strftime("%H:%M:%S"))
+print("🚀 CARGANDO VERSIÓN COMPATIBLE CON RENDER - " + datetime.datetime.now().strftime("%H:%M:%S"))
 
 # CORS
 app.add_middleware(
@@ -68,7 +68,7 @@ def score_system(info: dict):
     }
 
 # -------------------------
-#   PDF CON FUENTES DEL SISTEMA WINDOWS
+#   PDF COMPATIBLE CON RENDER - FUENTES POR DEFECTO
 # -------------------------
 class PDF(FPDF):
     def header(self):
@@ -76,13 +76,13 @@ class PDF(FPDF):
         self.set_fill_color(10, 15, 30)
         self.rect(0, 0, 210, 50, 'F')
         
-        # TÍTULO PRINCIPAL CON IMPACT (similar a Coming Soon) - CENTRADO
-        self.set_font("Impact", "B", 34)  # Impact es gruesa y llamativa
+        # TÍTULO PRINCIPAL CON HELVETICA (BOLD) - CENTRADO
+        self.set_font("Helvetica", "B", 34)  # Helvetica es gruesa y moderna
         self.set_text_color(76, 201, 240)
-        self.cell(0, 20, "AnalizaTuPc", ln=True, align="C")
+        self.cell(0, 20, "ANALIZATUPC", ln=True, align="C")
         
-        # SUBTÍTULO CON IMPACT ITALIC - CENTRADO
-        self.set_font("Impact", "I", 16)
+        # SUBTÍTULO CON HELVETICA ITALIC - CENTRADO
+        self.set_font("Helvetica", "I", 16)
         self.set_text_color(200, 230, 255)
         self.cell(0, 10, "Análisis Profesional de Hardware", ln=True, align="C")
         
@@ -95,7 +95,7 @@ class PDF(FPDF):
 
     def footer(self):
         self.set_y(-20)
-        self.set_font("Times", "I", 9)  # Times es similar a Times New Roman
+        self.set_font("Helvetica", "I", 9)  # Helvetica para consistencia
         self.set_text_color(100, 100, 100)
         
         # LÍNEA SEPARADORA
@@ -108,8 +108,8 @@ class PDF(FPDF):
 
     def add_section_title(self, title):
         self.ln(12)
-        # TÍTULO DE SECCIÓN CENTRADO CON IMPACT
-        self.set_font("Impact", "B", 20)
+        # TÍTULO DE SECCIÓN CENTRADO CON HELVETICA BOLD
+        self.set_font("Helvetica", "B", 20)
         self.set_text_color(255, 255, 255)
         self.set_fill_color(76, 201, 240)
         
@@ -123,12 +123,12 @@ class PDF(FPDF):
         self.ln(8)
 
     def add_feature_card(self, title, value, highlight=False):
-        # TEXTO CON TIMES
-        self.set_font("Times", "B", 11)
+        # TEXTO CON HELVETICA
+        self.set_font("Helvetica", "B", 11)
         self.set_text_color(30, 30, 30)
         self.cell(65, 8, f"{title}:", border=0)
         
-        self.set_font("Times", "B" if highlight else "", 11)
+        self.set_font("Helvetica", "B" if highlight else "", 11)
         if highlight:
             self.set_text_color(247, 37, 133)
         else:
@@ -138,7 +138,7 @@ class PDF(FPDF):
         self.ln(4)
 
     def add_score_meter(self, profile, score, rank):
-        self.set_font("Times", "B", 12)
+        self.set_font("Helvetica", "B", 12)
         
         # DETERMINAR COLOR SEGÚN PUNTUACIÓN
         if score >= 80:
@@ -162,18 +162,18 @@ class PDF(FPDF):
         self.ln(6)
 
 # -------------------------
-#   GENERACIÓN DEL PDF CON NUEVAS FUENTES
+#   GENERACIÓN DEL PDF COMPATIBLE
 # -------------------------
 def create_pdf_report(sysinfo: dict, result: dict):
     pdf = PDF()
     pdf.add_page()
 
     # PORTADA ESPECTACULAR
-    pdf.set_font("Impact", "B", 38)  # Impact para título grande
+    pdf.set_font("Helvetica", "B", 38)  # Helvetica para título grande
     pdf.set_text_color(76, 201, 240)
     pdf.cell(0, 60, "INFORME DE SISTEMA", ln=True, align="C")
     
-    pdf.set_font("Impact", "I", 20)  # Impact italic para subtítulo
+    pdf.set_font("Helvetica", "I", 20)  # Helvetica italic para subtítulo
     pdf.set_text_color(160, 160, 160)
     pdf.cell(0, 25, "Evaluación Profesional de Hardware", ln=True, align="C")
     
@@ -184,24 +184,24 @@ def create_pdf_report(sysinfo: dict, result: dict):
     pdf.ln(40)
     
     # PERFIL PRINCIPAL SUPER DESTACADO
-    pdf.set_font("Impact", "B", 24)
+    pdf.set_font("Helvetica", "B", 24)
     pdf.set_text_color(255, 255, 255)
     pdf.set_fill_color(247, 37, 133)
     pdf.cell(0, 18, " PERFIL PRINCIPAL RECOMENDADO ", ln=True, align="C", fill=True)
     
     pdf.ln(12)
-    pdf.set_font("Impact", "B", 30)
+    pdf.set_font("Helvetica", "B", 30)
     pdf.set_text_color(30, 30, 30)
     pdf.cell(0, 20, f"{result['main_profile']}", ln=True, align="C")
     
-    pdf.set_font("Impact", "B", 26)
+    pdf.set_font("Helvetica", "B", 26)
     pdf.set_text_color(0, 245, 212)
     pdf.cell(0, 15, f"{result['main_score']}% DE EFECTIVIDAD", ln=True, align="C")
     
     pdf.ln(35)
     
     # CÓDIGO DE REPORTE ELEGANTE
-    pdf.set_font("Times", "I", 12)  # Times para texto normal
+    pdf.set_font("Helvetica", "I", 12)  # Helvetica para texto normal
     pdf.set_text_color(150, 150, 150)
     pdf.cell(0, 10, f"ID: APC-{int(datetime.datetime.now().timestamp())}", ln=True, align="C")
 
@@ -213,7 +213,7 @@ def create_pdf_report(sysinfo: dict, result: dict):
     
     # CABECERA DE TABLA MEJORADA
     pdf.set_fill_color(30, 60, 120)
-    pdf.set_font("Times", "B", 13)  # Times en negrita para cabecera
+    pdf.set_font("Helvetica", "B", 13)  # Helvetica en negrita para cabecera
     pdf.set_text_color(255, 255, 255)
     pdf.cell(85, 12, "COMPONENTE", border=1, fill=True, align='C')
     pdf.cell(0, 12, "ESPECIFICACIÓN", border=1, fill=True, align='C')
@@ -230,7 +230,7 @@ def create_pdf_report(sysinfo: dict, result: dict):
         ("Sistema de Almacenamiento", f"{sysinfo.get('disk_type', 'No detectado')}"),
     ]
     
-    pdf.set_font("Times", "", 11)  # Times normal para contenido
+    pdf.set_font("Helvetica", "", 11)  # Helvetica normal para contenido
     for i, (component, spec) in enumerate(specs_data):
         # FONDO ALTERNADO MÁS SUAVE
         fill_color = (245, 248, 255) if i % 2 == 0 else (255, 255, 255)
@@ -241,9 +241,9 @@ def create_pdf_report(sysinfo: dict, result: dict):
         pdf.cell(85, 10, f"   {component}", border=1, fill=True)
         
         # ESPECIFICACIÓN
-        pdf.set_font("Times", "B", 11)
+        pdf.set_font("Helvetica", "B", 11)
         pdf.cell(0, 10, spec, border=1, fill=True, align='C')
-        pdf.set_font("Times", "", 11)
+        pdf.set_font("Helvetica", "", 11)
         pdf.ln()
     
     # SECCIÓN: RESULTADOS DEL ANÁLISIS - TÍTULO CENTRADO
@@ -262,7 +262,7 @@ def create_pdf_report(sysinfo: dict, result: dict):
     
     # CABECERA DE TABLA MEJORADA
     pdf.set_fill_color(30, 60, 120)
-    pdf.set_font("Times", "B", 12)
+    pdf.set_font("Helvetica", "B", 12)
     pdf.set_text_color(255, 255, 255)
     pdf.cell(105, 12, "PERFIL DE USO", border=1, fill=True, align='C')
     pdf.cell(50, 12, "PUNTUACIÓN", border=1, fill=True, align='C')
@@ -270,7 +270,7 @@ def create_pdf_report(sysinfo: dict, result: dict):
     pdf.ln()
     
     # FILAS DE TABLA MEJORADAS
-    pdf.set_font("Times", "", 11)
+    pdf.set_font("Helvetica", "", 11)
     for i, (profile, score) in enumerate(sorted_scores):
         score_percent = round(score * 100, 1)
         
@@ -297,10 +297,10 @@ def create_pdf_report(sysinfo: dict, result: dict):
             classification = "MEJORABLE"
         
         pdf.set_text_color(*text_color)
-        pdf.set_font("Times", "B", 11)
+        pdf.set_font("Helvetica", "B", 11)
         pdf.cell(50, 10, f"{score_percent}%", border=1, fill=True, align='C')
         pdf.set_text_color(60, 60, 60)
-        pdf.set_font("Times", "", 11)
+        pdf.set_font("Helvetica", "", 11)
         pdf.cell(0, 10, classification, border=1, fill=True, align='C')
         pdf.ln()
 
@@ -356,21 +356,21 @@ def create_pdf_report(sysinfo: dict, result: dict):
     recommendations.append("SEGURIDAD: Sistema antivirus actualizado y copias de seguridad")
     
     # ESCRIBIR RECOMENDACIONES MEJORADAS
-    pdf.set_font("Times", "", 10)
+    pdf.set_font("Helvetica", "", 10)
     pdf.set_text_color(60, 60, 60)
     
     for i, rec in enumerate(recommendations):
         # DESTACAR CATEGORÍAS EN NEGRITA
         if ':' in rec:
             parts = rec.split(':', 1)
-            pdf.set_font("Times", "B", 10)
+            pdf.set_font("Helvetica", "B", 10)
             pdf.cell(25, 8, f"{i+1}. {parts[0]}:", border=0)
-            pdf.set_font("Times", "", 10)
+            pdf.set_font("Helvetica", "", 10)
             pdf.multi_cell(0, 8, parts[1])
         else:
-            pdf.set_font("Times", "B", 10)
+            pdf.set_font("Helvetica", "B", 10)
             pdf.cell(15, 8, f"{i+1}.", border=0)
-            pdf.set_font("Times", "", 10)
+            pdf.set_font("Helvetica", "", 10)
             pdf.multi_cell(0, 8, f" {rec}")
         pdf.ln(3)
 
@@ -379,11 +379,11 @@ def create_pdf_report(sysinfo: dict, result: dict):
     pdf_filename = f"AnalizaTuPC_Reporte_{timestamp}.pdf"
     pdf.output(pdf_filename)
 
-    print(f"✅ PDF CON NUEVAS FUENTES generado: {pdf_filename}")
+    print(f"✅ PDF COMPATIBLE CON RENDER generado: {pdf_filename}")
     return pdf_filename
 
 # -------------------------
-#   API (MANTENIENDO LA ESTRUCTURA)
+#   API
 # -------------------------
 @app.on_event("startup")
 async def startup_event():
@@ -400,7 +400,7 @@ def analyze(sysinfo: SysInfo):
     info = sysinfo.dict()
     result = score_system(info)
 
-    # CREAR PDF CON NUEVAS FUENTES
+    # CREAR PDF COMPATIBLE
     pdf_filename = create_pdf_report(info, result)
 
     # GUARDAR JSON
@@ -454,5 +454,5 @@ def analyze(sysinfo: SysInfo):
 
 if __name__ == "__main__":
     import uvicorn
-    print("🚀 INICIANDO ANALIZATUPC - CON FUENTES DEL SISTEMA...")
+    print("🚀 INICIANDO ANALIZATUPC - COMPATIBLE CON RENDER...")
     uvicorn.run(app, host="0.0.0.0", port=8000)
