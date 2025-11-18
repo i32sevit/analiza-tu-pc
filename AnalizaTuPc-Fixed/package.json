@@ -8,6 +8,8 @@
     "web": "expo start --web"
   },
   "dependencies": {
+    "@types/expo": "^32.0.13",
+    "@types/expo__vector-icons": "^9.0.1",
     "axios": "^1.6.0",
     "expo": "~54.0.25",
     "expo-constants": "~18.0.10",
