@@ -1061,9 +1061,9 @@ def get_dashboard(db: Session = Depends(get_db)):
         <div class="dashboard-container">
             <!-- HEADER CORPORATIVO -->
             <header class="corporate-header">
-                <div class="header-content">
+                <div class="header-content" style="text-align: center;">
                     <h1><i class="fas fa-chart-line"></i> AnalizaTuPC Dashboard</h1>
-                    <p class="subtitle">Panel de control corporativo - Análisis de hardware en tiempo real</p>
+                        <p class="subtitle">Panel de control corporativo - Análisis de hardware en tiempo real</p>
                 </div>
             </header>
             
