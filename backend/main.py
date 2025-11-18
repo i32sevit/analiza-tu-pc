@@ -12,7 +12,9 @@ from dotenv import load_dotenv
 load_dotenv()
 access_token = os.getenv("DROPBOX_ACCESS_TOKEN")
 
-app = FastAPI(title="AnalizaPC API", version="1.0.0")
+app = FastAPI(title="AnalizaPC API", version="2.0.0")  # Cambiado versión
+
+print("🚀 CARGANDO VERSIÓN NUEVA MEJORADA - " + datetime.datetime.now().strftime("%H:%M:%S"))
 
 # CORS
 app.add_middleware(
@@ -66,257 +68,233 @@ def score_system(info: dict):
     }
 
 # -------------------------
-#   PDF PROFESIONAL Y MODERNO
+#   PDF SUPER MEJORADO - VERSIÓN PROFESIONAL
 # -------------------------
 class PDF(FPDF):
     def header(self):
-        # Fondo de encabezado profesional
-        self.set_fill_color(41, 128, 185)  # Azul profesional
-        self.rect(0, 0, 210, 30, 'F')
+        # Encabezado moderno con gradiente simulado
+        self.set_fill_color(30, 60, 120)  # Azul oscuro profesional
+        self.rect(0, 0, 210, 35, 'F')
         
-        # Título principal
-        self.set_font("Arial", "B", 20)
+        # Logo/título
+        self.set_font("Arial", "B", 22)
         self.set_text_color(255, 255, 255)
-        self.cell(0, 20, "ANALIZAPC", ln=True, align="C")
+        self.cell(0, 25, "🔍 ANALIZAPC PRO", ln=True, align="C")
         
-        # Subtítulo
-        self.set_font("Arial", "I", 12)
-        self.set_text_color(200, 230, 255)
-        self.cell(0, -5, "Informe Profesional de Sistema", ln=True, align="C")
+        # Línea decorativa
+        self.set_draw_color(70, 130, 180)
+        self.line(50, 32, 160, 32)
         
         self.ln(15)
 
     def footer(self):
-        self.set_y(-20)
+        self.set_y(-25)
         self.set_font("Arial", "I", 9)
-        self.set_text_color(128, 128, 128)
+        self.set_text_color(100, 100, 100)
         
-        # Línea superior del footer
+        # Línea separadora
         self.set_draw_color(200, 200, 200)
         self.line(10, self.get_y(), 200, self.get_y())
-        self.ln(5)
+        self.ln(8)
         
-        # Texto del footer
-        self.cell(0, 6, f"Reporte generado el {datetime.datetime.now().strftime('%d/%m/%Y a las %H:%M')} | Página {self.page_no()}", align="C")
+        # Información del footer
+        self.cell(0, 6, f"Reporte profesional generado el {datetime.datetime.now().strftime('%d/%m/%Y')} a las {datetime.datetime.now().strftime('%H:%M')}", align="C")
         self.ln(4)
-        self.cell(0, 6, "www.analizapc.com - Todos los derechos reservados", align="C")
+        self.cell(0, 6, f"Página {self.page_no()} • www.analizapc.com • Soporte: info@analizapc.com", align="C")
 
-    def add_section_title(self, title, icon="▶"):
-        self.set_font("Arial", "B", 14)
-        self.set_text_color(41, 128, 185)  # Azul corporativo
-        self.set_fill_color(240, 245, 249)  # Fondo azul muy claro
-        self.cell(0, 10, f" {icon} {title}", ln=True, fill=True)
-        self.ln(5)
+    def add_section(self, title, icon="📊"):
+        self.ln(10)
+        self.set_font("Arial", "B", 16)
+        self.set_text_color(30, 60, 120)
+        self.set_fill_color(240, 245, 255)
+        self.cell(0, 12, f" {icon}  {title.upper()}", ln=True, fill=True)
+        self.ln(8)
 
-    def add_feature_card(self, title, value, icon="💻"):
+    def add_feature(self, icon, title, value, highlight=False):
         self.set_font("Arial", "B", 11)
         self.set_text_color(60, 60, 60)
-        self.cell(25, 8, f"{icon}", border=0)
-        self.cell(50, 8, f"{title}:", border=0)
+        self.cell(30, 8, icon, border=0)
+        self.cell(60, 8, f"{title}:", border=0)
         
-        self.set_font("Arial", "", 11)
-        self.set_text_color(0, 0, 0)
+        self.set_font("Arial", "B" if highlight else "", 11)
+        if highlight:
+            self.set_text_color(220, 0, 0)
+        else:
+            self.set_text_color(0, 0, 0)
+            
         self.cell(0, 8, str(value), ln=True)
         self.ln(3)
 
-    def add_performance_bar(self, label, percentage, color):
-        # Barra de progreso visual
-        bar_width = 100
-        fill_width = (percentage / 100) * bar_width
+    def add_score_card(self, profile, score, rank):
+        self.set_font("Arial", "B", 12)
         
-        self.set_font("Arial", "B", 10)
-        self.set_text_color(60, 60, 60)
-        self.cell(50, 8, f"{label}:", border=0)
+        # Determinar color según puntuación
+        if score >= 80:
+            color = (46, 204, 113)  # Verde
+            emoji = "🎯"
+        elif score >= 60:
+            color = (52, 152, 219)  # Azul
+            emoji = "⚡"
+        elif score >= 40:
+            color = (241, 196, 15)  # Amarillo
+            emoji = "📈"
+        else:
+            color = (231, 76, 60)   # Rojo
+            emoji = "💡"
         
-        # Fondo de la barra
-        self.set_draw_color(220, 220, 220)
-        self.set_fill_color(220, 220, 220)
-        self.rect(self.get_x(), self.get_y() + 2, bar_width, 6, 'FD')
-        
-        # Barra de progreso
-        self.set_fill_color(*color)
-        self.rect(self.get_x(), self.get_y() + 2, fill_width, 6, 'F')
-        
-        # Porcentaje
-        self.set_text_color(0, 0, 0)
-        self.cell(30, 8, f"{percentage}%", ln=True, align="R")
-        self.ln(8)
+        # Fondo de la tarjeta
+        self.set_fill_color(color[0], color[1], color[2])
+        self.set_text_color(255, 255, 255)
+        self.cell(0, 10, f" {emoji} {profile}: {score}% ({rank})", ln=True, fill=True)
+        self.ln(5)
 
 # -------------------------
-#   CREACIÓN DEL PDF PROFESIONAL
+#   GENERACIÓN DEL PDF MEJORADO
 # -------------------------
 def create_pdf_report(sysinfo: dict, result: dict):
     pdf = PDF()
     pdf.add_page()
 
     # PORTADA MEJORADA
-    pdf.set_font("Arial", "B", 24)
-    pdf.set_text_color(41, 128, 185)
-    pdf.cell(0, 40, "INFORME DE SISTEMA", ln=True, align="C")
+    pdf.set_font("Arial", "B", 28)
+    pdf.set_text_color(30, 60, 120)
+    pdf.cell(0, 50, "INFORME TÉCNICO", ln=True, align="C")
     
-    pdf.set_font("Arial", "I", 14)
+    pdf.set_font("Arial", "I", 16)
     pdf.set_text_color(100, 100, 100)
-    pdf.cell(0, 15, "Análisis Profesional de Hardware", ln=True, align="C")
+    pdf.cell(0, 20, "Análisis Profesional de Hardware", ln=True, align="C")
     
     # Línea decorativa
-    pdf.set_draw_color(41, 128, 185)
-    pdf.line(50, pdf.get_y(), 160, pdf.get_y())
-    pdf.ln(20)
+    pdf.set_draw_color(30, 60, 120)
+    pdf.set_line_width(1)
+    pdf.line(40, pdf.get_y(), 170, pdf.get_y())
+    pdf.ln(30)
     
     # PERFIL PRINCIPAL DESTACADO
-    pdf.set_font("Arial", "B", 16)
+    pdf.set_font("Arial", "B", 20)
     pdf.set_text_color(255, 255, 255)
-    pdf.set_fill_color(46, 204, 113)  # Verde éxito
-    pdf.cell(0, 12, " PERFIL RECOMENDADO ", ln=True, align="C", fill=True)
+    pdf.set_fill_color(46, 204, 113)
+    pdf.cell(0, 15, " PERFIL RECOMENDADO ", ln=True, align="C", fill=True)
     
-    pdf.ln(5)
-    pdf.set_font("Arial", "B", 22)
-    pdf.set_text_color(41, 128, 185)
-    pdf.cell(0, 15, f"🎯 {result['main_profile']}", ln=True, align="C")
+    pdf.ln(10)
+    pdf.set_font("Arial", "B", 24)
+    pdf.set_text_color(30, 60, 120)
+    pdf.cell(0, 15, f"🚀 {result['main_profile']}", ln=True, align="C")
     
-    pdf.set_font("Arial", "B", 18)
+    pdf.set_font("Arial", "B", 20)
     pdf.set_text_color(46, 204, 113)
-    pdf.cell(0, 10, f"{result['main_score']}% DE ADECUACIÓN", ln=True, align="C")
+    pdf.cell(0, 12, f"⭐ {result['main_score']}% DE EFICIENCIA", ln=True, align="C")
     
-    pdf.ln(25)
+    pdf.ln(30)
     
-    # FECHA Y CÓDIGO
+    # INFORMACIÓN ADICIONAL
     pdf.set_font("Arial", "I", 10)
     pdf.set_text_color(150, 150, 150)
-    pdf.cell(0, 8, f"Código de reporte: APC-{int(datetime.datetime.now().timestamp())}", ln=True, align="C")
+    pdf.cell(0, 8, f"ID del análisis: APC-{int(datetime.datetime.now().timestamp())}", ln=True, align="C")
+    pdf.cell(0, 8, "Documento generado automáticamente por el sistema AnalizaPC Pro", ln=True, align="C")
 
-    # NUEVA PÁGINA PARA DETALLES
+    # NUEVA PÁGINA - DETALLES TÉCNICOS
     pdf.add_page()
     
-    # SECCIÓN: ESPECIFICACIONES TÉCNICAS
-    pdf.add_section_title("Especificaciones del Sistema", "🔧")
+    # SECCIÓN: HARDWARE DETECTADO
+    pdf.add_section("Especificaciones del Sistema", "🔧")
     
-    hardware_specs = [
-        ("Procesador", f"{sysinfo.get('cpu_model', 'No detectado')}"),
-        ("Núcleos/Hilos", f"{sysinfo.get('cores', '?')} núcleos"),
-        ("Frecuencia CPU", f"{sysinfo.get('cpu_speed_ghz', '?')} GHz"),
-        ("Memoria RAM", f"{sysinfo.get('ram_gb', '?')} GB"),
-        ("Tarjeta Gráfica", f"{sysinfo.get('gpu_model', 'No detectado')}"),
-        ("Memoria GPU", f"{sysinfo.get('gpu_vram_gb', '0')} GB VRAM"),
-        ("Almacenamiento", f"{sysinfo.get('disk_type', 'No detectado')}"),
+    specs = [
+        ("💻", "Procesador", f"{sysinfo.get('cpu_model', 'No detectado')}"),
+        ("⚡", "Núcleos", f"{sysinfo.get('cores', '?')} núcleos"),
+        ("🚀", "Velocidad", f"{sysinfo.get('cpu_speed_ghz', '?')} GHz"),
+        ("🧠", "Memoria RAM", f"{sysinfo.get('ram_gb', '?')} GB"),
+        ("🎮", "Tarjeta Gráfica", f"{sysinfo.get('gpu_model', 'No detectado')}"),
+        ("📊", "VRAM GPU", f"{sysinfo.get('gpu_vram_gb', '0')} GB"),
+        ("💾", "Almacenamiento", f"{sysinfo.get('disk_type', 'No detectado')}"),
     ]
     
-    for title, value in hardware_specs:
-        pdf.add_feature_card(title, value)
+    for icon, title, value in specs:
+        pdf.add_feature(icon, title, value)
     
-    pdf.ln(10)
+    # SECCIÓN: RESULTADOS DEL ANÁLISIS
+    pdf.add_section("Resultados del Análisis", "📈")
     
-    # SECCIÓN: ANÁLISIS DE RENDIMIENTO
-    pdf.add_section_title("Análisis de Rendimiento", "📊")
+    # Ordenar perfiles por puntuación
+    sorted_scores = sorted(result['scores'].items(), key=lambda x: x[1], reverse=True)
     
-    # Barras de rendimiento por perfil
-    performance_colors = {
-        "Ofimática": (52, 152, 219),    # Azul
-        "Gaming": (155, 89, 182),       # Púrpura
-        "Edición vídeo": (230, 126, 34), # Naranja
-        "Virtualización": (46, 204, 113), # Verde
-        "ML ligero": (231, 76, 60)      # Rojo
-    }
+    for i, (profile, score) in enumerate(sorted_scores):
+        score_percent = round(score * 100, 1)
+        rank = f"#{i+1}"
+        pdf.add_score_card(profile, score_percent, rank)
     
-    for profile, score in result['scores'].items():
-        percentage = round(score * 100, 1)
-        color = performance_colors.get(profile, (100, 100, 100))
-        pdf.add_performance_bar(profile, percentage, color)
-    
-    pdf.ln(15)
-    
-    # SECCIÓN: RECOMENDACIONES
-    pdf.add_section_title("Recomendaciones y Observaciones", "💡")
-    
-    recommendations = [
-        "✅ Sistema analizado automáticamente por AnalizaPC",
-        "📈 Puntuación basada en benchmarks estándar del sector",
-        "🔍 Considerar actualizaciones para mejorar puntuaciones bajas",
-        "💾 Optimizar configuración según perfil principal detectado"
-    ]
-    
-    pdf.set_font("Arial", "", 10)
-    pdf.set_text_color(80, 80, 80)
-    
-    for rec in recommendations:
-        pdf.cell(10, 8, "•", border=0)
-        pdf.multi_cell(0, 8, f" {rec}")
-        pdf.ln(2)
-    
-    # TABLA RESUMEN PROFESIONAL
-    pdf.ln(10)
-    pdf.add_section_title("Resumen de Puntuaciones", "📋")
+    # SECCIÓN: TABLA DETALLADA
+    pdf.add_section("Tabla de Puntuaciones Detalladas", "📋")
     
     # Cabecera de tabla
-    pdf.set_fill_color(41, 128, 185)
+    pdf.set_fill_color(30, 60, 120)
     pdf.set_font("Arial", "B", 11)
     pdf.set_text_color(255, 255, 255)
-    pdf.cell(100, 10, "PERFIL DE USO", border=1, fill=True, align='C')
-    pdf.cell(40, 10, "PUNTUACIÓN", border=1, fill=True, align='C')
-    pdf.cell(0, 10, "NIVEL", border=1, fill=True, align='C')
+    pdf.cell(100, 10, "PERFIL", border=1, fill=True, align='C')
+    pdf.cell(45, 10, "PUNTUACIÓN", border=1, fill=True, align='C')
+    pdf.cell(0, 10, "CLASIFICACIÓN", border=1, fill=True, align='C')
     pdf.ln()
     
-    # Filas de la tabla
+    # Filas de tabla
     pdf.set_font("Arial", "", 10)
-    for profile, score in result['scores'].items():
-        percentage = round(score * 100, 1)
+    for i, (profile, score) in enumerate(sorted_scores):
+        score_percent = round(score * 100, 1)
         
-        # Color de fondo alternado
-        if list(result['scores'].keys()).index(profile) % 2 == 0:
-            pdf.set_fill_color(250, 250, 250)
-        else:
-            pdf.set_fill_color(255, 255, 255)
+        # Fondo alternado
+        fill_color = (250, 250, 250) if i % 2 == 0 else (255, 255, 255)
+        pdf.set_fill_color(*fill_color)
         
-        # Celda perfil
+        # Perfil
         pdf.set_text_color(0, 0, 0)
         pdf.cell(100, 10, f"   {profile}", border=1, fill=True)
         
-        # Celda puntuación con color
-        if percentage >= 80:
-            pdf.set_text_color(46, 204, 113)  # Verde
-            level = "Excelente"
-        elif percentage >= 60:
-            pdf.set_text_color(230, 126, 34)  # Naranja
-            level = "Bueno"
-        elif percentage >= 40:
-            pdf.set_text_color(241, 196, 15)  # Amarillo
-            level = "Regular"
+        # Puntuación con color
+        if score_percent >= 80:
+            text_color = (46, 204, 113)
+            classification = "Excelente"
+        elif score_percent >= 60:
+            text_color = (52, 152, 219)
+            classification = "Bueno"
+        elif score_percent >= 40:
+            text_color = (241, 196, 15)
+            classification = "Regular"
         else:
-            pdf.set_text_color(231, 76, 60)   # Rojo
-            level = "Bajo"
+            text_color = (231, 76, 60)
+            classification = "Mejorable"
         
-        pdf.cell(40, 10, f"{percentage}%", border=1, fill=True, align='C')
+        pdf.set_text_color(*text_color)
+        pdf.cell(45, 10, f"{score_percent}%", border=1, fill=True, align='C')
         pdf.set_text_color(100, 100, 100)
-        pdf.cell(0, 10, level, border=1, fill=True, align='C')
+        pdf.cell(0, 10, classification, border=1, fill=True, align='C')
         pdf.ln()
 
     # Guardar PDF
     timestamp = int(datetime.datetime.now().timestamp())
-    pdf_filename = f"reporte_profesional_{timestamp}.pdf"
+    pdf_filename = f"analisis_pro_{timestamp}.pdf"
     pdf.output(pdf_filename)
 
-    print(f"✅ PDF profesional generado: {pdf_filename}")
+    print(f"✅ PDF SUPER MEJORADO generado: {pdf_filename}")
     return pdf_filename
 
 # -------------------------
-#   API (igual que antes)
+#   API
 # -------------------------
 @app.on_event("startup")
 async def startup_event():
     if access_token:
         create_dropbox_folder_structure(access_token)
-        print("✅ Dropbox listo")
+        print("✅ Dropbox configurado")
 
 @app.get("/")
 def read_root():
-    return {"message": "AnalizaPC API funcionando correctamente"}
+    return {"message": "AnalizaPC API v2.0 funcionando", "version": "2.0.0"}
 
 @app.post("/api/analyze")
 def analyze(sysinfo: SysInfo):
     info = sysinfo.dict()
     result = score_system(info)
 
-    # Crear PDF profesional
+    # Crear PDF MEJORADO
     pdf_filename = create_pdf_report(info, result)
 
     # Guardar JSON
@@ -325,7 +303,8 @@ def analyze(sysinfo: SysInfo):
         json.dump({
             "sysinfo": info,
             "result": result,
-            "timestamp": datetime.datetime.now().isoformat()
+            "timestamp": datetime.datetime.now().isoformat(),
+            "version": "2.0.0"
         }, f, indent=2, ensure_ascii=False)
 
     pdf_url = None
@@ -363,9 +342,11 @@ def analyze(sysinfo: SysInfo):
         "pdf_url": pdf_url,
         "json_url": json_url,
         "result": result,
-        "message": "Análisis completado correctamente"
+        "message": "Análisis profesional completado",
+        "version": "2.0.0"
     }
 
 if __name__ == "__main__":
     import uvicorn
+    print("🚀 INICIANDO VERSIÓN NUEVA MEJORADA...")
     uvicorn.run(app, host="0.0.0.0", port=8000)
