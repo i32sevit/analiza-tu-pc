@@ -1,7 +1,9 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from fpdf import FPDF
+from sqlalchemy.orm import Session
+from database import get_db, SystemAnalysis, create_tables, get_next_analysis_id
 import datetime
 import json
 import os
@@ -71,9 +73,9 @@ def score_system(info: dict):
 #   PDF SUPER ELEGANTE - COLORES MÁS CLAROS
 # -------------------------
 class PDF(FPDF):
-    def __init__(self):
+    def __init__(self, analysis_id: int):
         super().__init__()
-        self.analysis_id = f"APC-{int(datetime.datetime.now().timestamp())}"
+        self.analysis_id = f"APC-{analysis_id:04d}"
     
     def header(self):
         # ENCABEZADO CON AZUL CELESTE
@@ -199,8 +201,8 @@ class PDF(FPDF):
 # -------------------------
 #   GENERACIÓN DEL PDF ELEGANTE
 # -------------------------
-def create_pdf_report(sysinfo: dict, result: dict):
-    pdf = PDF()
+def create_pdf_report(sysinfo: dict, result: dict, analysis_id: int):
+    pdf = PDF(analysis_id)
     pdf.add_page()
 
     # PORTADA CON AZUL CELESTE
@@ -265,8 +267,6 @@ def create_pdf_report(sysinfo: dict, result: dict):
     pdf.cell(0, 10, f"{result['main_score']}% DE EFICIENCIA", ln=True, align="C")
     
     pdf.ln(40)
-    
-    # EL ID DEL ANÁLISIS YA NO VA AQUÍ, VA EN EL FOOTER
 
     # NUEVA PÁGINA - DETALLES TÉCNICOS
     pdf.add_page()
@@ -420,41 +420,49 @@ def create_pdf_report(sysinfo: dict, result: dict):
         pdf.multi_cell(0, 8, f" {rec}")
         pdf.ln(2)
 
-    # Guardar PDF
-    timestamp = int(datetime.datetime.now().timestamp())
-    pdf_filename = f"analiza_tu_pc_{timestamp}.pdf"
+    # Guardar PDF CON NUEVO NOMBRE
+    pdf_filename = f"analisis_{analysis_id:04d}.pdf"  # Ej: analisis_0001.pdf, analisis_0002.pdf
     pdf.output(pdf_filename)
 
     print(f"✅ PDF elegante generado: {pdf_filename}")
     return pdf_filename
 
 # -------------------------
-#   API (igual que antes)
+#   API
 # -------------------------
 @app.on_event("startup")
 async def startup_event():
     if access_token:
         create_dropbox_folder_structure(access_token)
         print("✅ Dropbox configurado")
+    
+    # Crear tablas si no existen
+    create_tables()
+    print("✅ Base de datos configurada")
 
 @app.get("/")
 def read_root():
     return {"message": "AnalizaTuPC API v2.0 funcionando", "version": "2.0.0"}
 
 @app.post("/api/analyze")
-def analyze(sysinfo: SysInfo):
+def analyze(sysinfo: SysInfo, db: Session = Depends(get_db)):
     info = sysinfo.dict()
     result = score_system(info)
 
-    # Crear PDF ELEGANTE
-    pdf_filename = create_pdf_report(info, result)
+    # OBTENER EL PRÓXIMO ID
+    analysis_id = get_next_analysis_id(db)
+    print(f"📊 Nuevo análisis ID: {analysis_id}")
+    
+    # Crear PDF ELEGANTE con el ID
+    pdf_filename = create_pdf_report(info, result, analysis_id)
 
     # Guardar JSON
-    json_filename = pdf_filename.replace(".pdf", ".json")
+    json_filename = f"analisis_{analysis_id:04d}.json"  # Mismo nombre base
     with open(json_filename, "w", encoding="utf-8") as f:
         json.dump({
             "sysinfo": info,
             "result": result,
+            "analysis_id": analysis_id,
             "timestamp": datetime.datetime.now().isoformat(),
             "version": "2.0.0"
         }, f, indent=2, ensure_ascii=False)
@@ -482,6 +490,26 @@ def analyze(sysinfo: SysInfo):
     else:
         print("⚠️ Token Dropbox no configurado")
 
+    # GUARDAR EN BASE DE DATOS
+    db_analysis = SystemAnalysis(
+        analysis_id=analysis_id,
+        cpu_model=info.get('cpu_model', ''),
+        cpu_speed_ghz=info.get('cpu_speed_ghz', 0),
+        cores=info.get('cores', 0),
+        ram_gb=info.get('ram_gb', 0),
+        disk_type=info.get('disk_type', ''),
+        gpu_model=info.get('gpu_model', ''),
+        gpu_vram_gb=info.get('gpu_vram_gb', 0),
+        main_profile=result['main_profile'],
+        main_score=result['main_score'],
+        pdf_url=pdf_url,
+        json_url=json_url
+    )
+    
+    db.add(db_analysis)
+    db.commit()
+    db.refresh(db_analysis)
+
     # Limpiar archivos locales
     try:
         os.remove(pdf_filename)
@@ -491,6 +519,7 @@ def analyze(sysinfo: SysInfo):
 
     return {
         "status": "success",
+        "analysis_id": analysis_id,
         "pdf_url": pdf_url,
         "json_url": json_url,
         "result": result,
