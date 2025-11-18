@@ -450,9 +450,17 @@ def analyze(sysinfo: SysInfo, db: Session = Depends(get_db)):
     info = sysinfo.dict()
     result = score_system(info)
 
+    # DEBUG: Ver qué hay en la base de datos
+    print("🔍 === DEBUG INICIO ===")
+    all_analyses = db.query(SystemAnalysis).all()
+    print(f"🔍 ANALISIS EN BD: {len(all_analyses)} registros")
+    for analysis in all_analyses:
+        print(f"   - ID: {analysis.analysis_id}, CPU: {analysis.cpu_model}, Score: {analysis.main_score}%")
+
     # OBTENER EL PRÓXIMO ID
     analysis_id = get_next_analysis_id(db)
-    print(f"📊 Nuevo análisis ID: {analysis_id}")
+    print(f"📊 NUEVO ID CALCULADO: {analysis_id}")
+    print("🔍 === DEBUG FIN ===")
     
     # Crear PDF ELEGANTE con el ID
     pdf_filename = create_pdf_report(info, result, analysis_id)
@@ -510,6 +518,8 @@ def analyze(sysinfo: SysInfo, db: Session = Depends(get_db)):
     db.add(db_analysis)
     db.commit()
     db.refresh(db_analysis)
+
+    print(f"💾 Análisis guardado en BD con ID: {analysis_id}")
 
     # Limpiar archivos locales
     try:
