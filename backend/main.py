@@ -564,11 +564,11 @@ def analyze(sysinfo: SysInfo, db: Session = Depends(get_db)):
         "version": "2.0.0"
     }
 
-# ==================== DASHBOARD CON GRÁFICOS ====================
+# ==================== DASHBOARD EMPRESARIAL ELEGANTE ====================
 
 @app.get("/dashboard", response_class=HTMLResponse)
 def get_dashboard(db: Session = Depends(get_db)):
-    """Dashboard HTML con gráficos para visualizar la base de datos"""
+    """Dashboard empresarial elegante con la misma paleta de colores de los PDFs"""
     
     # Obtener datos para el dashboard
     analyses = db.query(SystemAnalysis).order_by(SystemAnalysis.analysis_id.desc()).all()
@@ -614,16 +614,34 @@ def get_dashboard(db: Session = Depends(get_db)):
         timeline_labels.append(f"#{analysis.analysis_id}")
         timeline_scores.append(analysis.main_score)
         timeline_colors.append(get_score_color(analysis.main_score))
-    
+
     html_content = f"""
     <!DOCTYPE html>
     <html lang="es">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>AnalizaTuPC - Dashboard Avanzado</title>
+        <title>AnalizaTuPC - Dashboard Corporativo</title>
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
         <style>
+            :root {{
+                /* PALETA IDÉNTICA A LOS PDFs */
+                --azul-celeste-claro: #add8e6;
+                --azul-celeste-medio: #87ceeb;
+                --azul-oscuro: #00008b;
+                --azul-acero: #4682b4;
+                --azul-muy-claro: #c8e6ff;
+                --azul-alice: #f0f8ff;
+                --azul-casi-blanco: #f5faff;
+                --texto-oscuro: #2d3748;
+                --texto-medio: #4a5568;
+                --texto-claro: #718096;
+                --borde-claro: #e2e8f0;
+                --sombra-suave: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+                --sombra-media: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            }}
+            
             * {{
                 margin: 0;
                 padding: 0;
@@ -631,119 +649,192 @@ def get_dashboard(db: Session = Depends(get_db)):
             }}
             
             body {{
-                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+                background: linear-gradient(135deg, var(--azul-celeste-claro) 0%, var(--azul-celeste-medio) 100%);
                 min-height: 100vh;
-                padding: 20px;
+                color: var(--texto-oscuro);
+                line-height: 1.6;
             }}
             
-            .container {{
+            .dashboard-container {{
                 max-width: 1400px;
                 margin: 0 auto;
-            }}
-            
-            .header {{
-                text-align: center;
-                color: white;
-                margin-bottom: 40px;
                 padding: 30px;
-                background: rgba(255,255,255,0.1);
+            }}
+            
+            /* HEADER EMPRESARIAL */
+            .corporate-header {{
+                background: var(--azul-oscuro);
+                color: white;
+                padding: 40px;
                 border-radius: 20px;
-                backdrop-filter: blur(10px);
+                margin-bottom: 40px;
+                box-shadow: var(--sombra-media);
+                position: relative;
+                overflow: hidden;
             }}
             
-            .header h1 {{
-                font-size: 3em;
+            .corporate-header::before {{
+                content: '';
+                position: absolute;
+                top: 0;
+                right: 0;
+                width: 300px;
+                height: 300px;
+                background: var(--azul-acero);
+                border-radius: 50%;
+                transform: translate(100px, -100px);
+                opacity: 0.1;
+            }}
+            
+            .header-content {{
+                position: relative;
+                z-index: 2;
+            }}
+            
+            .corporate-header h1 {{
+                font-size: 3.2em;
+                font-weight: 700;
                 margin-bottom: 10px;
-                text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+                letter-spacing: -0.5px;
             }}
             
-            .header p {{
+            .corporate-header .subtitle {{
                 font-size: 1.3em;
                 opacity: 0.9;
+                font-weight: 300;
             }}
             
+            /* STATS GRID ELEGANTE */
             .stats-grid {{
                 display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-                gap: 25px;
-                margin-bottom: 40px;
+                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                gap: 30px;
+                margin-bottom: 50px;
             }}
             
             .stat-card {{
                 background: white;
-                padding: 30px;
+                padding: 35px;
                 border-radius: 20px;
-                box-shadow: 0 12px 35px rgba(0,0,0,0.15);
+                box-shadow: var(--sombra-suave);
                 text-align: center;
-                transition: all 0.3s ease;
-                border: 1px solid rgba(255,255,255,0.2);
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                border: 1px solid var(--borde-claro);
+                position: relative;
+                overflow: hidden;
+            }}
+            
+            .stat-card::before {{
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 4px;
+                background: linear-gradient(90deg, var(--azul-celeste-medio), var(--azul-oscuro));
             }}
             
             .stat-card:hover {{
                 transform: translateY(-8px);
-                box-shadow: 0 20px 45px rgba(0,0,0,0.25);
+                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            }}
+            
+            .stat-icon {{
+                font-size: 2.5em;
+                color: var(--azul-oscuro);
+                margin-bottom: 20px;
+                opacity: 0.8;
             }}
             
             .stat-number {{
-                font-size: 3em;
-                font-weight: bold;
-                color: #4a5568;
-                margin-bottom: 15px;
+                font-size: 3.5em;
+                font-weight: 800;
+                color: var(--azul-oscuro);
+                margin-bottom: 10px;
+                line-height: 1;
             }}
             
             .stat-label {{
-                color: #718096;
-                font-size: 1.2em;
+                color: var(--texto-medio);
+                font-size: 1.1em;
                 font-weight: 500;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            }}
+            
+            /* CHARTS SECTION */
+            .charts-section {{
+                background: white;
+                border-radius: 20px;
+                padding: 40px;
+                margin-bottom: 50px;
+                box-shadow: var(--sombra-media);
+                border: 1px solid var(--borde-claro);
+            }}
+            
+            .section-title {{
+                font-size: 2em;
+                font-weight: 700;
+                color: var(--azul-oscuro);
+                margin-bottom: 35px;
+                text-align: center;
+                position: relative;
+            }}
+            
+            .section-title::after {{
+                content: '';
+                position: absolute;
+                bottom: -10px;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 80px;
+                height: 4px;
+                background: linear-gradient(90deg, var(--azul-celeste-medio), var(--azul-oscuro));
+                border-radius: 2px;
             }}
             
             .charts-grid {{
                 display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-                gap: 25px;
-                margin-bottom: 40px;
+                grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+                gap: 40px;
             }}
             
             .chart-container {{
-                background: white;
-                border-radius: 20px;
-                padding: 25px;
-                box-shadow: 0 12px 35px rgba(0,0,0,0.15);
+                background: var(--azul-alice);
+                border-radius: 16px;
+                padding: 30px;
+                border: 1px solid var(--azul-muy-claro);
             }}
             
             .chart-title {{
-                color: #2d3748;
-                margin-bottom: 20px;
-                font-size: 1.4em;
+                font-size: 1.3em;
                 font-weight: 600;
+                color: var(--azul-oscuro);
+                margin-bottom: 25px;
                 text-align: center;
             }}
             
+            .chart-wrapper {{
+                position: relative;
+                height: 320px;
+            }}
+            
+            /* ANALYSES SECTION */
             .analyses-section {{
                 background: white;
                 border-radius: 20px;
-                padding: 35px;
-                box-shadow: 0 12px 35px rgba(0,0,0,0.15);
-                margin-bottom: 40px;
-            }}
-            
-            .section-title {{
-                color: #2d3748;
-                margin-bottom: 25px;
-                font-size: 1.8em;
-                font-weight: 600;
-                text-align: center;
-                border-bottom: 3px solid #e2e8f0;
-                padding-bottom: 15px;
+                padding: 40px;
+                box-shadow: var(--sombra-media);
+                border: 1px solid var(--borde-claro);
             }}
             
             .analysis-card {{
-                background: #f7fafc;
-                border: 2px solid #e2e8f0;
-                border-radius: 15px;
-                padding: 25px;
-                margin-bottom: 20px;
+                background: var(--azul-casi-blanco);
+                border: 1px solid var(--azul-muy-claro);
+                border-radius: 16px;
+                padding: 30px;
+                margin-bottom: 25px;
                 transition: all 0.3s ease;
                 position: relative;
                 overflow: hidden;
@@ -752,38 +843,39 @@ def get_dashboard(db: Session = Depends(get_db)):
             .analysis-card::before {{
                 content: '';
                 position: absolute;
-                top: 0;
                 left: 0;
-                width: 5px;
+                top: 0;
                 height: 100%;
-                background: #667eea;
+                width: 6px;
+                background: var(--azul-acero);
             }}
             
             .analysis-card:hover {{
-                background: #edf2f7;
-                transform: translateX(10px);
-                border-color: #cbd5e0;
+                transform: translateX(8px);
+                box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+                border-color: var(--azul-celeste-medio);
             }}
             
             .analysis-header {{
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
-                margin-bottom: 20px;
+                margin-bottom: 25px;
             }}
             
             .analysis-id {{
-                background: #4a5568;
+                background: var(--azul-oscuro);
                 color: white;
-                padding: 8px 20px;
+                padding: 10px 25px;
                 border-radius: 25px;
-                font-weight: bold;
+                font-weight: 700;
                 font-size: 1.1em;
+                letter-spacing: 0.5px;
             }}
             
             .analysis-score {{
-                font-size: 1.8em;
-                font-weight: bold;
+                font-size: 2.2em;
+                font-weight: 800;
             }}
             
             .score-excelent {{ color: #38a169; }}
@@ -791,243 +883,337 @@ def get_dashboard(db: Session = Depends(get_db)):
             .score-regular {{ color: #d69e2e; }}
             .score-poor {{ color: #e53e3e; }}
             
-            .hardware-info {{
+            .hardware-grid {{
                 display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-                gap: 15px;
-                margin-bottom: 20px;
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                gap: 20px;
+                margin-bottom: 25px;
             }}
             
             .hardware-item {{
                 background: white;
-                padding: 15px;
+                padding: 20px;
                 border-radius: 12px;
-                border-left: 5px solid #667eea;
-                box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+                border-left: 4px solid var(--azul-acero);
+                box-shadow: var(--sombra-suave);
             }}
             
             .hardware-label {{
-                font-weight: bold;
-                color: #4a5568;
-                font-size: 0.95em;
-                margin-bottom: 5px;
+                font-weight: 600;
+                color: var(--texto-medio);
+                font-size: 0.9em;
+                margin-bottom: 8px;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
             }}
             
             .hardware-value {{
-                color: #2d3748;
+                color: var(--texto-oscuro);
                 font-size: 1.1em;
+                font-weight: 500;
             }}
             
             .profile-badge {{
-                display: inline-block;
-                background: linear-gradient(135deg, #667eea, #764ba2);
-                color: white;
-                padding: 8px 20px;
-                border-radius: 20px;
-                font-size: 1em;
-                font-weight: 500;
-                margin: 10px 0;
-            }}
-            
-            .no-data {{
-                text-align: center;
-                color: #718096;
-                padding: 60px;
-                font-size: 1.3em;
-            }}
-            
-            .links {{
-                margin-top: 20px;
-                display: flex;
-                gap: 15px;
-                flex-wrap: wrap;
-            }}
-            
-            .link {{
                 display: inline-flex;
                 align-items: center;
                 gap: 8px;
-                background: #48bb78;
+                background: linear-gradient(135deg, var(--azul-celeste-medio), var(--azul-oscuro));
                 color: white;
-                padding: 10px 20px;
+                padding: 12px 25px;
+                border-radius: 25px;
+                font-weight: 600;
+                font-size: 1em;
+                margin: 15px 0;
+            }}
+            
+            .analysis-links {{
+                display: flex;
+                gap: 15px;
+                margin-top: 20px;
+                flex-wrap: wrap;
+            }}
+            
+            .analysis-link {{
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                background: var(--azul-oscuro);
+                color: white;
+                padding: 12px 24px;
                 border-radius: 10px;
                 text-decoration: none;
                 font-weight: 500;
                 transition: all 0.3s ease;
+                border: 2px solid transparent;
             }}
             
-            .link:hover {{
-                background: #38a169;
+            .analysis-link:hover {{
+                background: white;
+                color: var(--azul-oscuro);
+                border-color: var(--azul-oscuro);
                 transform: translateY(-2px);
             }}
             
-            .link-json {{
-                background: #4299e1;
+            .analysis-link.json {{
+                background: var(--azul-acero);
             }}
             
-            .link-json:hover {{
-                background: #3182ce;
+            .analysis-link.json:hover {{
+                background: white;
+                color: var(--azul-acero);
+                border-color: var(--azul-acero);
             }}
             
-            .timestamp {{
-                margin-top: 15px;
-                color: #718096;
+            .analysis-meta {{
+                margin-top: 20px;
+                color: var(--texto-claro);
                 font-size: 0.9em;
                 font-style: italic;
+                border-top: 1px solid var(--borde-claro);
+                padding-top: 15px;
             }}
             
-            .chart-wrapper {{
-                position: relative;
-                height: 300px;
-                margin-top: 20px;
+            /* NO DATA STATE */
+            .no-data {{
+                text-align: center;
+                padding: 80px 40px;
+                color: var(--texto-claro);
+            }}
+            
+            .no-data i {{
+                font-size: 4em;
+                margin-bottom: 20px;
+                opacity: 0.5;
+            }}
+            
+            .no-data h3 {{
+                font-size: 1.5em;
+                margin-bottom: 10px;
+                color: var(--texto-medio);
+            }}
+            
+            /* FOOTER */
+            .dashboard-footer {{
+                text-align: center;
+                margin-top: 60px;
+                padding: 30px;
+                color: white;
+                opacity: 0.9;
             }}
             
             .api-links {{
-                text-align: center;
+                display: flex;
+                justify-content: center;
+                gap: 20px;
                 margin-top: 30px;
+                flex-wrap: wrap;
             }}
             
             .api-link {{
-                display: inline-block;
-                background: rgba(255,255,255,0.2);
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                background: rgba(255, 255, 255, 0.2);
                 color: white;
-                padding: 12px 25px;
+                padding: 12px 24px;
                 border-radius: 10px;
                 text-decoration: none;
-                margin: 0 10px;
                 transition: all 0.3s ease;
-                border: 1px solid rgba(255,255,255,0.3);
+                border: 1px solid rgba(255, 255, 255, 0.3);
             }}
             
             .api-link:hover {{
-                background: rgba(255,255,255,0.3);
+                background: rgba(255, 255, 255, 0.3);
                 transform: translateY(-2px);
             }}
             
+            /* RESPONSIVE */
             @media (max-width: 768px) {{
-                .charts-grid {{
-                    grid-template-columns: 1fr;
+                .dashboard-container {{
+                    padding: 20px;
+                }}
+                
+                .corporate-header h1 {{
+                    font-size: 2.5em;
                 }}
                 
                 .stats-grid {{
                     grid-template-columns: 1fr;
                 }}
                 
-                .hardware-info {{
+                .charts-grid {{
                     grid-template-columns: 1fr;
+                }}
+                
+                .hardware-grid {{
+                    grid-template-columns: 1fr;
+                }}
+                
+                .analysis-header {{
+                    flex-direction: column;
+                    gap: 15px;
+                    align-items: flex-start;
                 }}
             }}
         </style>
     </head>
     <body>
-        <div class="container">
-            <div class="header">
-                <h1>📊 AnalizaTuPC - Dashboard Avanzado</h1>
-                <p>Visualización en tiempo real con gráficos interactivos</p>
-            </div>
+        <div class="dashboard-container">
+            <!-- HEADER CORPORATIVO -->
+            <header class="corporate-header">
+                <div class="header-content">
+                    <h1><i class="fas fa-chart-line"></i> AnalizaTuPC Dashboard</h1>
+                    <p class="subtitle">Panel de control corporativo - Análisis de hardware en tiempo real</p>
+                </div>
+            </header>
             
+            <!-- ESTADÍSTICAS PRINCIPALES -->
             <div class="stats-grid">
                 <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-chart-bar"></i>
+                    </div>
                     <div class="stat-number">{total_analyses}</div>
                     <div class="stat-label">Total de Análisis</div>
                 </div>
+                
                 <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-percentage"></i>
+                    </div>
                     <div class="stat-number">{round(avg_score, 1)}%</div>
-                    <div class="stat-label">Puntuación Promedio</div>
+                    <div class="stat-label">Puntuación Promedia</div>
                 </div>
+                
                 <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-layer-group"></i>
+                    </div>
                     <div class="stat-number">{len(profile_counts)}</div>
                     <div class="stat-label">Perfiles Diferentes</div>
                 </div>
+                
                 <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-trophy"></i>
+                    </div>
                     <div class="stat-number">{best_analysis.main_score if best_analysis else 0}%</div>
                     <div class="stat-label">Mejor Puntuación</div>
                 </div>
             </div>
             
-            <div class="charts-grid">
-                <div class="chart-container">
-                    <div class="chart-title">📈 Distribución por Perfiles</div>
-                    <div class="chart-wrapper">
-                        <canvas id="profileChart"></canvas>
+            <!-- SECCIÓN DE GRÁFICOS -->
+            <section class="charts-section">
+                <h2 class="section-title">Métricas y Análisis</h2>
+                <div class="charts-grid">
+                    <div class="chart-container">
+                        <div class="chart-title">
+                            <i class="fas fa-chart-pie"></i> Distribución por Perfiles
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="profileChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <div class="chart-title">
+                            <i class="fas fa-chart-bar"></i> Rangos de Puntuación
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="scoreChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <div class="chart-title">
+                            <i class="fas fa-chart-line"></i> Evolución Reciente
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="timelineChart"></canvas>
+                        </div>
                     </div>
                 </div>
-                
-                <div class="chart-container">
-                    <div class="chart-title">🎯 Rangos de Puntuación</div>
-                    <div class="chart-wrapper">
-                        <canvas id="scoreChart"></canvas>
-                    </div>
-                </div>
-                
-                <div class="chart-container">
-                    <div class="chart-title">📅 Evolución Reciente</div>
-                    <div class="chart-wrapper">
-                        <canvas id="timelineChart"></canvas>
-                    </div>
-                </div>
-            </div>
+            </section>
             
-            <div class="analyses-section">
-                <h2 class="section-title">🔍 Análisis Detallados</h2>
+            <!-- SECCIÓN DE ANÁLISIS DETALLADOS -->
+            <section class="analyses-section">
+                <h2 class="section-title">Análisis Detallados del Sistema</h2>
                 
                 {"".join([f"""
                 <div class="analysis-card">
                     <div class="analysis-header">
-                        <div class="analysis-id">Análisis #{analysis.analysis_id}</div>
-                        <div class="analysis-score {get_score_class(analysis.main_score)}">{analysis.main_score}%</div>
+                        <div class="analysis-id">
+                            <i class="fas fa-desktop"></i> Análisis #{analysis.analysis_id}
+                        </div>
+                        <div class="analysis-score {get_score_class(analysis.main_score)}">
+                            {analysis.main_score}%
+                        </div>
                     </div>
                     
-                    <div class="hardware-info">
+                    <div class="hardware-grid">
                         <div class="hardware-item">
-                            <div class="hardware-label">🖥️ CPU</div>
+                            <div class="hardware-label">Procesador</div>
                             <div class="hardware-value">{analysis.cpu_model or "No especificado"}</div>
                         </div>
                         <div class="hardware-item">
-                            <div class="hardware-label">⚡ Núcleos</div>
+                            <div class="hardware-label">Núcleos</div>
                             <div class="hardware-value">{analysis.cores}</div>
                         </div>
                         <div class="hardware-item">
-                            <div class="hardware-label">💾 RAM</div>
+                            <div class="hardware-label">Memoria RAM</div>
                             <div class="hardware-value">{analysis.ram_gb} GB</div>
                         </div>
                         <div class="hardware-item">
-                            <div class="hardware-label">🎮 GPU</div>
+                            <div class="hardware-label">Tarjeta Gráfica</div>
                             <div class="hardware-value">{analysis.gpu_model or "No especificado"}</div>
                         </div>
                         <div class="hardware-item">
-                            <div class="hardware-label">🚀 VRAM</div>
+                            <div class="hardware-label">VRAM</div>
                             <div class="hardware-value">{analysis.gpu_vram_gb} GB</div>
                         </div>
                         <div class="hardware-item">
-                            <div class="hardware-label">💿 Almacenamiento</div>
+                            <div class="hardware-label">Almacenamiento</div>
                             <div class="hardware-value">{analysis.disk_type}</div>
                         </div>
                     </div>
                     
-                    <div class="profile-badge">🎯 {analysis.main_profile}</div>
-                    
-                    <div class="links">
-                        {"<a href='"+analysis.pdf_url+"' class='link' target='_blank'>📄 Ver PDF</a>" if analysis.pdf_url else ""}
-                        {"<a href='"+analysis.json_url+"' class='link link-json' target='_blank'>📊 Ver JSON</a>" if analysis.json_url else ""}
+                    <div class="profile-badge">
+                        <i class="fas fa-bullseye"></i> Perfil Recomendado: {analysis.main_profile}
                     </div>
                     
-                    <div class="timestamp">
-                        ⏰ Creado: {analysis.created_at.strftime("%d/%m/%Y %H:%M") if analysis.created_at else "Fecha no disponible"}
+                    <div class="analysis-links">
+                        {"<a href='"+analysis.pdf_url+"' class='analysis-link' target='_blank'><i class='fas fa-file-pdf'></i> Ver Informe PDF</a>" if analysis.pdf_url else ""}
+                        {"<a href='"+analysis.json_url+"' class='analysis-link json' target='_blank'><i class='fas fa-code'></i> Ver Datos JSON</a>" if analysis.json_url else ""}
+                    </div>
+                    
+                    <div class="analysis-meta">
+                        <i class="fas fa-clock"></i> Generado el {analysis.created_at.strftime("%d/%m/%Y a las %H:%M") if analysis.created_at else "Fecha no disponible"}
                     </div>
                 </div>
-                """ for analysis in analyses]) if analyses else '<div class="no-data">🎉 ¡No hay análisis en la base de datos!<br><small>Realiza el primer análisis para ver datos aquí.</small></div>'}
-            </div>
+                """ for analysis in analyses]) if analyses else '''
+                <div class="no-data">
+                    <i class="fas fa-inbox"></i>
+                    <h3>No hay análisis disponibles</h3>
+                    <p>Realiza el primer análisis para ver los datos en este dashboard</p>
+                </div>
+                '''}
+            </section>
             
-            <div class="api-links">
-                <a href="/api/analyses" class="api-link" target="_blank">📋 API - Todos los análisis</a>
-                <a href="/api/stats" class="api-link" target="_blank">📊 API - Estadísticas</a>
-                <a href="/" class="api-link" target="_blank">🚀 API Principal</a>
-            </div>
-            
-            <div style="text-align: center; color: white; margin-top: 50px; opacity: 0.8;">
-                <p>AnalizaTuPC Dashboard Avanzado • {datetime.datetime.now().strftime("%d/%m/%Y %H:%M")}</p>
-            </div>
+            <!-- FOOTER Y ENLACES -->
+            <footer class="dashboard-footer">
+                <div class="api-links">
+                    <a href="/api/analyses" class="api-link" target="_blank">
+                        <i class="fas fa-database"></i> API de Análisis
+                    </a>
+                    <a href="/api/stats" class="api-link" target="_blank">
+                        <i class="fas fa-chart-bar"></i> API de Estadísticas
+                    </a>
+                    <a href="/" class="api-link" target="_blank">
+                        <i class="fas fa-rocket"></i> Documentación API
+                    </a>
+                </div>
+                <p>AnalizaTuPC Dashboard Corporativo • {datetime.datetime.now().strftime("%d/%m/%Y %H:%M")}</p>
+            </footer>
         </div>
         
         <script>
@@ -1048,8 +1234,9 @@ def get_dashboard(db: Session = Depends(get_db)):
                     datasets: [{{
                         data: profileData.map(p => p.data),
                         backgroundColor: profileData.map(p => p.color),
-                        borderWidth: 2,
-                        borderColor: '#fff'
+                        borderWidth: 3,
+                        borderColor: '#ffffff',
+                        hoverOffset: 15
                     }}]
                 }},
                 options: {{
@@ -1059,15 +1246,25 @@ def get_dashboard(db: Session = Depends(get_db)):
                         legend: {{
                             position: 'bottom',
                             labels: {{
-                                padding: 20,
-                                usePointStyle: true
+                                padding: 25,
+                                usePointStyle: true,
+                                font: {{
+                                    size: 12,
+                                    family: "'Segoe UI', sans-serif"
+                                }}
                             }}
                         }},
-                        title: {{
-                            display: true,
-                            text: 'Distribución por Perfil'
+                        tooltip: {{
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            titleFont: {{
+                                size: 14
+                            }},
+                            bodyFont: {{
+                                size: 13
+                            }}
                         }}
-                    }}
+                    }},
+                    cutout: '60%'
                 }}
             }});
             
@@ -1080,7 +1277,8 @@ def get_dashboard(db: Session = Depends(get_db)):
                         data: scoreData.map(s => s.data),
                         backgroundColor: scoreData.map(s => s.color),
                         borderWidth: 0,
-                        borderRadius: 8
+                        borderRadius: 8,
+                        borderSkipped: false,
                     }}]
                 }},
                 options: {{
@@ -1090,16 +1288,31 @@ def get_dashboard(db: Session = Depends(get_db)):
                         legend: {{
                             display: false
                         }},
-                        title: {{
-                            display: true,
-                            text: 'Análisis por Rango de Puntuación'
+                        tooltip: {{
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)'
                         }}
                     }},
                     scales: {{
                         y: {{
                             beginAtZero: true,
                             ticks: {{
-                                stepSize: 1
+                                stepSize: 1,
+                                font: {{
+                                    family: "'Segoe UI', sans-serif"
+                                }}
+                            }},
+                            grid: {{
+                                color: 'rgba(0, 0, 0, 0.1)'
+                            }}
+                        }},
+                        x: {{
+                            ticks: {{
+                                font: {{
+                                    family: "'Segoe UI', sans-serif"
+                                }}
+                            }},
+                            grid: {{
+                                display: false
                             }}
                         }}
                     }}
@@ -1112,26 +1325,31 @@ def get_dashboard(db: Session = Depends(get_db)):
                 data: {{
                     labels: timelineData.labels,
                     datasets: [{{
-                        label: 'Puntuación',
+                        label: 'Puntuación del Sistema',
                         data: timelineData.scores,
-                        borderColor: '#667eea',
-                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        borderColor: '#00008b',
+                        backgroundColor: 'rgba(0, 0, 139, 0.1)',
                         borderWidth: 3,
                         fill: true,
                         tension: 0.4,
                         pointBackgroundColor: timelineData.colors,
-                        pointBorderColor: '#fff',
-                        pointBorderWidth: 2,
-                        pointRadius: 6
+                        pointBorderColor: '#ffffff',
+                        pointBorderWidth: 3,
+                        pointRadius: 6,
+                        pointHoverRadius: 8
                     }}]
                 }},
                 options: {{
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {{
-                        title: {{
-                            display: true,
-                            text: 'Evolución de Puntuaciones'
+                        tooltip: {{
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            callbacks: {{
+                                label: function(context) {{
+                                    return `Puntuación: ${{context.parsed.y}}%`;
+                                }}
+                            }}
                         }}
                     }},
                     scales: {{
@@ -1141,25 +1359,41 @@ def get_dashboard(db: Session = Depends(get_db)):
                             ticks: {{
                                 callback: function(value) {{
                                     return value + '%';
+                                }},
+                                font: {{
+                                    family: "'Segoe UI', sans-serif"
                                 }}
+                            }},
+                            grid: {{
+                                color: 'rgba(0, 0, 0, 0.1)'
+                            }}
+                        }},
+                        x: {{
+                            ticks: {{
+                                font: {{
+                                    family: "'Segoe UI', sans-serif"
+                                }}
+                            }},
+                            grid: {{
+                                color: 'rgba(0, 0, 0, 0.05)'
                             }}
                         }}
                     }}
                 }}
             }});
             
-            // Auto-refresh cada 45 segundos
+            // Auto-refresh cada 60 segundos
             setTimeout(() => {{
                 window.location.reload();
-            }}, 45000);
+            }}, 60000);
             
             // Efectos de hover mejorados
             document.querySelectorAll('.analysis-card').forEach(card => {{
                 card.addEventListener('mouseenter', function() {{
-                    this.style.boxShadow = '0 15px 40px rgba(0,0,0,0.2)';
+                    this.style.transform = 'translateX(12px)';
                 }});
                 card.addEventListener('mouseleave', function() {{
-                    this.style.boxShadow = 'none';
+                    this.style.transform = 'translateX(0)';
                 }});
             }});
         </script>
