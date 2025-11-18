@@ -68,7 +68,7 @@ def score_system(info: dict):
     }
 
 # -------------------------
-#   PDF SUPER ELEGANTE - COLOR AZUL CELESTE
+#   PDF SUPER ELEGANTE - COLORES MÁS CLAROS
 # -------------------------
 class PDF(FPDF):
     def __init__(self):
@@ -174,25 +174,25 @@ class PDF(FPDF):
     def add_score_meter(self, profile, score, rank):
         self.set_font("Arial", "B", 12)
         
-        # Determinar color según puntuación - ahora con azules
+        # COLORES MÁS CLAROS Y SUAVES para las puntuaciones
         if score >= 80:
-            color = (0, 191, 255)  # Azul deep sky
+            color = (200, 230, 255)  # Azul muy claro y suave - EXCELENTE
             label = "EXCELENTE"
         elif score >= 60:
-            color = (100, 149, 237)  # Azul cornflower
+            color = (220, 240, 255)  # Azul casi blanco - BUENO
             label = "BUENO"
         elif score >= 40:
-            color = (176, 224, 230)  # Azul powder
+            color = (240, 248, 255)  # Azul alice muy claro - REGULAR
             label = "REGULAR"
         else:
-            color = (173, 216, 230)  # Azul celeste claro
+            color = (245, 250, 255)  # Casi blanco con tono azul - MEJORABLE
             label = "MEJORABLE"
         
-        # Tarjeta de puntuación con borde
+        # Tarjeta de puntuación con borde sutil
         self.set_fill_color(color[0], color[1], color[2])
         self.set_text_color(0, 0, 0)  # Texto negro para mejor contraste
-        self.set_draw_color(max(0, color[0]-30), max(0, color[1]-30), max(0, color[2]-30))
-        self.set_line_width(0.3)
+        self.set_draw_color(200, 200, 200)  # Borde gris claro
+        self.set_line_width(0.2)  # Borde más delgado
         self.cell(0, 10, f" {label} - {profile}: {score}% ({rank})", border=1, ln=True, fill=True)
         self.ln(5)
 
@@ -237,16 +237,16 @@ def create_pdf_report(sysinfo: dict, result: dict):
     pdf.ln(40)
     
     # PERFIL PRINCIPAL DESTACADO CON AZUL CELESTE
-    pdf.set_fill_color(173, 216, 230)  # Azul celeste claro
-    pdf.set_draw_color(135, 206, 235)  # Azul celeste medio
+    pdf.set_fill_color(200, 230, 255)  # Azul muy claro y suave
+    pdf.set_draw_color(173, 216, 230)  # Azul celeste claro para borde
     pdf.set_line_width(1)
     
-    # Sombra del recuadro
-    pdf.set_fill_color(200, 200, 200)
+    # Sombra del recuadro (más sutil)
+    pdf.set_fill_color(220, 220, 220)
     pdf.rect(52, pdf.get_y() + 2, 106, 54, 'F')
     
     # Recuadro principal
-    pdf.set_fill_color(173, 216, 230)  # Azul celeste claro
+    pdf.set_fill_color(200, 230, 255)  # Azul muy claro y suave
     pdf.rect(50, pdf.get_y(), 106, 50, 'F')
     
     # Contenido del recuadro
@@ -275,7 +275,7 @@ def create_pdf_report(sysinfo: dict, result: dict):
     pdf.add_section_title("Especificaciones del Sistema")
     
     # Crear tabla elegante para especificaciones CON AZUL CELESTE
-    pdf.set_fill_color(135, 206, 235)  # Azul celeste para cabecera
+    pdf.set_fill_color(200, 230, 255)  # Azul muy claro para cabecera
     pdf.set_font("Arial", "B", 12)
     pdf.set_text_color(0, 0, 0)  # Texto negro para mejor contraste
     pdf.cell(80, 10, "COMPONENTE", border=1, fill=True, align='C')
@@ -296,7 +296,7 @@ def create_pdf_report(sysinfo: dict, result: dict):
     pdf.set_font("Arial", "", 10)
     for i, (component, spec) in enumerate(specs_data):
         # Fondo alternado para mejor lectura
-        fill_color = (240, 248, 255) if i % 2 == 0 else (255, 255, 255)  # Azul alice claro alternado
+        fill_color = (245, 250, 255) if i % 2 == 0 else (255, 255, 255)  # Azul muy claro alternado
         pdf.set_fill_color(*fill_color)
         
         # Componente
@@ -321,8 +321,8 @@ def create_pdf_report(sysinfo: dict, result: dict):
     # SECCIÓN: TABLA DETALLADA DE PUNTUACIONES
     pdf.add_section_title("Tabla de Puntuaciones Detalladas")
     
-    # Cabecera de tabla CON AZUL CELESTE
-    pdf.set_fill_color(135, 206, 235)  # Azul celeste
+    # Cabecera de tabla CON AZUL MUY CLARO
+    pdf.set_fill_color(200, 230, 255)  # Azul muy claro
     pdf.set_font("Arial", "B", 11)
     pdf.set_text_color(0, 0, 0)  # Texto negro
     pdf.cell(100, 10, "PERFIL DE USO", border=1, fill=True, align='C')
@@ -335,17 +335,17 @@ def create_pdf_report(sysinfo: dict, result: dict):
     for i, (profile, score) in enumerate(sorted_scores):
         score_percent = round(score * 100, 1)
         
-        # Fondo alternado
-        fill_color = (240, 248, 255) if i % 2 == 0 else (255, 255, 255)  # Azul alice claro alternado
+        # Fondo alternado muy suave
+        fill_color = (245, 250, 255) if i % 2 == 0 else (255, 255, 255)  # Azul muy claro alternado
         pdf.set_fill_color(*fill_color)
         
         # Perfil
         pdf.set_text_color(0, 0, 0)
         pdf.cell(100, 10, f"   {profile}", border=1, fill=True)
         
-        # Puntuación con color EN TONOS AZULES
+        # Puntuación con color EN TONOS AZULES MUY CLAROS
         if score_percent >= 80:
-            text_color = (0, 0, 139)  # Azul oscuro
+            text_color = (0, 0, 139)  # Azul oscuro para contraste
             classification = "Excelente"
         elif score_percent >= 60:
             text_color = (70, 130, 180)  # Azul acero
