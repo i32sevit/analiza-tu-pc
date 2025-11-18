@@ -1,24 +1,33 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
-from pydantic import BaseModel
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from pydantic import BaseModel, EmailStr
 from fpdf import FPDF
 from sqlalchemy.orm import Session
 from sqlalchemy import func
-from database import get_db, SystemAnalysis, create_tables, get_next_analysis_id
+from database import get_db, SystemAnalysis, User, create_tables, get_next_analysis_id
+from auth import create_access_token, get_password_hash, verify_password, get_current_user, ACCESS_TOKEN_EXPIRE_MINUTES
 import datetime
 import json
 import os
 from dropbox_upload import upload_to_dropbox, create_dropbox_folder_structure
 from dotenv import load_dotenv
+from typing import List, Optional
+from models import UserCreate, UserLogin, UserResponse, Token, AnalysisCreate, AnalysisResponse, AnalysisHistory
+from auth import create_access_token, get_password_hash, verify_password, get_current_user, ACCESS_TOKEN_EXPIRE_MINUTES
+from jose import JWTError, jwt
+from datetime import timedelta
 
 # Cargar variables de entorno
 load_dotenv()
 access_token = os.getenv("DROPBOX_ACCESS_TOKEN")
+SECRET_KEY = os.getenv("SECRET_KEY", "tu_clave_secreta_muy_segura_aqui_cambiar_en_produccion")
+ALGORITHM = "HS256"
 
 app = FastAPI(title="AnalizaTuPC API", version="2.0.0")
 
-print("🚀 CARGANDO VERSIÓN NUEVA MEJORADA - " + datetime.datetime.now().strftime("%H:%M:%S"))
+print("🚀 CARGANDO VERSIÓN NUEVA MEJORADA CON AUTENTICACIÓN- " + datetime.datetime.now().strftime("%H:%M:%S"))
 
 # CORS
 app.add_middleware(
@@ -40,6 +49,62 @@ class SysInfo(BaseModel):
     disk_type: str = "HDD"
     gpu_model: str = ""
     gpu_vram_gb: float = 0.0
+
+class UserCreate(BaseModel):
+    username: str
+    email: EmailStr
+    password: str
+
+class UserLogin(BaseModel):
+    username: str
+    password: str
+
+class UserResponse(BaseModel):
+    id: int
+    username: str
+    email: str
+    created_at: datetime.datetime
+
+    class Config:
+        from_attributes = True
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+    user: UserResponse
+
+class AnalysisHistory(BaseModel):
+    analyses: List[dict]
+    total_count: int
+
+# -------------------------
+#   FUNCIONES AUXILIARES PARA USUARIOS NO REGISTRADOS
+# -------------------------
+def get_current_user_optional(
+    credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer(auto_error=False)),
+    db: Session = Depends(get_db)
+):
+    """
+    Función opcional para obtener el usuario actual.
+    Si no hay token o es inválido, retorna None.
+    """
+    if credentials is None:
+        return None
+    
+    try:
+        payload = jwt.decode(credentials.credentials, SECRET_KEY, algorithms=[ALGORITHM])
+        username: str = payload.get("sub")
+        if username is None:
+            return None
+        
+        user = db.query(User).filter(User.username == username).first()
+        return user
+    except JWTError:
+        return None
+
+def generate_guest_analysis_id():
+    """Genera un ID temporal para análisis de invitados"""
+    return int(datetime.datetime.now().timestamp())
 
 # -------------------------
 #   FUNCIONES DE SCORE
@@ -457,47 +522,102 @@ def get_score_color(score):
 # -------------------------
 #   API ENDPOINTS
 # -------------------------
-@app.on_event("startup")
-async def startup_event():
-    if access_token:
-        create_dropbox_folder_structure(access_token)
-        print("✅ Dropbox configurado")
+
+#   ENDPOINTS DE AUTENTICACIÓN 
+@app.post("/register", response_model=UserResponse)
+def register(user_data: UserCreate, db: Session = Depends(get_db)):
+    # Verificar si el usuario ya existe
+    existing_user = db.query(User).filter(
+        (User.username == user_data.username) | (User.email == user_data.email)
+    ).first()
     
-    # Crear tablas si no existen
-    create_tables()
-    print("✅ Base de datos configurada")
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Username or email already registered"
+        )
+    
+    # Crear nuevo usuario
+    hashed_password = get_password_hash(user_data.password)
+    db_user = User(
+        username=user_data.username,
+        email=user_data.email,
+        hashed_password=hashed_password
+    )
+    
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
+    
+    return db_user
 
-@app.get("/")
-def read_root():
-    return {"message": "AnalizaTuPC API v2.0 funcionando", "version": "2.0.0"}
+@app.post("/login", response_model=Token)
+def login(login_data: UserLogin, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.username == login_data.username).first()
+    
+    if not user or not verify_password(login_data.password, user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password"
+        )
+    
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": user.username}, expires_delta=access_token_expires
+    )
+    
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user": user
+    }
 
+@app.get("/profile", response_model=UserResponse)
+def get_profile(current_user: User = Depends(get_current_user)):
+    return current_user
+
+
+#   ENDPOINTS DE ANÁLISIS (PARA USUARIOS REGISTRADOS Y NO REGISTRADOS)
 @app.post("/api/analyze")
-def analyze(sysinfo: SysInfo, db: Session = Depends(get_db)):
+def analyze(
+    sysinfo: SysInfo, 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user_optional)
+):
+    """
+    Endpoint para análisis que funciona tanto para usuarios registrados como no registrados.
+    """
     info = sysinfo.dict()
     result = score_system(info)
 
-    # DEBUG: Ver qué hay en la base de datos
-    print("🔍 === DEBUG INICIO ===")
-    all_analyses = db.query(SystemAnalysis).all()
-    print(f"🔍 ANALISIS EN BD: {len(all_analyses)} registros")
-    for analysis in all_analyses:
-        print(f"   - ID: {analysis.analysis_id}, CPU: {analysis.cpu_model}, Score: {analysis.main_score}%")
-
-    # OBTENER EL PRÓXIMO ID
-    analysis_id = get_next_analysis_id(db)
-    print(f"📊 NUEVO ID CALCULADO: {analysis_id}")
-    print("🔍 === DEBUG FIN ===")
+    # Determinar si es usuario registrado o invitado
+    is_guest = current_user is None
     
-    # Crear PDF ELEGANTE con el ID
+    if is_guest:
+        # Usuario no registrado - análisis temporal
+        analysis_id = generate_guest_analysis_id()
+        user_id = None
+        print(f"🔍 Análisis para usuario INVITADO - ID temporal: {analysis_id}")
+    else:
+        # Usuario registrado - análisis persistente
+        user_analyses = db.query(SystemAnalysis).filter(SystemAnalysis.user_id == current_user.id).all()
+        analysis_id = get_next_analysis_id(db)
+        user_id = current_user.id
+        print(f"🔍 Análisis para usuario REGISTRADO {current_user.username} - ID: {analysis_id}")
+        print(f"🔍 Total de análisis del usuario: {len(user_analyses)}")
+
+    # Crear PDF
     pdf_filename = create_pdf_report(info, result, analysis_id)
 
     # Guardar JSON
-    json_filename = f"analisis_{analysis_id:04d}.json"  # Mismo nombre base
+    json_filename = f"analisis_{analysis_id:04d}.json"
     with open(json_filename, "w", encoding="utf-8") as f:
         json.dump({
             "sysinfo": info,
             "result": result,
             "analysis_id": analysis_id,
+            "user_id": user_id,
+            "is_guest": is_guest,
             "timestamp": datetime.datetime.now().isoformat(),
             "version": "2.0.0"
         }, f, indent=2, ensure_ascii=False)
@@ -525,27 +645,31 @@ def analyze(sysinfo: SysInfo, db: Session = Depends(get_db)):
     else:
         print("⚠️ Token Dropbox no configurado")
 
-    # GUARDAR EN BASE DE DATOS
-    db_analysis = SystemAnalysis(
-        analysis_id=analysis_id,
-        cpu_model=info.get('cpu_model', ''),
-        cpu_speed_ghz=info.get('cpu_speed_ghz', 0),
-        cores=info.get('cores', 0),
-        ram_gb=info.get('ram_gb', 0),
-        disk_type=info.get('disk_type', ''),
-        gpu_model=info.get('gpu_model', ''),
-        gpu_vram_gb=info.get('gpu_vram_gb', 0),
-        main_profile=result['main_profile'],
-        main_score=result['main_score'],
-        pdf_url=pdf_url,
-        json_url=json_url
-    )
-    
-    db.add(db_analysis)
-    db.commit()
-    db.refresh(db_analysis)
+    # GUARDAR EN BASE DE DATOS solo si es usuario registrado
+    if not is_guest:
+        db_analysis = SystemAnalysis(
+            analysis_id=analysis_id,
+            cpu_model=info.get('cpu_model', ''),
+            cpu_speed_ghz=info.get('cpu_speed_ghz', 0),
+            cores=info.get('cores', 0),
+            ram_gb=info.get('ram_gb', 0),
+            disk_type=info.get('disk_type', ''),
+            gpu_model=info.get('gpu_model', ''),
+            gpu_vram_gb=info.get('gpu_vram_gb', 0),
+            main_profile=result['main_profile'],
+            main_score=result['main_score'],
+            pdf_url=pdf_url,
+            json_url=json_url,
+            user_id=user_id
+        )
+        
+        db.add(db_analysis)
+        db.commit()
+        db.refresh(db_analysis)
 
-    print(f"💾 Análisis guardado en BD con ID: {analysis_id}")
+        print(f"💾 Análisis guardado en BD con ID: {analysis_id} para usuario: {current_user.username}")
+    else:
+        print(f"📝 Análisis temporal generado para invitado - ID: {analysis_id}")
 
     # Limpiar archivos locales
     try:
@@ -560,9 +684,220 @@ def analyze(sysinfo: SysInfo, db: Session = Depends(get_db)):
         "pdf_url": pdf_url,
         "json_url": json_url,
         "result": result,
-        "message": "Análisis completado correctamente",
+        "is_guest": is_guest,
+        "message": "Análisis completado correctamente" + (" (modo invitado)" if is_guest else ""),
         "version": "2.0.0"
     }
+
+
+#   ENDPOINTS EXCLUSIVOS PARA USUARIOS REGISTRADOS
+@app.get("/api/analyses", response_model=List[dict])
+def get_user_analyses(
+    skip: int = 0,
+    limit: int = 10,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Solo usuarios registrados pueden ver su historial"""
+    analyses = db.query(SystemAnalysis)\
+        .filter(SystemAnalysis.user_id == current_user.id)\
+        .order_by(SystemAnalysis.created_at.desc())\
+        .offset(skip)\
+        .limit(limit)\
+        .all()
+    
+    return [
+        {
+            "analysis_id": a.analysis_id,
+            "cpu_model": a.cpu_model,
+            "cpu_speed_ghz": a.cpu_speed_ghz,
+            "cores": a.cores,
+            "ram_gb": a.ram_gb,
+            "gpu_model": a.gpu_model,
+            "main_profile": a.main_profile,
+            "main_score": a.main_score,
+            "pdf_url": a.pdf_url,
+            "created_at": a.created_at.isoformat() if a.created_at else None
+        }
+        for a in analyses
+    ]
+
+@app.get("/api/analyses/{analysis_id}")
+def get_analysis(
+    analysis_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Solo usuarios registrados pueden ver análisis específicos"""
+    analysis = db.query(SystemAnalysis)\
+        .filter(
+            SystemAnalysis.analysis_id == analysis_id,
+            SystemAnalysis.user_id == current_user.id
+        )\
+        .first()
+    
+    if not analysis:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Analysis not found"
+        )
+    
+    return {
+        "status": "success",
+        "analysis": {
+            "analysis_id": analysis.analysis_id,
+            "cpu_model": analysis.cpu_model,
+            "cpu_speed_ghz": analysis.cpu_speed_ghz,
+            "cores": analysis.cores,
+            "ram_gb": analysis.ram_gb,
+            "disk_type": analysis.disk_type,
+            "gpu_model": analysis.gpu_model,
+            "gpu_vram_gb": analysis.gpu_vram_gb,
+            "main_profile": analysis.main_profile,
+            "main_score": analysis.main_score,
+            "pdf_url": analysis.pdf_url,
+            "json_url": analysis.json_url,
+            "created_at": analysis.created_at.isoformat() if analysis.created_at else None
+        }
+    }
+
+@app.get("/api/analyses/history", response_model=AnalysisHistory)
+def get_analysis_history(
+    skip: int = 0,
+    limit: int = 10,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Solo usuarios registrados pueden ver su historial completo"""
+    analyses = db.query(SystemAnalysis)\
+        .filter(SystemAnalysis.user_id == current_user.id)\
+        .order_by(SystemAnalysis.created_at.desc())\
+        .offset(skip)\
+        .limit(limit)\
+        .all()
+    
+    total_count = db.query(SystemAnalysis)\
+        .filter(SystemAnalysis.user_id == current_user.id)\
+        .count()
+    
+    analysis_list = [
+        {
+            "analysis_id": a.analysis_id,
+            "cpu_model": a.cpu_model,
+            "cpu_speed_ghz": a.cpu_speed_ghz,
+            "cores": a.cores,
+            "ram_gb": a.ram_gb,
+            "gpu_model": a.gpu_model,
+            "main_profile": a.main_profile,
+            "main_score": a.main_score,
+            "pdf_url": a.pdf_url,
+            "created_at": a.created_at.isoformat() if a.created_at else None
+        }
+        for a in analyses
+    ]
+    
+    return AnalysisHistory(analyses=analysis_list, total_count=total_count)
+
+
+#   ENDPOINT PARA ANÁLISIS RÁPIDO (SIN AUTENTICACIÓN)
+@app.post("/api/quick-analyze")
+def quick_analyze(
+    sysinfo: SysInfo, 
+    db: Session = Depends(get_db)
+):
+    """
+    Endpoint específico para análisis rápido sin necesidad de autenticación.
+    No guarda en base de datos, solo genera el reporte.
+    """
+    info = sysinfo.dict()
+    result = score_system(info)
+
+    # ID temporal para invitados
+    analysis_id = generate_guest_analysis_id()
+    
+    print(f"🚀 Análisis RÁPIDO para INVITADO - ID temporal: {analysis_id}")
+
+    # Crear PDF
+    pdf_filename = create_pdf_report(info, result, analysis_id)
+
+    # Guardar JSON temporal
+    json_filename = f"analisis_{analysis_id:04d}.json"
+    with open(json_filename, "w", encoding="utf-8") as f:
+        json.dump({
+            "sysinfo": info,
+            "result": result,
+            "analysis_id": analysis_id,
+            "is_guest": True,
+            "timestamp": datetime.datetime.now().isoformat(),
+            "version": "2.0.0"
+        }, f, indent=2, ensure_ascii=False)
+
+    pdf_url = None
+    json_url = None
+
+    if access_token and access_token != "tu_token_de_dropbox_aqui":
+        try:
+            pdf_dropbox_path = f"/AnalizaPC-Reports/{pdf_filename}"
+            pdf_url, pdf_error = upload_to_dropbox(access_token, pdf_filename, pdf_dropbox_path)
+
+            json_dropbox_path = f"/AnalizaPC-Reports/{json_filename}"
+            json_url, json_error = upload_to_dropbox(access_token, json_filename, json_dropbox_path)
+
+            if not pdf_error and not json_error:
+                print(f"✅ Archivos subidos a Dropbox para análisis rápido")
+        except Exception as e:
+            print(f"❌ Error en subida a Dropbox: {e}")
+
+    # Limpiar archivos locales
+    try:
+        os.remove(pdf_filename)
+        os.remove(json_filename)
+    except:
+        pass
+
+    return {
+        "status": "success",
+        "analysis_id": analysis_id,
+        "pdf_url": pdf_url,
+        "json_url": json_url,
+        "result": result,
+        "is_guest": True,
+        "message": "Análisis rápido completado (modo invitado)",
+        "note": "Regístrate para guardar tu historial de análisis",
+        "version": "2.0.0"
+    }
+
+#   ENDPOINTS PÚBLICOS
+@app.on_event("startup")
+async def startup_event():
+    if access_token:
+        create_dropbox_folder_structure(access_token)
+        print("✅ Dropbox configurado")
+    
+    # Crear tablas si no existen
+    create_tables()
+    print("✅ Base de datos configurada")
+
+@app.get("/")
+def read_root():
+    return {
+        "message": "AnalizaTuPC API v2.0 funcionando", 
+        "version": "2.0.0",
+        "features": {
+            "auth_required": "Análisis con historial persistente",
+            "no_auth": "Análisis rápido sin registro",
+            "endpoints": {
+                "POST /api/analyze": "Análisis (con/sin autenticación)",
+                "POST /api/quick-analyze": "Análisis rápido sin autenticación",
+                "POST /register": "Registro de usuario",
+                "POST /login": "Inicio de sesión"
+            }
+        }
+    }
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
 
 # ==================== DASHBOARD EMPRESARIAL ELEGANTE ====================
 

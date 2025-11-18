@@ -111,6 +111,323 @@
             font-weight: 400;
         }
 
+        /* Barra de usuario */
+        .user-bar {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--glass);
+            padding: 8px 15px;
+            border-radius: 25px;
+            border: 1px solid var(--glass-border);
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(45deg, var(--primary), var(--success));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: white;
+        }
+
+        .user-name {
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .auth-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-auth {
+            padding: 8px 16px;
+            background: rgba(76, 201, 240, 0.1);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            color: var(--light);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .btn-auth:hover {
+            background: rgba(76, 201, 240, 0.2);
+            border-color: var(--primary);
+        }
+
+        /* Sección de historial */
+        .history-section {
+            margin-bottom: 30px;
+        }
+
+        .history-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .history-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--light);
+        }
+
+        .history-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+        }
+
+        .history-card {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .history-card:hover {
+            transform: translateY(-3px);
+            border-color: var(--primary);
+        }
+
+        .history-date {
+            font-size: 0.8rem;
+            color: var(--gray);
+            margin-bottom: 8px;
+        }
+
+        .history-score {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 5px;
+        }
+
+        .history-profile {
+            font-size: 0.9rem;
+            color: var(--light);
+            margin-bottom: 10px;
+        }
+
+        .history-components {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .component-tag {
+            background: rgba(76, 201, 240, 0.1);
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            color: var(--primary);
+        }
+
+        /* Modal de autenticación */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 15, 31, 0.9);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--dark-2);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 40px;
+            width: 90%;
+            max-width: 400px;
+            position: relative;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            color: var(--gray);
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .modal-close:hover {
+            color: var(--light);
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            text-align: center;
+            color: var(--light);
+        }
+
+        .modal-subtitle {
+            color: var(--gray);
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .auth-tabs {
+            display: flex;
+            margin-bottom: 25px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+            padding: 4px;
+        }
+
+        .auth-tab {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .auth-tab.active {
+            background: rgba(76, 201, 240, 0.2);
+            color: var(--primary);
+        }
+
+        .auth-form {
+            display: none;
+        }
+
+        .auth-form.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--light);
+            font-size: 0.9rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            color: var(--light);
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(76, 201, 240, 0.2);
+        }
+
+        .btn-modal {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(45deg, var(--primary), var(--primary-dark));
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 15px;
+        }
+
+        .btn-modal:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(76, 201, 240, 0.3);
+        }
+
+        .btn-modal:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .auth-footer {
+            text-align: center;
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+
+        .auth-link {
+            color: var(--primary);
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .auth-link:hover {
+            text-decoration: underline;
+        }
+
+        .error-message {
+            color: var(--warning);
+            font-size: 0.8rem;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--success);
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
         /* Cards mejoradas con glassmorphism */
         .card {
             background: var(--glass);
@@ -789,6 +1106,27 @@
 </head>
 <body>
     <div class="container">
+
+        <!-- Barra de usuario -->
+        <div class="user-bar">
+            <div class="user-info" id="userInfo" style="display: none;">
+                <div class="user-avatar" id="userAvatar">U</div>
+                <div class="user-name" id="userName">Usuario</div>
+            </div>
+            <div class="auth-buttons" id="authButtons">
+                <button class="btn-auth" id="btnLogin">Iniciar Sesión</button>
+                <button class="btn-auth" id="btnRegister">Registrarse</button>
+            </div>
+            <div class="auth-buttons" id="userActions" style="display: none;">
+                <button class="btn-auth" id="btnHistory">
+                    <i class="fas fa-history"></i> Historial
+                </button>
+                <button class="btn-auth" id="btnLogout">
+                    <i class="fas fa-sign-out-alt"></i> Salir
+                </button>
+            </div>
+        </div>
+
         <header class="header">
             <div class="logo-container">
                 <i class="fas fa-desktop logo"></i>
@@ -796,6 +1134,16 @@
             <h1 class="title">AnalizaTuPc</h1>
             <p class="subtitle">Análisis profesional de hardware para determinar el rendimiento de tu equipo en diferentes perfiles de uso</p>
         </header>
+
+        <!-- Sección de historial (solo para usuarios registrados) -->
+        <div class="history-section" id="historySection" style="display: none;">
+            <div class="history-header">
+                <h3 class="history-title">Tus Análisis Anteriores</h3>
+            </div>
+            <div class="history-grid" id="historyGrid">
+                <!-- El historial se cargará dinámicamente -->
+            </div>
+        </div>
 
         <main>
             <div class="card">
@@ -971,7 +1319,412 @@
         </footer>
     </div>
 
+    <!-- Modal de autenticación -->
+    <div class="modal" id="authModal">
+        <div class="modal-content">
+            <button class="modal-close" id="modalClose">&times;</button>
+            
+            <div class="auth-tabs">
+                <div class="auth-tab active" data-tab="login">Iniciar Sesión</div>
+                <div class="auth-tab" data-tab="register">Registrarse</div>
+            </div>
+
+            <!-- Formulario de Login -->
+            <form id="loginForm" class="auth-form active">
+                <h3 class="modal-title">Bienvenido de nuevo</h3>
+                <p class="modal-subtitle">Ingresa a tu cuenta para guardar tu historial</p>
+                
+                <div class="form-group">
+                    <label class="form-label" for="loginUsername">Usuario</label>
+                    <input type="text" id="loginUsername" class="form-input" placeholder="Tu nombre de usuario" required>
+                    <div class="error-message" id="loginUsernameError"></div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="loginPassword">Contraseña</label>
+                    <input type="password" id="loginPassword" class="form-input" placeholder="Tu contraseña" required>
+                    <div class="error-message" id="loginPasswordError"></div>
+                </div>
+                
+                <button type="submit" class="btn-modal" id="btnLoginSubmit">
+                    <span id="loginText">Iniciar Sesión</span>
+                    <span id="loginLoading" class="loading-spinner" style="display: none;"></span>
+                </button>
+                
+                <div class="auth-footer">
+                    ¿No tienes cuenta? <a class="auth-link" id="showRegisterLink">Regístrate aquí</a>
+                </div>
+            </form>
+
+            <!-- Formulario de Registro -->
+            <form id="registerForm" class="auth-form">
+                <h3 class="modal-title">Crear Cuenta</h3>
+                <p class="modal-subtitle">Regístrate para guardar tu historial de análisis</p>
+                
+                <div class="form-group">
+                    <label class="form-label" for="registerUsername">Usuario</label>
+                    <input type="text" id="registerUsername" class="form-input" placeholder="Elige un nombre de usuario" required>
+                    <div class="error-message" id="registerUsernameError"></div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="registerEmail">Email</label>
+                    <input type="email" id="registerEmail" class="form-input" placeholder="tu@email.com" required>
+                    <div class="error-message" id="registerEmailError"></div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="registerPassword">Contraseña</label>
+                    <input type="password" id="registerPassword" class="form-input" placeholder="Mínimo 6 caracteres" required>
+                    <div class="error-message" id="registerPasswordError"></div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="registerConfirmPassword">Confirmar Contraseña</label>
+                    <input type="password" id="registerConfirmPassword" class="form-input" placeholder="Repite tu contraseña" required>
+                    <div class="error-message" id="registerConfirmPasswordError"></div>
+                </div>
+                
+                <button type="submit" class="btn-modal" id="btnRegisterSubmit">
+                    <span id="registerText">Crear Cuenta</span>
+                    <span id="registerLoading" class="loading-spinner" style="display: none;"></span>
+                </button>
+                
+                <div class="auth-footer">
+                    ¿Ya tienes cuenta? <a class="auth-link" id="showLoginLink">Inicia sesión aquí</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
+
+         const API_BASE = 'http://localhost:8000';
+        let currentUser = null;
+        let authToken = localStorage.getItem('auth_token');
+
+        // Elementos de autenticación
+        const authModal = document.getElementById('authModal');
+        const modalClose = document.getElementById('modalClose');
+        const btnLogin = document.getElementById('btnLogin');
+        const btnRegister = document.getElementById('btnRegister');
+        const btnLogout = document.getElementById('btnLogout');
+        const btnHistory = document.getElementById('btnHistory');
+        const userInfo = document.getElementById('userInfo');
+        const authButtons = document.getElementById('authButtons');
+        const userActions = document.getElementById('userActions');
+        const historySection = document.getElementById('historySection');
+        const historyGrid = document.getElementById('historyGrid');
+        const userAvatar = document.getElementById('userAvatar');
+        const userName = document.getElementById('userName');
+
+        // Elementos de formularios
+        const authTabs = document.querySelectorAll('.auth-tab');
+        const authForms = document.querySelectorAll('.auth-form');
+        const loginForm = document.getElementById('loginForm');
+        const registerForm = document.getElementById('registerForm');
+        const showRegisterLink = document.getElementById('showRegisterLink');
+        const showLoginLink = document.getElementById('showLoginLink');
+
+        // Servicio de autenticación
+        const authService = {
+            async login(username, password) {
+                try {
+                    const response = await axios.post(`${API_BASE}/login`, {
+                        username,
+                        password
+                    });
+                    
+                    return response.data;
+                } catch (error) {
+                    throw new Error(error.response?.data?.detail || 'Error en el inicio de sesión');
+                }
+            },
+
+            async register(username, email, password) {
+                try {
+                    const response = await axios.post(`${API_BASE}/register`, {
+                        username,
+                        email,
+                        password
+                    });
+                    
+                    return response.data;
+                } catch (error) {
+                    throw new Error(error.response?.data?.detail || 'Error en el registro');
+                }
+            },
+
+            async getAnalysisHistory() {
+                if (!authToken) throw new Error('No autenticado');
+                
+                try {
+                    const response = await axios.get(`${API_BASE}/api/analyses/history`, {
+                        headers: {
+                            'Authorization': `Bearer ${authToken}`
+                        }
+                    });
+                    
+                    return response.data;
+                } catch (error) {
+                    throw new Error('Error al cargar el historial');
+                }
+            },
+
+            async saveAnalysis(analysisData) {
+                if (!authToken) return { is_guest: true };
+                
+                try {
+                    const response = await axios.post(`${API_BASE}/api/analyze`, analysisData, {
+                        headers: {
+                            'Authorization': `Bearer ${authToken}`
+                        }
+                    });
+                    
+                    return response.data;
+                } catch (error) {
+                    throw new Error('Error al guardar el análisis');
+                }
+            }
+        };
+
+        // Funciones de UI para autenticación
+        function showAuthModal() {
+            authModal.classList.add('active');
+            switchAuthTab('login');
+        }
+
+        function hideAuthModal() {
+            authModal.classList.remove('active');
+            clearAuthForms();
+        }
+
+        function switchAuthTab(tabName) {
+            authTabs.forEach(tab => {
+                tab.classList.toggle('active', tab.dataset.tab === tabName);
+            });
+            
+            authForms.forEach(form => {
+                form.classList.toggle('active', form.id === `${tabName}Form`);
+            });
+            
+            clearAuthErrors();
+        }
+
+        function clearAuthForms() {
+            document.querySelectorAll('#authModal .form-input').forEach(input => {
+                input.value = '';
+            });
+            clearAuthErrors();
+        }
+
+        function clearAuthErrors() {
+            document.querySelectorAll('.error-message').forEach(error => {
+                error.classList.remove('show');
+            });
+        }
+
+        function showAuthError(fieldId, message) {
+            const errorElement = document.getElementById(`${fieldId}Error`);
+            if (errorElement) {
+                errorElement.textContent = message;
+                errorElement.classList.add('show');
+            }
+        }
+
+        function updateUIForAuth(user) {
+            if (user) {
+                // Usuario autenticado
+                currentUser = user;
+                userInfo.style.display = 'flex';
+                authButtons.style.display = 'flex';   // MOSTRAR siempre los botones
+                userActions.style.display = 'flex';
+                historySection.style.display = 'block';
+                
+                // Actualizar información del usuario
+                userAvatar.textContent = user.username.charAt(0).toUpperCase();
+                userName.textContent = user.username;
+                
+                // Cargar historial
+                loadAnalysisHistory();
+            } else {
+                // Usuario no autenticado (invitado)
+                currentUser = null;
+                userInfo.style.display = 'none';
+                authButtons.style.display = 'flex';   // MOSTRAR botones de auth
+                userActions.style.display = 'none';
+                historySection.style.display = 'none';
+            }
+        }
+
+        async function loadAnalysisHistory() {
+            if (!authToken) return;
+            
+            try {
+                const history = await authService.getAnalysisHistory();
+                displayAnalysisHistory(history.analyses);
+            } catch (error) {
+                console.error('Error cargando historial:', error);
+            }
+        }
+
+        function displayAnalysisHistory(analyses) {
+            if (!analyses || analyses.length === 0) {
+                historyGrid.innerHTML = '<p style="color: var(--gray); text-align: center;">No hay análisis guardados</p>';
+                return;
+            }
+
+            historyGrid.innerHTML = analyses.map(analysis => `
+                <div class="history-card" onclick="loadAnalysis(${analysis.analysis_id})">
+                    <div class="history-date">${new Date(analysis.created_at).toLocaleDateString()}</div>
+                    <div class="history-score">${analysis.main_score}%</div>
+                    <div class="history-profile">${analysis.main_profile}</div>
+                    <div class="history-components">
+                        <span class="component-tag">${analysis.cpu_model}</span>
+                        <span class="component-tag">${analysis.ram_gb}GB RAM</span>
+                        <span class="component-tag">${analysis.gpu_model}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Event Listeners para autenticación
+        btnLogin.addEventListener('click', showAuthModal);
+        btnRegister.addEventListener('click', showAuthModal);
+        modalClose.addEventListener('click', hideAuthModal);
+        btnLogout.addEventListener('click', logout);
+        btnHistory.addEventListener('click', loadAnalysisHistory);
+
+        authTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                switchAuthTab(tab.dataset.tab);
+            });
+        });
+
+        showRegisterLink.addEventListener('click', () => switchAuthTab('register'));
+        showLoginLink.addEventListener('click', () => switchAuthTab('login'));
+
+        // Login
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+            const btn = document.getElementById('btnLoginSubmit');
+            const text = document.getElementById('loginText');
+            const loading = document.getElementById('loginLoading');
+
+            if (!username || !password) {
+                showAuthError('loginUsername', 'Completa todos los campos');
+                return;
+            }
+
+            // Mostrar loading
+            text.style.display = 'none';
+            loading.style.display = 'inline-block';
+            btn.disabled = true;
+
+            try {
+                const result = await authService.login(username, password);
+                
+                // Guardar token y usuario
+                authToken = result.access_token;
+                localStorage.setItem('auth_token', authToken);
+                localStorage.setItem('user', JSON.stringify(result.user));
+                
+                // Actualizar UI
+                updateUIForAuth(result.user);
+                hideAuthModal();
+                
+            } catch (error) {
+                showAuthError('loginPassword', error.message);
+            } finally {
+                // Ocultar loading
+                text.style.display = 'inline-block';
+                loading.style.display = 'none';
+                btn.disabled = false;
+            }
+        });
+
+        // Registro
+        registerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const username = document.getElementById('registerUsername').value;
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+            const confirmPassword = document.getElementById('registerConfirmPassword').value;
+            const btn = document.getElementById('btnRegisterSubmit');
+            const text = document.getElementById('registerText');
+            const loading = document.getElementById('registerLoading');
+
+            // Validaciones
+            if (!username || !email || !password || !confirmPassword) {
+                showAuthError('registerUsername', 'Completa todos los campos');
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                showAuthError('registerConfirmPassword', 'Las contraseñas no coinciden');
+                return;
+            }
+
+            if (password.length < 6) {
+                showAuthError('registerPassword', 'La contraseña debe tener al menos 6 caracteres');
+                return;
+            }
+
+            // Mostrar loading
+            text.style.display = 'none';
+            loading.style.display = 'inline-block';
+            btn.disabled = true;
+
+            try {
+                await authService.register(username, email, password);
+                
+                // Auto-login después del registro
+                const loginResult = await authService.login(username, password);
+                
+                authToken = loginResult.access_token;
+                localStorage.setItem('auth_token', authToken);
+                localStorage.setItem('user', JSON.stringify(loginResult.user));
+                
+                updateUIForAuth(loginResult.user);
+                hideAuthModal();
+                
+            } catch (error) {
+                if (error.message.includes('email')) {
+                    showAuthError('registerEmail', error.message);
+                } else if (error.message.includes('username')) {
+                    showAuthError('registerUsername', error.message);
+                } else {
+                    showAuthError('registerUsername', error.message);
+                }
+            } finally {
+                text.style.display = 'inline-block';
+                loading.style.display = 'none';
+                btn.disabled = false;
+            }
+        });
+
+        function logout() {
+            authToken = null;
+            currentUser = null;
+            localStorage.removeItem('auth_token');
+            localStorage.removeItem('user');
+            updateUIForAuth(null);
+        }
+
+        // Inicializar estado de autenticación al cargar la página
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedUser = localStorage.getItem('user');
+            if (savedUser && authToken) {
+                updateUIForAuth(JSON.parse(savedUser));
+            } else {
+                updateUIForAuth(null);
+            }
+        });
+
         // Elementos DOM
         const out = document.getElementById('out');
         const btnAuto = document.getElementById('btn-auto');
@@ -1458,7 +2211,7 @@
         }
 
         // Función para realizar el análisis
-        async function performAnalysis(data, isManual = false) {
+       async function performAnalysis(data, isManual = false) {
             const btn = isManual ? btnManual : btnAuto;
             
             btn.disabled = true;
@@ -1472,45 +2225,38 @@
                     await new Promise(resolve => setTimeout(resolve, 1000));
                     updateProgress(30);
                     
-                    await new Promise(resolve => setTimeout(resolve, 1000));
-                    updateProgress(50);
-                    
-                    await new Promise(resolve => setTimeout(resolve, 1000));
-                    updateProgress(70);
-                    
-                    await new Promise(resolve => setTimeout(resolve, 1000));
-                    updateProgress(90);
-                    
-                    // Datos de ejemplo para simulación
-                    data = {
-                        cpu_model: "Intel Core i7-10700K",
-                        cpu_speed_ghz: 3.8,
-                        cores: 8,
-                        ram_gb: 16,
-                        disk_type: "SSD",
-                        gpu_model: "NVIDIA GeForce RTX 3060",
-                        gpu_vram_gb: 12
-                    };
+                    // ... resto de la simulación ...
                 }
 
                 // Mostrar estadísticas
                 showStats(data);
-                
                 updateProgress(95);
 
                 try {
-                    // Enviar al backend
+                    // Enviar al backend (ahora con autenticación si está disponible)
                     const API_URL = 'https://analizatupc-backend.onrender.com';
-                    const res = await axios.post(`${API_URL}/api/analyze`, data);
+                    let result;
+                    
+                    if (authToken && currentUser) {
+                        // Usuario autenticado - guardar en base de datos
+                        result = await authService.saveAnalysis(data);
+                    } else {
+                        // Usuario no autenticado - análisis temporal
+                        const response = await axios.post(`${API_URL}/api/analyze`, data);
+                        result = response.data;
+                    }
                     
                     // Mostrar resultados visuales
-                    showResults(data, res.data.result);
+                    showResults(data, result.result || result);
+                    
+                    // Recargar historial si el usuario está autenticado
+                    if (authToken && currentUser) {
+                        loadAnalysisHistory();
+                    }
                     
                 } catch (apiError) {
                     // Si hay error con la API, mostrar análisis local
                     const localResult = generateLocalAnalysis(data);
-                    
-                    // Mostrar resultados visuales
                     showResults(data, localResult);
                 }
 
@@ -1525,6 +2271,48 @@
                     ? '<i class="fas fa-sync-alt"></i><span>Realizar Nuevo Análisis</span>'
                     : '<i class="fas fa-sync-alt"></i><span>Realizar Nuevo Análisis</span>';
                 if (!isManual) btn.classList.add('pulse');
+            }
+        }
+
+        // Función para cargar un análisis del historial
+        async function loadAnalysis(analysisId) {
+            if (!authToken) return;
+            
+            try {
+                const response = await axios.get(`${API_BASE}/api/analyses/${analysisId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+                
+                const analysis = response.data.analysis;
+                const data = {
+                    cpu_model: analysis.cpu_model,
+                    cpu_speed_ghz: analysis.cpu_speed_ghz,
+                    cores: analysis.cores,
+                    ram_gb: analysis.ram_gb,
+                    disk_type: analysis.disk_type,
+                    gpu_model: analysis.gpu_model,
+                    gpu_vram_gb: analysis.gpu_vram_gb
+                };
+                
+                const result = {
+                    main_profile: analysis.main_profile,
+                    main_score: analysis.main_score,
+                    scores: {
+                        'Gaming': analysis.main_score * 0.01,
+                        'Diseño': analysis.main_score * 0.01,
+                        'Oficina': analysis.main_score * 0.01,
+                        'Desarrollo': analysis.main_score * 0.01,
+                        'Streaming': analysis.main_score * 0.01
+                    }
+                };
+                
+                showStats(data);
+                showResults(data, result);
+                
+            } catch (error) {
+                console.error('Error cargando análisis:', error);
             }
         }
 

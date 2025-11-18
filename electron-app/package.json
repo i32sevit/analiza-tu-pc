@@ -1,11 +1,13 @@
 {
-  "name": "electron-app",
-  "version": "1.0.0",
-  "description": "",
+  "name": "analizatupc",
+  "version": "2.0.0",
+  "description": "Sistema de análisis de hardware",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "electron . --dev",
+    "build": "electron-builder"
   },
   "keywords": [],
   "author": "",
