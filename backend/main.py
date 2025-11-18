@@ -66,96 +66,240 @@ def score_system(info: dict):
     }
 
 # -------------------------
-#   PDF PERSONALIZADO CON ARIAL
+#   PDF PROFESIONAL Y MODERNO
 # -------------------------
 class PDF(FPDF):
     def header(self):
-        logo_path = "logo.png"  # si quieres meter uno
-        if os.path.exists(logo_path):
-            self.image(logo_path, 10, 8, 30)
-
-        self.set_font("Arial", "B", 16)  # Cambiado a Arial
-        self.cell(0, 10, "AnalizaPC - Informe de Sistema", ln=True, align="C")
-        self.ln(5)
+        # Fondo de encabezado profesional
+        self.set_fill_color(41, 128, 185)  # Azul profesional
+        self.rect(0, 0, 210, 30, 'F')
+        
+        # Título principal
+        self.set_font("Arial", "B", 20)
+        self.set_text_color(255, 255, 255)
+        self.cell(0, 20, "ANALIZAPC", ln=True, align="C")
+        
+        # Subtítulo
+        self.set_font("Arial", "I", 12)
+        self.set_text_color(200, 230, 255)
+        self.cell(0, -5, "Informe Profesional de Sistema", ln=True, align="C")
+        
+        self.ln(15)
 
     def footer(self):
-        self.set_y(-15)
-        self.set_font("Arial", "", 8)  # Cambiado a Arial
-        self.cell(0, 10, "Generado automáticamente por AnalizaPC", align="C")
+        self.set_y(-20)
+        self.set_font("Arial", "I", 9)
+        self.set_text_color(128, 128, 128)
+        
+        # Línea superior del footer
+        self.set_draw_color(200, 200, 200)
+        self.line(10, self.get_y(), 200, self.get_y())
+        self.ln(5)
+        
+        # Texto del footer
+        self.cell(0, 6, f"Reporte generado el {datetime.datetime.now().strftime('%d/%m/%Y a las %H:%M')} | Página {self.page_no()}", align="C")
+        self.ln(4)
+        self.cell(0, 6, "www.analizapc.com - Todos los derechos reservados", align="C")
+
+    def add_section_title(self, title, icon="▶"):
+        self.set_font("Arial", "B", 14)
+        self.set_text_color(41, 128, 185)  # Azul corporativo
+        self.set_fill_color(240, 245, 249)  # Fondo azul muy claro
+        self.cell(0, 10, f" {icon} {title}", ln=True, fill=True)
+        self.ln(5)
+
+    def add_feature_card(self, title, value, icon="💻"):
+        self.set_font("Arial", "B", 11)
+        self.set_text_color(60, 60, 60)
+        self.cell(25, 8, f"{icon}", border=0)
+        self.cell(50, 8, f"{title}:", border=0)
+        
+        self.set_font("Arial", "", 11)
+        self.set_text_color(0, 0, 0)
+        self.cell(0, 8, str(value), ln=True)
+        self.ln(3)
+
+    def add_performance_bar(self, label, percentage, color):
+        # Barra de progreso visual
+        bar_width = 100
+        fill_width = (percentage / 100) * bar_width
+        
+        self.set_font("Arial", "B", 10)
+        self.set_text_color(60, 60, 60)
+        self.cell(50, 8, f"{label}:", border=0)
+        
+        # Fondo de la barra
+        self.set_draw_color(220, 220, 220)
+        self.set_fill_color(220, 220, 220)
+        self.rect(self.get_x(), self.get_y() + 2, bar_width, 6, 'FD')
+        
+        # Barra de progreso
+        self.set_fill_color(*color)
+        self.rect(self.get_x(), self.get_y() + 2, fill_width, 6, 'F')
+        
+        # Porcentaje
+        self.set_text_color(0, 0, 0)
+        self.cell(30, 8, f"{percentage}%", ln=True, align="R")
+        self.ln(8)
 
 # -------------------------
-#   CREACIÓN DEL PDF CON ARIAL
+#   CREACIÓN DEL PDF PROFESIONAL
 # -------------------------
 def create_pdf_report(sysinfo: dict, result: dict):
     pdf = PDF()
-
-    # ELIMINADO: No necesitas cargar fuentes externas
-    # pdf.add_font("Roboto-Regular", "", "fonts/Roboto-Regular.ttf", uni=True)
-    # pdf.add_font("Roboto-Bold", "", "fonts/Roboto-Bold.ttf", uni=True)
-
     pdf.add_page()
 
-    # Fecha
-    pdf.set_font("Arial", "", 12)  # Cambiado a Arial
-    pdf.cell(0, 8, f"Fecha: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", ln=True)
-
+    # PORTADA MEJORADA
+    pdf.set_font("Arial", "B", 24)
+    pdf.set_text_color(41, 128, 185)
+    pdf.cell(0, 40, "INFORME DE SISTEMA", ln=True, align="C")
+    
+    pdf.set_font("Arial", "I", 14)
+    pdf.set_text_color(100, 100, 100)
+    pdf.cell(0, 15, "Análisis Profesional de Hardware", ln=True, align="C")
+    
+    # Línea decorativa
+    pdf.set_draw_color(41, 128, 185)
+    pdf.line(50, pdf.get_y(), 160, pdf.get_y())
+    pdf.ln(20)
+    
+    # PERFIL PRINCIPAL DESTACADO
+    pdf.set_font("Arial", "B", 16)
+    pdf.set_text_color(255, 255, 255)
+    pdf.set_fill_color(46, 204, 113)  # Verde éxito
+    pdf.cell(0, 12, " PERFIL RECOMENDADO ", ln=True, align="C", fill=True)
+    
     pdf.ln(5)
-    pdf.set_draw_color(200, 200, 200)
-    pdf.line(10, pdf.get_y(), 200, pdf.get_y())
-    pdf.ln(5)
+    pdf.set_font("Arial", "B", 22)
+    pdf.set_text_color(41, 128, 185)
+    pdf.cell(0, 15, f"🎯 {result['main_profile']}", ln=True, align="C")
+    
+    pdf.set_font("Arial", "B", 18)
+    pdf.set_text_color(46, 204, 113)
+    pdf.cell(0, 10, f"{result['main_score']}% DE ADECUACIÓN", ln=True, align="C")
+    
+    pdf.ln(25)
+    
+    # FECHA Y CÓDIGO
+    pdf.set_font("Arial", "I", 10)
+    pdf.set_text_color(150, 150, 150)
+    pdf.cell(0, 8, f"Código de reporte: APC-{int(datetime.datetime.now().timestamp())}", ln=True, align="C")
 
-    # Perfil principal
-    pdf.set_font("Arial", "B", 14)  # Cambiado a Arial
-    pdf.cell(0, 10, "Perfil principal detectado:", ln=True)
-
-    pdf.set_font("Arial", "", 12)  # Cambiado a Arial
-    pdf.set_fill_color(230, 230, 230)
-    pdf.cell(0, 10, f"  {result['main_profile']}  ({result['main_score']}%)", ln=True, fill=True)
-
-    pdf.ln(10)
-
-    # Hardware detectado
-    pdf.set_font("Arial", "B", 13)  # Cambiado a Arial
-    pdf.cell(0, 10, "Hardware detectado:", ln=True)
-
-    items = [
-        ("CPU", f"{sysinfo.get('cpu_model')} ({sysinfo.get('cores')} núcleos)"),
-        ("RAM", f"{sysinfo.get('ram_gb')} GB"),
-        ("GPU", f"{sysinfo.get('gpu_model')} ({sysinfo.get('gpu_vram_gb')} GB VRAM)"),
-        ("Almacenamiento", sysinfo.get('disk_type')),
+    # NUEVA PÁGINA PARA DETALLES
+    pdf.add_page()
+    
+    # SECCIÓN: ESPECIFICACIONES TÉCNICAS
+    pdf.add_section_title("Especificaciones del Sistema", "🔧")
+    
+    hardware_specs = [
+        ("Procesador", f"{sysinfo.get('cpu_model', 'No detectado')}"),
+        ("Núcleos/Hilos", f"{sysinfo.get('cores', '?')} núcleos"),
+        ("Frecuencia CPU", f"{sysinfo.get('cpu_speed_ghz', '?')} GHz"),
+        ("Memoria RAM", f"{sysinfo.get('ram_gb', '?')} GB"),
+        ("Tarjeta Gráfica", f"{sysinfo.get('gpu_model', 'No detectado')}"),
+        ("Memoria GPU", f"{sysinfo.get('gpu_vram_gb', '0')} GB VRAM"),
+        ("Almacenamiento", f"{sysinfo.get('disk_type', 'No detectado')}"),
     ]
-
-    pdf.set_font("Arial", "", 11)  # Cambiado a Arial
-    for label, value in items:
-        pdf.set_font("Arial", "B", 11)  # Cambiado a Arial
-        pdf.cell(50, 8, f"{label}:", border=0)
-        pdf.set_font("Arial", "", 11)  # Cambiado a Arial
-        pdf.cell(0, 8, value, ln=True)
-
-    pdf.ln(8)
-
-    # Scores por perfil
-    pdf.set_font("Arial", "B", 13)  # Cambiado a Arial
-    pdf.cell(0, 10, "Adecuación por perfiles:", ln=True)
-
-    pdf.set_font("Arial", "", 11)  # Cambiado a Arial
-    pdf.set_fill_color(245, 245, 245)
-
+    
+    for title, value in hardware_specs:
+        pdf.add_feature_card(title, value)
+    
+    pdf.ln(10)
+    
+    # SECCIÓN: ANÁLISIS DE RENDIMIENTO
+    pdf.add_section_title("Análisis de Rendimiento", "📊")
+    
+    # Barras de rendimiento por perfil
+    performance_colors = {
+        "Ofimática": (52, 152, 219),    # Azul
+        "Gaming": (155, 89, 182),       # Púrpura
+        "Edición vídeo": (230, 126, 34), # Naranja
+        "Virtualización": (46, 204, 113), # Verde
+        "ML ligero": (231, 76, 60)      # Rojo
+    }
+    
     for profile, score in result['scores'].items():
-        pdf.cell(80, 8, profile, border=1, fill=True)
-        pdf.cell(0, 8, f"{round(score * 100, 1)} %", border=1, ln=True)
-
+        percentage = round(score * 100, 1)
+        color = performance_colors.get(profile, (100, 100, 100))
+        pdf.add_performance_bar(profile, percentage, color)
+    
     pdf.ln(15)
+    
+    # SECCIÓN: RECOMENDACIONES
+    pdf.add_section_title("Recomendaciones y Observaciones", "💡")
+    
+    recommendations = [
+        "✅ Sistema analizado automáticamente por AnalizaPC",
+        "📈 Puntuación basada en benchmarks estándar del sector",
+        "🔍 Considerar actualizaciones para mejorar puntuaciones bajas",
+        "💾 Optimizar configuración según perfil principal detectado"
+    ]
+    
+    pdf.set_font("Arial", "", 10)
+    pdf.set_text_color(80, 80, 80)
+    
+    for rec in recommendations:
+        pdf.cell(10, 8, "•", border=0)
+        pdf.multi_cell(0, 8, f" {rec}")
+        pdf.ln(2)
+    
+    # TABLA RESUMEN PROFESIONAL
+    pdf.ln(10)
+    pdf.add_section_title("Resumen de Puntuaciones", "📋")
+    
+    # Cabecera de tabla
+    pdf.set_fill_color(41, 128, 185)
+    pdf.set_font("Arial", "B", 11)
+    pdf.set_text_color(255, 255, 255)
+    pdf.cell(100, 10, "PERFIL DE USO", border=1, fill=True, align='C')
+    pdf.cell(40, 10, "PUNTUACIÓN", border=1, fill=True, align='C')
+    pdf.cell(0, 10, "NIVEL", border=1, fill=True, align='C')
+    pdf.ln()
+    
+    # Filas de la tabla
+    pdf.set_font("Arial", "", 10)
+    for profile, score in result['scores'].items():
+        percentage = round(score * 100, 1)
+        
+        # Color de fondo alternado
+        if list(result['scores'].keys()).index(profile) % 2 == 0:
+            pdf.set_fill_color(250, 250, 250)
+        else:
+            pdf.set_fill_color(255, 255, 255)
+        
+        # Celda perfil
+        pdf.set_text_color(0, 0, 0)
+        pdf.cell(100, 10, f"   {profile}", border=1, fill=True)
+        
+        # Celda puntuación con color
+        if percentage >= 80:
+            pdf.set_text_color(46, 204, 113)  # Verde
+            level = "Excelente"
+        elif percentage >= 60:
+            pdf.set_text_color(230, 126, 34)  # Naranja
+            level = "Bueno"
+        elif percentage >= 40:
+            pdf.set_text_color(241, 196, 15)  # Amarillo
+            level = "Regular"
+        else:
+            pdf.set_text_color(231, 76, 60)   # Rojo
+            level = "Bajo"
+        
+        pdf.cell(40, 10, f"{percentage}%", border=1, fill=True, align='C')
+        pdf.set_text_color(100, 100, 100)
+        pdf.cell(0, 10, level, border=1, fill=True, align='C')
+        pdf.ln()
 
-    # Guardar
+    # Guardar PDF
     timestamp = int(datetime.datetime.now().timestamp())
-    pdf_filename = f"report_{timestamp}.pdf"
+    pdf_filename = f"reporte_profesional_{timestamp}.pdf"
     pdf.output(pdf_filename)
 
+    print(f"✅ PDF profesional generado: {pdf_filename}")
     return pdf_filename
 
 # -------------------------
-#   API
+#   API (igual que antes)
 # -------------------------
 @app.on_event("startup")
 async def startup_event():
@@ -172,7 +316,7 @@ def analyze(sysinfo: SysInfo):
     info = sysinfo.dict()
     result = score_system(info)
 
-    # Crear PDF
+    # Crear PDF profesional
     pdf_filename = create_pdf_report(info, result)
 
     # Guardar JSON
