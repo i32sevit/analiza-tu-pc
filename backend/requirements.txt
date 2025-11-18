@@ -1,12 +1,11 @@
-setuptools==70.0.0
-pip==24.0
-wheel==0.43.0
+setuptools>=70.0.0
+pip>=23.0
+wheel
 fastapi==0.104.1
 uvicorn[standard]==0.24.0
-fpdf2==2.7.8
+fpdf==1.7.2
 requests==2.31.0
 python-dotenv==1.0.0
 dropbox==11.36.2
 python-multipart==0.0.6
 sqlalchemy==2.0.30
-greenlet==3.1.1
