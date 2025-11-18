@@ -68,46 +68,50 @@ def score_system(info: dict):
     }
 
 # -------------------------
-#   PDF SUPER ELEGANTE - TÍTULO MEJORADO
+#   PDF SUPER ELEGANTE - COLOR AZUL CELESTE
 # -------------------------
 class PDF(FPDF):
+    def __init__(self):
+        super().__init__()
+        self.analysis_id = f"APC-{int(datetime.datetime.now().timestamp())}"
+    
     def header(self):
-        # ENCABEZADO MEJORADO CON GRADIENTE Y SOMBRA
-        # Fondo con gradiente azul
-        self.set_fill_color(20, 50, 100)  # Azul más oscuro y elegante
+        # ENCABEZADO CON AZUL CELESTE
+        # Fondo con azul celeste
+        self.set_fill_color(173, 216, 230)  # Azul celeste claro
         self.rect(0, 0, 210, 45, 'F')
         
         # Efecto de gradiente (simulado con rectángulos superpuestos)
-        self.set_fill_color(40, 80, 160)
+        self.set_fill_color(135, 206, 235)  # Azul celeste medio
         self.rect(0, 0, 210, 15, 'F')
         
-        # TÍTULO PRINCIPAL MÁS DESTACADO
-        self.set_font("Arial", "B", 28)  # Tamaño aumentado
-        self.set_text_color(76, 201, 240)  # Azul claro brillante
+        # TÍTULO PRINCIPAL
+        self.set_font("Arial", "B", 28)
+        self.set_text_color(0, 0, 139)  # Azul oscuro para contraste
         
         # Efecto de sombra para el título
-        self.set_text_color(20, 40, 80)  # Color sombra
+        self.set_text_color(70, 130, 180)  # Azul acero para sombra
         self.cell(0, 28, "AnalizaTuPc", ln=True, align="C")
         
         # Título principal (sobre la sombra)
-        self.set_y(20)  # Volver a posición
-        self.set_text_color(76, 201, 240)  # Azul claro principal
+        self.set_y(20)
+        self.set_text_color(0, 0, 139)  # Azul oscuro principal
         self.set_font("Arial", "B", 28)
         self.cell(0, 8, "AnalizaTuPc", ln=True, align="C")
         
         # Subtítulo elegante
         self.set_y(32)
         self.set_font("Arial", "I", 12)
-        self.set_text_color(200, 230, 255)  # Azul muy claro
+        self.set_text_color(0, 0, 100)  # Azul oscuro
         self.cell(0, 8, "ANÁLISIS PROFESIONAL DE HARDWARE", ln=True, align="C")
         
         # LÍNEA DECORATIVA MEJORADA
-        self.set_draw_color(0, 245, 212)  # Verde azulado brillante
-        self.set_line_width(1.5)  # Línea más gruesa
-        self.line(30, 42, 180, 42)  # Línea más larga
+        self.set_draw_color(0, 0, 139)  # Azul oscuro
+        self.set_line_width(1.5)
+        self.line(30, 42, 180, 42)
         
         # Elementos decorativos en las esquinas
-        self.set_draw_color(0, 245, 212)
+        self.set_draw_color(0, 0, 139)
         self.set_line_width(1)
         # Esquina superior izquierda
         self.line(10, 10, 25, 10)
@@ -119,31 +123,36 @@ class PDF(FPDF):
         self.ln(20)
 
     def footer(self):
-        self.set_y(-20)
+        self.set_y(-25)  # Más espacio para el footer
         self.set_font("Arial", "I", 9)
         self.set_text_color(100, 100, 100)
         
         # Línea separadora
         self.set_draw_color(200, 200, 200)
         self.line(10, self.get_y(), 200, self.get_y())
-        self.ln(8)
+        self.ln(5)
         
-        # Información del footer
+        # Información del footer CON EL ID DEL ANÁLISIS
         self.cell(0, 6, f"Reporte generado el {datetime.datetime.now().strftime('%d/%m/%Y')} a las {datetime.datetime.now().strftime('%H:%M')}", align="C")
         self.ln(4)
         self.cell(0, 6, f"Página {self.page_no()}", align="C")
+        self.ln(4)
+        # ID DEL ANÁLISIS SIEMPRE EN EL FOOTER
+        self.set_font("Arial", "B", 9)
+        self.set_text_color(70, 130, 180)  # Azul acero
+        self.cell(0, 6, f"ID del análisis: {self.analysis_id}", align="C")
 
     def add_section_title(self, title):
         self.ln(12)
-        self.set_font("Arial", "B", 18)  # Tamaño aumentado
+        self.set_font("Arial", "B", 18)
         self.set_text_color(255, 255, 255)  # Texto blanco
-        self.set_fill_color(30, 60, 120)  # Fondo azul elegante
+        self.set_fill_color(135, 206, 235)  # Azul celeste para fondo
         
         # Borde redondeado simulado
         self.cell(0, 14, f" {title.upper()} ", ln=True, fill=True, align='L')
         
         # Línea decorativa debajo del título
-        self.set_draw_color(0, 245, 212)
+        self.set_draw_color(0, 0, 139)  # Azul oscuro
         self.set_line_width(0.8)
         self.line(15, self.get_y() - 2, 60, self.get_y() - 2)
         self.ln(10)
@@ -165,23 +174,23 @@ class PDF(FPDF):
     def add_score_meter(self, profile, score, rank):
         self.set_font("Arial", "B", 12)
         
-        # Determinar color según puntuación
+        # Determinar color según puntuación - ahora con azules
         if score >= 80:
-            color = (0, 245, 212)  # Verde éxito
+            color = (0, 191, 255)  # Azul deep sky
             label = "EXCELENTE"
         elif score >= 60:
-            color = (76, 201, 240)  # Azul primario
+            color = (100, 149, 237)  # Azul cornflower
             label = "BUENO"
         elif score >= 40:
-            color = (247, 37, 133)  # Rosa warning
+            color = (176, 224, 230)  # Azul powder
             label = "REGULAR"
         else:
-            color = (114, 9, 183)   # Púrpura accent
+            color = (173, 216, 230)  # Azul celeste claro
             label = "MEJORABLE"
         
         # Tarjeta de puntuación con borde
         self.set_fill_color(color[0], color[1], color[2])
-        self.set_text_color(255, 255, 255)
+        self.set_text_color(0, 0, 0)  # Texto negro para mejor contraste
         self.set_draw_color(max(0, color[0]-30), max(0, color[1]-30), max(0, color[2]-30))
         self.set_line_width(0.3)
         self.cell(0, 10, f" {label} - {profile}: {score}% ({rank})", border=1, ln=True, fill=True)
@@ -194,20 +203,20 @@ def create_pdf_report(sysinfo: dict, result: dict):
     pdf = PDF()
     pdf.add_page()
 
-    # PORTADA SUPER ELEGANTE
+    # PORTADA CON AZUL CELESTE
     # Fondo de portada
-    pdf.set_fill_color(240, 245, 255)
+    pdf.set_fill_color(240, 248, 255)  # Azul alice muy claro
     pdf.rect(0, 45, 210, 160, 'F')
     
-    # TÍTULO PRINCIPAL DE PORTADA MÁS IMPACTANTE
+    # TÍTULO PRINCIPAL DE PORTADA
     pdf.set_y(60)
-    pdf.set_font("Arial", "B", 32)  # Más grande
-    pdf.set_text_color(30, 60, 120)
+    pdf.set_font("Arial", "B", 32)
+    pdf.set_text_color(70, 130, 180)  # Azul acero
     
     # Efecto de sombra para el título principal
-    pdf.set_text_color(20, 40, 80)
+    pdf.set_text_color(100, 149, 237)  # Azul cornflower para sombra
     pdf.cell(0, 15, "INFORME PROFESIONAL", ln=True, align="C")
-    pdf.set_text_color(30, 60, 120)
+    pdf.set_text_color(70, 130, 180)  # Azul acero principal
     pdf.set_y(75)
     pdf.cell(0, 15, "INFORME PROFESIONAL", ln=True, align="C")
     
@@ -217,19 +226,19 @@ def create_pdf_report(sysinfo: dict, result: dict):
     pdf.set_text_color(100, 100, 100)
     pdf.cell(0, 10, "Análisis Completo de Hardware", ln=True, align="C")
     
-    # Línea decorativa doble
-    pdf.set_draw_color(76, 201, 240)
+    # Línea decorativa doble en azules
+    pdf.set_draw_color(135, 206, 235)  # Azul celeste
     pdf.set_line_width(1)
     pdf.line(50, 115, 160, 115)
-    pdf.set_draw_color(0, 245, 212)
+    pdf.set_draw_color(0, 0, 139)  # Azul oscuro
     pdf.set_line_width(0.5)
     pdf.line(55, 117, 155, 117)
     
     pdf.ln(40)
     
-    # PERFIL PRINCIPAL DESTACADO CON EFECTO 3D
-    pdf.set_fill_color(0, 245, 212)
-    pdf.set_draw_color(0, 200, 170)
+    # PERFIL PRINCIPAL DESTACADO CON AZUL CELESTE
+    pdf.set_fill_color(173, 216, 230)  # Azul celeste claro
+    pdf.set_draw_color(135, 206, 235)  # Azul celeste medio
     pdf.set_line_width(1)
     
     # Sombra del recuadro
@@ -237,30 +246,27 @@ def create_pdf_report(sysinfo: dict, result: dict):
     pdf.rect(52, pdf.get_y() + 2, 106, 54, 'F')
     
     # Recuadro principal
-    pdf.set_fill_color(0, 245, 212)
+    pdf.set_fill_color(173, 216, 230)  # Azul celeste claro
     pdf.rect(50, pdf.get_y(), 106, 50, 'F')
     
     # Contenido del recuadro
     pdf.set_y(pdf.get_y() + 8)
     pdf.set_font("Arial", "B", 16)
-    pdf.set_text_color(255, 255, 255)
+    pdf.set_text_color(0, 0, 139)  # Azul oscuro
     pdf.cell(0, 8, "PERFIL RECOMENDADO", ln=True, align="C")
     
     pdf.ln(5)
     pdf.set_font("Arial", "B", 24)
-    pdf.set_text_color(30, 60, 120)
+    pdf.set_text_color(0, 0, 100)  # Azul muy oscuro
     pdf.cell(0, 12, f"{result['main_profile']}", ln=True, align="C")
     
     pdf.set_font("Arial", "B", 20)
-    pdf.set_text_color(0, 200, 170)
+    pdf.set_text_color(70, 130, 180)  # Azul acero
     pdf.cell(0, 10, f"{result['main_score']}% DE EFICIENCIA", ln=True, align="C")
     
     pdf.ln(40)
     
-    # INFORMACIÓN ADICIONAL
-    pdf.set_font("Arial", "I", 10)
-    pdf.set_text_color(150, 150, 150)
-    pdf.cell(0, 8, f"ID del análisis: APC-{int(datetime.datetime.now().timestamp())}", ln=True, align="C")
+    # EL ID DEL ANÁLISIS YA NO VA AQUÍ, VA EN EL FOOTER
 
     # NUEVA PÁGINA - DETALLES TÉCNICOS
     pdf.add_page()
@@ -268,10 +274,10 @@ def create_pdf_report(sysinfo: dict, result: dict):
     # SECCIÓN: ESPECIFICACIONES DEL SISTEMA EN TABLA
     pdf.add_section_title("Especificaciones del Sistema")
     
-    # Crear tabla elegante para especificaciones
-    pdf.set_fill_color(30, 60, 120)
+    # Crear tabla elegante para especificaciones CON AZUL CELESTE
+    pdf.set_fill_color(135, 206, 235)  # Azul celeste para cabecera
     pdf.set_font("Arial", "B", 12)
-    pdf.set_text_color(255, 255, 255)
+    pdf.set_text_color(0, 0, 0)  # Texto negro para mejor contraste
     pdf.cell(80, 10, "COMPONENTE", border=1, fill=True, align='C')
     pdf.cell(0, 10, "ESPECIFICACIÓN", border=1, fill=True, align='C')
     pdf.ln()
@@ -290,7 +296,7 @@ def create_pdf_report(sysinfo: dict, result: dict):
     pdf.set_font("Arial", "", 10)
     for i, (component, spec) in enumerate(specs_data):
         # Fondo alternado para mejor lectura
-        fill_color = (250, 250, 250) if i % 2 == 0 else (255, 255, 255)
+        fill_color = (240, 248, 255) if i % 2 == 0 else (255, 255, 255)  # Azul alice claro alternado
         pdf.set_fill_color(*fill_color)
         
         # Componente
@@ -312,14 +318,13 @@ def create_pdf_report(sysinfo: dict, result: dict):
         rank = f"#{i+1}"
         pdf.add_score_meter(profile, score_percent, rank)
     
-    # Resto del código permanece igual...
     # SECCIÓN: TABLA DETALLADA DE PUNTUACIONES
     pdf.add_section_title("Tabla de Puntuaciones Detalladas")
     
-    # Cabecera de tabla
-    pdf.set_fill_color(30, 60, 120)
+    # Cabecera de tabla CON AZUL CELESTE
+    pdf.set_fill_color(135, 206, 235)  # Azul celeste
     pdf.set_font("Arial", "B", 11)
-    pdf.set_text_color(255, 255, 255)
+    pdf.set_text_color(0, 0, 0)  # Texto negro
     pdf.cell(100, 10, "PERFIL DE USO", border=1, fill=True, align='C')
     pdf.cell(45, 10, "PUNTUACIÓN", border=1, fill=True, align='C')
     pdf.cell(0, 10, "CLASIFICACIÓN", border=1, fill=True, align='C')
@@ -331,25 +336,25 @@ def create_pdf_report(sysinfo: dict, result: dict):
         score_percent = round(score * 100, 1)
         
         # Fondo alternado
-        fill_color = (250, 250, 250) if i % 2 == 0 else (255, 255, 255)
+        fill_color = (240, 248, 255) if i % 2 == 0 else (255, 255, 255)  # Azul alice claro alternado
         pdf.set_fill_color(*fill_color)
         
         # Perfil
         pdf.set_text_color(0, 0, 0)
         pdf.cell(100, 10, f"   {profile}", border=1, fill=True)
         
-        # Puntuación con color
+        # Puntuación con color EN TONOS AZULES
         if score_percent >= 80:
-            text_color = (0, 245, 212)  # Verde éxito
+            text_color = (0, 0, 139)  # Azul oscuro
             classification = "Excelente"
         elif score_percent >= 60:
-            text_color = (76, 201, 240)  # Azul primario
+            text_color = (70, 130, 180)  # Azul acero
             classification = "Bueno"
         elif score_percent >= 40:
-            text_color = (247, 37, 133)  # Rosa warning
+            text_color = (100, 149, 237)  # Azul cornflower
             classification = "Regular"
         else:
-            text_color = (114, 9, 183)   # Púrpura accent
+            text_color = (135, 206, 235)  # Azul celeste
             classification = "Mejorable"
         
         pdf.set_text_color(*text_color)
