@@ -160,9 +160,8 @@ const Header = ({ user, onLogin, onLogout, onHistory }) => (
   </View>
 );
 
-// Componente AnalysisCard
-const AnalysisCard = ({ onAutoAnalysis, onManualAnalysis, analyzing, progress }) => {
-  const [activeTab, setActiveTab] = useState('auto');
+// Componente AnalysisCard - SOLO ENTRADA MANUAL
+const AnalysisCard = ({ onManualAnalysis, analyzing }) => {
   const [manualData, setManualData] = useState({
     cpu_model: '',
     cpu_speed_ghz: '',
@@ -190,161 +189,109 @@ const AnalysisCard = ({ onAutoAnalysis, onManualAnalysis, analyzing, progress })
         <Text style={styles.cardTitle}>Análisis del Sistema</Text>
       </View>
       
-      <View style={styles.tabs}>
-        <TouchableOpacity 
-          style={[styles.tab, activeTab === 'auto' && styles.tabActive]}
-          onPress={() => setActiveTab('auto')}
-        >
-          <Text style={[styles.tabText, activeTab === 'auto' && styles.tabTextActive]}>
-            Detección Automática
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={[styles.tab, activeTab === 'manual' && styles.tabActive]}
-          onPress={() => setActiveTab('manual')}
-        >
-          <Text style={[styles.tabText, activeTab === 'manual' && styles.tabTextActive]}>
-            Entrada Manual
-          </Text>
-        </TouchableOpacity>
-      </View>
-      
-      {activeTab === 'auto' && (
-        <View style={styles.tabContent}>
-          <TouchableOpacity 
-            style={[styles.btn, analyzing && styles.btnDisabled]}
-            onPress={onAutoAnalysis}
-            disabled={analyzing}
-          >
-            {analyzing ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <>
-                <Text style={styles.btnIcon}>🔍</Text>
-                <Text style={styles.btnText}>Iniciar Análisis Automático</Text>
-              </>
-            )}
-          </TouchableOpacity>
-          
-          {analyzing && (
-            <View style={styles.progressContainer}>
-              <View style={styles.progressHeader}>
-                <Text style={styles.progressText}>Progreso del análisis</Text>
-                <Text style={styles.progressText}>{progress}%</Text>
-              </View>
-              <View style={styles.progressBar}>
-                <View style={[styles.progressFill, { width: `${progress}%` }]} />
-              </View>
-            </View>
-          )}
-        </View>
-      )}
-      
-      {activeTab === 'manual' && (
-        <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false}>
-          <TextInput
-            style={styles.input}
-            placeholder="Modelo de CPU (ej: Intel Core i7-13700K)"
-            value={manualData.cpu_model}
-            onChangeText={(text) => setManualData({...manualData, cpu_model: text})}
-            placeholderTextColor="#8b8b9d"
-          />
-          
-          <TextInput
-            style={styles.input}
-            placeholder="Velocidad de CPU (GHz)"
-            value={manualData.cpu_speed_ghz}
-            onChangeText={(text) => setManualData({...manualData, cpu_speed_ghz: text})}
-            keyboardType="numeric"
-            placeholderTextColor="#8b8b9d"
-          />
-          
-          <TextInput
-            style={styles.input}
-            placeholder="Núcleos de CPU"
-            value={manualData.cores}
-            onChangeText={(text) => setManualData({...manualData, cores: text})}
-            keyboardType="numeric"
-            placeholderTextColor="#8b8b9d"
-          />
-          
-          <TextInput
-            style={styles.input}
-            placeholder="Memoria RAM (GB)"
-            value={manualData.ram_gb}
-            onChangeText={(text) => setManualData({...manualData, ram_gb: text})}
-            keyboardType="numeric"
-            placeholderTextColor="#8b8b9d"
-          />
-          
-          <View style={styles.pickerContainer}>
-            <Text style={styles.pickerLabel}>Tipo de Almacenamiento</Text>
-            <View style={styles.picker}>
-              <TouchableOpacity 
-                style={[styles.pickerOption, manualData.disk_type === 'SSD' && styles.pickerOptionActive]}
-                onPress={() => setManualData({...manualData, disk_type: 'SSD'})}
-              >
-                <Text style={manualData.disk_type === 'SSD' ? styles.pickerOptionTextActive : styles.pickerOptionText}>
-                  SSD
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={[styles.pickerOption, manualData.disk_type === 'NVMe' && styles.pickerOptionActive]}
-                onPress={() => setManualData({...manualData, disk_type: 'NVMe'})}
-              >
-                <Text style={manualData.disk_type === 'NVMe' ? styles.pickerOptionTextActive : styles.pickerOptionText}>
-                  NVMe
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={[styles.pickerOption, manualData.disk_type === 'HDD' && styles.pickerOptionActive]}
-                onPress={() => setManualData({...manualData, disk_type: 'HDD'})}
-              >
-                <Text style={manualData.disk_type === 'HDD' ? styles.pickerOptionTextActive : styles.pickerOptionText}>
-                  HDD
-                </Text>
-              </TouchableOpacity>
-            </View>
+      <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false}>
+        <TextInput
+          style={styles.input}
+          placeholder="Modelo de CPU (ej: Intel Core i7-13700K)"
+          value={manualData.cpu_model}
+          onChangeText={(text) => setManualData({...manualData, cpu_model: text})}
+          placeholderTextColor="#8b8b9d"
+        />
+        
+        <TextInput
+          style={styles.input}
+          placeholder="Velocidad de CPU (GHz)"
+          value={manualData.cpu_speed_ghz}
+          onChangeText={(text) => setManualData({...manualData, cpu_speed_ghz: text})}
+          keyboardType="numeric"
+          placeholderTextColor="#8b8b9d"
+        />
+        
+        <TextInput
+          style={styles.input}
+          placeholder="Núcleos de CPU"
+          value={manualData.cores}
+          onChangeText={(text) => setManualData({...manualData, cores: text})}
+          keyboardType="numeric"
+          placeholderTextColor="#8b8b9d"
+        />
+        
+        <TextInput
+          style={styles.input}
+          placeholder="Memoria RAM (GB)"
+          value={manualData.ram_gb}
+          onChangeText={(text) => setManualData({...manualData, ram_gb: text})}
+          keyboardType="numeric"
+          placeholderTextColor="#8b8b9d"
+        />
+        
+        <View style={styles.pickerContainer}>
+          <Text style={styles.pickerLabel}>Tipo de Almacenamiento</Text>
+          <View style={styles.picker}>
+            <TouchableOpacity 
+              style={[styles.pickerOption, manualData.disk_type === 'SSD' && styles.pickerOptionActive]}
+              onPress={() => setManualData({...manualData, disk_type: 'SSD'})}
+            >
+              <Text style={manualData.disk_type === 'SSD' ? styles.pickerOptionTextActive : styles.pickerOptionText}>
+                SSD
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={[styles.pickerOption, manualData.disk_type === 'NVMe' && styles.pickerOptionActive]}
+              onPress={() => setManualData({...manualData, disk_type: 'NVMe'})}
+            >
+              <Text style={manualData.disk_type === 'NVMe' ? styles.pickerOptionTextActive : styles.pickerOptionText}>
+                NVMe
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={[styles.pickerOption, manualData.disk_type === 'HDD' && styles.pickerOptionActive]}
+              onPress={() => setManualData({...manualData, disk_type: 'HDD'})}
+            >
+              <Text style={manualData.disk_type === 'HDD' ? styles.pickerOptionTextActive : styles.pickerOptionText}>
+                HDD
+              </Text>
+            </TouchableOpacity>
           </View>
-          
-          <TextInput
-            style={styles.input}
-            placeholder="Modelo de GPU (ej: NVIDIA RTX 4070)"
-            value={manualData.gpu_model}
-            onChangeText={(text) => setManualData({...manualData, gpu_model: text})}
-            placeholderTextColor="#8b8b9d"
-          />
-          
-          <TextInput
-            style={styles.input}
-            placeholder="VRAM de GPU (GB)"
-            value={manualData.gpu_vram_gb}
-            onChangeText={(text) => setManualData({...manualData, gpu_vram_gb: text})}
-            keyboardType="numeric"
-            placeholderTextColor="#8b8b9d"
-          />
-          
-          <TouchableOpacity 
-            style={styles.btn}
-            onPress={handleManualSubmit}
-            disabled={analyzing}
-          >
-            {analyzing ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <>
-                <Text style={styles.btnIcon}>📊</Text>
-                <Text style={styles.btnText}>Analizar con Datos Manuales</Text>
-              </>
-            )}
-          </TouchableOpacity>
-        </ScrollView>
-      )}
+        </View>
+        
+        <TextInput
+          style={styles.input}
+          placeholder="Modelo de GPU (ej: NVIDIA RTX 4070)"
+          value={manualData.gpu_model}
+          onChangeText={(text) => setManualData({...manualData, gpu_model: text})}
+          placeholderTextColor="#8b8b9d"
+        />
+        
+        <TextInput
+          style={styles.input}
+          placeholder="VRAM de GPU (GB)"
+          value={manualData.gpu_vram_gb}
+          onChangeText={(text) => setManualData({...manualData, gpu_vram_gb: text})}
+          keyboardType="numeric"
+          placeholderTextColor="#8b8b9d"
+        />
+        
+        <TouchableOpacity 
+          style={styles.btn}
+          onPress={handleManualSubmit}
+          disabled={analyzing}
+        >
+          {analyzing ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <>
+              <Text style={styles.btnIcon}>📊</Text>
+              <Text style={styles.btnText}>Analizar Mi PC</Text>
+            </>
+          )}
+        </TouchableOpacity>
+      </ScrollView>
     </View>
   );
 };
 
-// Componente AuthModal
+// Componente AuthModal (igual que antes)
 const AuthModal = ({ visible, onClose, onAuthSuccess }) => {
   const [activeTab, setActiveTab] = useState('login');
   const [loading, setLoading] = useState(false);
@@ -540,7 +487,7 @@ const AuthModal = ({ visible, onClose, onAuthSuccess }) => {
   );
 };
 
-// Componente ResultsScreen
+// Componente ResultsScreen (igual que antes)
 const ResultsScreen = ({ analysisData, analysisResult, onBack }) => {
   const renderProfileCards = () => {
     if (!analysisResult.scores) return null;
@@ -663,7 +610,7 @@ const ResultsScreen = ({ analysisData, analysisResult, onBack }) => {
   );
 };
 
-// Funciones auxiliares para cálculos
+// Funciones auxiliares para cálculos (igual que antes)
 const calculateCPUScore = (data) => {
   let score = 50;
   if (data?.cpu_model?.includes('i9') || data?.cpu_model?.includes('Ryzen 9')) score += 35;
@@ -718,7 +665,7 @@ const getStars = (score) => {
   return stars;
 };
 
-// Estilos
+// Estilos (igual que antes)
 const styles = {
   container: {
     flex: 1,
@@ -846,30 +793,6 @@ const styles = {
     fontWeight: '600',
     color: '#e0e0e0',
   },
-  tabs: {
-    flexDirection: 'row',
-    backgroundColor: 'rgba(0,0,0,0.2)',
-    borderRadius: 12,
-    padding: 4,
-    marginBottom: 25,
-  },
-  tab: {
-    flex: 1,
-    padding: 15,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  tabActive: {
-    backgroundColor: 'rgba(76,201,240,0.2)',
-  },
-  tabText: {
-    color: '#8b8b9d',
-    fontWeight: '500',
-    fontSize: 14,
-  },
-  tabTextActive: {
-    color: '#4cc9f0',
-  },
   tabContent: {
     minHeight: 200,
   },
@@ -892,29 +815,6 @@ const styles = {
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
-  },
-  progressContainer: {
-    marginTop: 25,
-  },
-  progressHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 10,
-  },
-  progressText: {
-    color: '#8b8b9d',
-    fontSize: 14,
-  },
-  progressBar: {
-    height: 8,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    borderRadius: 4,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: '#4cc9f0',
-    borderRadius: 4,
   },
   input: {
     backgroundColor: 'rgba(0,0,0,0.3)',
@@ -1231,50 +1131,8 @@ export default function App() {
   const [user, setUser] = useState(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
-  const [progress, setProgress] = useState(0);
   const [analysisData, setAnalysisData] = useState(null);
   const [analysisResult, setAnalysisResult] = useState(null);
-
-  const handleAutoAnalysis = async () => {
-    setAnalyzing(true);
-    setProgress(0);
-    
-    const progressInterval = setInterval(() => {
-      setProgress(prev => {
-        if (prev >= 90) {
-          clearInterval(progressInterval);
-          return 90;
-        }
-        return prev + 10;
-      });
-    }, 300);
-
-    const systemData = {
-      cpu_model: 'Intel Core i7-13700K',
-      cpu_speed_ghz: 3.4,
-      cores: 16,
-      ram_gb: 32,
-      disk_type: 'NVMe',
-      gpu_model: 'NVIDIA GeForce RTX 4070',
-      gpu_vram_gb: 12
-    };
-
-    try {
-      const result = await analysisService.analyzeSystem(systemData, user?.token);
-      clearInterval(progressInterval);
-      setProgress(100);
-      
-      setTimeout(() => {
-        setAnalyzing(false);
-        setAnalysisData(systemData);
-        setAnalysisResult(result.result || result);
-        setCurrentScreen('results');
-      }, 500);
-    } catch (error) {
-      setAnalyzing(false);
-      Alert.alert('Error', 'No se pudo completar el análisis');
-    }
-  };
 
   const handleManualAnalysis = async (data) => {
     setAnalyzing(true);
@@ -1324,10 +1182,8 @@ export default function App() {
         />
         
         <AnalysisCard
-          onAutoAnalysis={handleAutoAnalysis}
           onManualAnalysis={handleManualAnalysis}
           analyzing={analyzing}
-          progress={progress}
         />
       </ScrollView>
 
