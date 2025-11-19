@@ -1,273 +1,218 @@
 // auth.js
-const API_BASE = 'http://localhost:8000';
+const API_BASE = "http://localhost:8000";
 
 class AuthService {
     constructor() {
-        this.token = localStorage.getItem('auth_token');
-        this.user = JSON.parse(localStorage.getItem('user') || 'null');
+        this.token = localStorage.getItem("auth_token");
+        this.user = JSON.parse(localStorage.getItem("user") || "null");
+
         this.initEventListeners();
     }
 
     initEventListeners() {
-        // Tabs de login/registro
-        document.querySelectorAll('.auth-tab').forEach(tab => {
-            tab.addEventListener('click', (e) => {
-                this.switchTab(e.target.dataset.tab);
-            });
+        document.querySelectorAll(".auth-tab").forEach(tab => {
+            tab.addEventListener("click", (e) => this.switchTab(e.target.dataset.tab));
         });
 
-        // Enlaces para cambiar entre formularios
-        document.getElementById('showRegister').addEventListener('click', () => {
-            this.switchTab('register');
-        });
+        document.getElementById("showRegister").addEventListener("click", () => this.switchTab("register"));
+        document.getElementById("showLogin").addEventListener("click", () => this.switchTab("login"));
 
-        document.getElementById('showLogin').addEventListener('click', () => {
-            this.switchTab('login');
-        });
-
-        // Formularios
-        document.getElementById('loginForm').addEventListener('submit', (e) => {
+        document.getElementById("loginForm").addEventListener("submit", (e) => {
             e.preventDefault();
             this.handleLogin();
         });
 
-        document.getElementById('registerForm').addEventListener('submit', (e) => {
+        document.getElementById("registerForm").addEventListener("submit", (e) => {
             e.preventDefault();
             this.handleRegister();
         });
 
-        // Botón de invitado
-        document.getElementById('guestButton').addEventListener('click', () => {
-            this.continueAsGuest();
-        });
+        document.getElementById("guestButton").addEventListener("click", () => this.continueAsGuest());
 
-        // Validación en tiempo real
         this.initRealTimeValidation();
     }
 
     switchTab(tabName) {
-        // Actualizar tabs
-        document.querySelectorAll('.auth-tab').forEach(tab => {
-            tab.classList.toggle('active', tab.dataset.tab === tabName);
+        document.querySelectorAll(".auth-tab").forEach(tab => {
+            tab.classList.toggle("active", tab.dataset.tab === tabName);
         });
 
-        // Mostrar formulario correspondiente
-        document.querySelectorAll('.auth-form').forEach(form => {
-            form.classList.toggle('active', form.id === `${tabName}Form`);
+        document.querySelectorAll(".auth-form").forEach(form => {
+            form.classList.toggle("active", form.id === `${tabName}Form`);
         });
 
-        // Limpiar errores
         this.clearErrors();
     }
 
     clearErrors() {
-        document.querySelectorAll('.error-message').forEach(error => {
-            error.classList.remove('show');
-        });
-        document.querySelectorAll('input').forEach(input => {
-            input.classList.remove('error');
-        });
+        document.querySelectorAll(".error-message").forEach(e => e.classList.remove("show"));
+        document.querySelectorAll("input").forEach(inp => inp.classList.remove("error"));
     }
 
     showError(inputId, message) {
         const input = document.getElementById(inputId);
-        const errorElement = document.getElementById(`${inputId}Error`);
-        
-        input.classList.add('error');
-        errorElement.textContent = message;
-        errorElement.classList.add('show');
-    }
+        const error = document.getElementById(`${inputId}Error`);
 
-    initRealTimeValidation() {
-        // Validación de confirmación de contraseña
-        const confirmPassword = document.getElementById('registerConfirmPassword');
-        const password = document.getElementById('registerPassword');
-
-        confirmPassword.addEventListener('input', () => {
-            if (confirmPassword.value && password.value !== confirmPassword.value) {
-                this.showError('registerConfirmPassword', 'Las contraseñas no coinciden');
-            } else {
-                this.clearFieldError('registerConfirmPassword');
-            }
-        });
-
-        password.addEventListener('input', () => {
-            if (confirmPassword.value && password.value !== confirmPassword.value) {
-                this.showError('registerConfirmPassword', 'Las contraseñas no coinciden');
-            } else {
-                this.clearFieldError('registerConfirmPassword');
-            }
-        });
+        input.classList.add("error");
+        error.textContent = message;
+        error.classList.add("show");
     }
 
     clearFieldError(fieldId) {
-        const input = document.getElementById(fieldId);
-        const errorElement = document.getElementById(`${fieldId}Error`);
-        
-        input.classList.remove('error');
-        errorElement.classList.remove('show');
+        document.getElementById(fieldId).classList.remove("error");
+        document.getElementById(`${fieldId}Error`).classList.remove("show");
+    }
+
+    initRealTimeValidation() {
+        const pass = document.getElementById("registerPassword");
+        const confirm = document.getElementById("registerConfirmPassword");
+
+        const validate = () => {
+            if (pass.value && confirm.value && pass.value !== confirm.value) {
+                this.showError("registerConfirmPassword", "Las contraseñas no coinciden");
+            } else {
+                this.clearFieldError("registerConfirmPassword");
+            }
+        };
+
+        pass.addEventListener("input", validate);
+        confirm.addEventListener("input", validate);
     }
 
     async handleLogin() {
-        const username = document.getElementById('loginUsername').value;
-        const password = document.getElementById('loginPassword').value;
-        const loginButton = document.getElementById('loginButton');
-        const loginText = document.getElementById('loginText');
-        const loginLoading = document.getElementById('loginLoading');
+        const username = document.getElementById("loginUsername").value.trim();
+        const password = document.getElementById("loginPassword").value;
 
-        // Validación básica
         if (!username || !password) {
-            this.showError('loginUsername', 'Completa todos los campos');
+            this.showError("loginUsername", "Ingresa usuario y contraseña");
+            this.showError("loginPassword", "");
             return;
         }
 
-        // Mostrar loading
-        loginText.style.display = 'none';
-        loginLoading.style.display = 'inline-block';
-        loginButton.disabled = true;
+        const btn = document.getElementById("loginButton");
+        const txt = document.getElementById("loginText");
+        const loading = document.getElementById("loginLoading");
+
+        txt.style.display = "none";
+        loading.style.display = "inline-block";
+        btn.disabled = true;
 
         try {
-            const response = await fetch(`${API_BASE}/login`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ username, password }),
+            const res = await fetch(`${API_BASE}/login`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ username, password })
             });
 
-            const data = await response.json();
+            const data = await res.json();
 
-            if (!response.ok) {
-                throw new Error(data.detail || 'Error en el inicio de sesión');
-            }
+            if (!res.ok) throw new Error(data.detail || "Credenciales incorrectas");
 
-            // Guardar token y usuario
             this.token = data.access_token;
             this.user = data.user;
-            
-            localStorage.setItem('auth_token', this.token);
-            localStorage.setItem('user', JSON.stringify(this.user));
 
-            // Redirigir a la aplicación principal
+            localStorage.setItem("auth_token", this.token);
+            localStorage.setItem("user", JSON.stringify(this.user));
+
             this.redirectToApp();
 
-        } catch (error) {
-            this.showError('loginPassword', error.message);
+        } catch (err) {
+            this.showError("loginPassword", err.message);
         } finally {
-            // Ocultar loading
-            loginText.style.display = 'inline-block';
-            loginLoading.style.display = 'none';
-            loginButton.disabled = false;
+            txt.style.display = "inline-block";
+            loading.style.display = "none";
+            btn.disabled = false;
         }
     }
 
     async handleRegister() {
-        const username = document.getElementById('registerUsername').value;
-        const email = document.getElementById('registerEmail').value;
-        const password = document.getElementById('registerPassword').value;
-        const confirmPassword = document.getElementById('registerConfirmPassword').value;
-        const registerButton = document.getElementById('registerButton');
-        const registerText = document.getElementById('registerText');
-        const registerLoading = document.getElementById('registerLoading');
+        const username = document.getElementById("registerUsername").value.trim();
+        const email = document.getElementById("registerEmail").value.trim();
+        const password = document.getElementById("registerPassword").value;
+        const confirmPassword = document.getElementById("registerConfirmPassword").value;
 
-        // Validaciones
         if (!username || !email || !password || !confirmPassword) {
-            this.showError('registerUsername', 'Completa todos los campos');
-            return;
-        }
-
-        if (password !== confirmPassword) {
-            this.showError('registerConfirmPassword', 'Las contraseñas no coinciden');
+            this.showError("registerUsername", "Completa todos los campos");
             return;
         }
 
         if (password.length < 6) {
-            this.showError('registerPassword', 'La contraseña debe tener al menos 6 caracteres');
+            this.showError("registerPassword", "La contraseña debe tener al menos 6 caracteres");
             return;
         }
 
-        // Mostrar loading
-        registerText.style.display = 'none';
-        registerLoading.style.display = 'inline-block';
-        registerButton.disabled = true;
+        if (password !== confirmPassword) {
+            this.showError("registerConfirmPassword", "Las contraseñas no coinciden");
+            return;
+        }
+
+        const btn = document.getElementById("registerButton");
+        const txt = document.getElementById("registerText");
+        const loading = document.getElementById("registerLoading");
+
+        txt.style.display = "none";
+        loading.style.display = "inline-block";
+        btn.disabled = true;
 
         try {
-            const response = await fetch(`${API_BASE}/register`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ username, email, password }),
+            const res = await fetch(`${API_BASE}/register`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ username, email, password })
             });
 
-            const data = await response.json();
+            const data = await res.json();
 
-            if (!response.ok) {
-                throw new Error(data.detail || 'Error en el registro');
-            }
+            if (!res.ok) throw new Error(data.detail || "Error en el registro");
 
-            // Mostrar mensaje de éxito
-            document.getElementById('successMessage').classList.add('show');
+            document.getElementById("successMessage").classList.add("show");
 
-            // Auto-login después del registro
             setTimeout(() => {
                 this.handleAutoLogin(username, password);
             }, 2000);
 
-        } catch (error) {
-            if (error.message.includes('email')) {
-                this.showError('registerEmail', error.message);
-            } else if (error.message.includes('username')) {
-                this.showError('registerUsername', error.message);
-            } else {
-                this.showError('registerUsername', error.message);
-            }
+        } catch (err) {
+            if (err.message.includes("email")) this.showError("registerEmail", err.message);
+            else if (err.message.includes("username")) this.showError("registerUsername", err.message);
+            else this.showError("registerUsername", "Error en el registro");
         } finally {
-            // Ocultar loading
-            registerText.style.display = 'inline-block';
-            registerLoading.style.display = 'none';
-            registerButton.disabled = false;
+            txt.style.display = "inline-block";
+            loading.style.display = "none";
+            btn.disabled = false;
         }
     }
 
     async handleAutoLogin(username, password) {
         try {
-            const response = await fetch(`${API_BASE}/login`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ username, password }),
+            const res = await fetch(`${API_BASE}/login`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ username, password })
             });
 
-            const data = await response.json();
+            const data = await res.json();
+            if (!res.ok) throw new Error();
 
-            if (response.ok) {
-                this.token = data.access_token;
-                this.user = data.user;
-                
-                localStorage.setItem('auth_token', this.token);
-                localStorage.setItem('user', JSON.stringify(this.user));
+            this.token = data.access_token;
+            this.user = data.user;
 
-                this.redirectToApp();
-            }
-        } catch (error) {
-            // Si falla el auto-login, mostrar formulario de login
-            this.switchTab('login');
-            document.getElementById('loginUsername').value = username;
-            document.getElementById('loginPassword').value = password;
+            localStorage.setItem("auth_token", this.token);
+            localStorage.setItem("user", JSON.stringify(this.user));
+
+            this.redirectToApp();
+
+        } catch {
+            this.switchTab("login");
         }
     }
 
     continueAsGuest() {
-        // Guardar estado de invitado
-        localStorage.setItem('is_guest', 'true');
+        localStorage.setItem("is_guest", "true");
         this.redirectToApp();
     }
 
     redirectToApp() {
-        // Redirigir a la aplicación principal
-        window.location.href = 'index.html';
+        window.location.href = "index.html";
     }
 
     isAuthenticated() {
@@ -275,55 +220,17 @@ class AuthService {
     }
 
     isGuest() {
-        return localStorage.getItem('is_guest') === 'true';
+        return localStorage.getItem("is_guest") === "true";
     }
 
     logout() {
-        this.token = null;
-        this.user = null;
-        localStorage.removeItem('auth_token');
-        localStorage.removeItem('user');
-        localStorage.removeItem('is_guest');
-        
-        // Redirigir a la página de auth
-        window.location.href = 'auth.html';
-    }
-
-    getAuthHeaders() {
-        return {
-            'Authorization': `Bearer ${this.token}`,
-            'Content-Type': 'application/json',
-        };
-    }
-
-    async makeAuthenticatedRequest(url, options = {}) {
-        if (!this.isAuthenticated()) {
-            throw new Error('Usuario no autenticado');
-        }
-
-        const response = await fetch(url, {
-            ...options,
-            headers: {
-                ...options.headers,
-                ...this.getAuthHeaders(),
-            },
-        });
-
-        if (response.status === 401) {
-            this.logout();
-            throw new Error('Sesión expirada');
-        }
-
-        return response;
+        localStorage.removeItem("auth_token");
+        localStorage.removeItem("user");
+        localStorage.removeItem("is_guest");
+        window.location.href = "auth.html";
     }
 }
 
-// Inicializar el servicio de autenticación cuando se carga la página
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener("DOMContentLoaded", () => {
     window.authService = new AuthService();
-
-    // Si ya está autenticado, redirigir a la app
-    if (window.authService.isAuthenticated() || window.authService.isGuest()) {
-        window.authService.redirectToApp();
-    }
 });

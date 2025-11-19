@@ -17,11 +17,7 @@
             --sombra: 0 10px 25px rgba(0, 0, 139, 0.1);
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
@@ -41,35 +37,19 @@
             width: 100%;
             max-width: 450px;
             position: relative;
-            overflow: hidden;
         }
 
         .auth-container::before {
             content: '';
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
+            top: 0; left: 0; right: 0;
             height: 6px;
             background: linear-gradient(90deg, var(--azul-celeste), var(--azul-oscuro));
         }
 
-        .logo {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        .logo h1 {
-            color: var(--azul-oscuro);
-            font-size: 2.5em;
-            font-weight: 700;
-            margin-bottom: 5px;
-        }
-
-        .logo p {
-            color: var(--texto-medio);
-            font-size: 1.1em;
-        }
+        .logo { text-align: center; margin-bottom: 30px; }
+        .logo h1 { color: var(--azul-oscuro); font-size: 2.5em; font-weight: 700; margin-bottom: 5px; }
+        .logo p { color: var(--texto-medio); font-size: 1.1em; }
 
         .auth-tabs {
             display: flex;
@@ -89,39 +69,21 @@
             font-weight: 600;
             color: var(--texto-medio);
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: 0.3s;
         }
 
-        .auth-tab.active {
-            background: var(--azul-oscuro);
-            color: white;
-        }
+        .auth-tab.active { background: var(--azul-oscuro); color: white; }
 
-        .auth-form {
-            display: none;
-        }
-
-        .auth-form.active {
-            display: block;
-            animation: fadeIn 0.5s ease;
-        }
+        .auth-form { display: none; }
+        .auth-form.active { display: block; animation: fadeIn 0.5s ease; }
 
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: var(--texto-oscuro);
-            font-weight: 600;
-            font-size: 0.9em;
-        }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; color: var(--texto-oscuro); font-weight: 600; }
 
         .form-group input {
             width: 100%;
@@ -129,7 +91,7 @@
             border: 2px solid var(--borde-claro);
             border-radius: 10px;
             font-size: 1em;
-            transition: all 0.3s ease;
+            transition: 0.3s;
             background: white;
         }
 
@@ -139,9 +101,7 @@
             box-shadow: 0 0 0 3px rgba(135, 206, 235, 0.2);
         }
 
-        .form-group input.error {
-            border-color: #e53e3e;
-        }
+        .form-group input.error { border-color: #e53e3e; }
 
         .error-message {
             color: #e53e3e;
@@ -150,9 +110,7 @@
             display: none;
         }
 
-        .error-message.show {
-            display: block;
-        }
+        .error-message.show { display: block; }
 
         .auth-button {
             width: 100%;
@@ -164,40 +122,19 @@
             font-size: 1.1em;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: 0.3s;
             margin-bottom: 20px;
         }
 
-        .auth-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 0, 139, 0.3);
-        }
+        .auth-button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,139,0.3); }
+        .auth-button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
-        .auth-button:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .auth-footer {
-            text-align: center;
-            color: var(--texto-medio);
-        }
-
-        .auth-footer a {
-            color: var(--azul-oscuro);
-            text-decoration: none;
-            font-weight: 600;
-            cursor: pointer;
-        }
-
-        .auth-footer a:hover {
-            text-decoration: underline;
-        }
+        .auth-footer { text-align: center; color: var(--texto-medio); }
+        .auth-footer a { color: var(--azul-oscuro); font-weight: 600; cursor: pointer; text-decoration: none; }
+        .auth-footer a:hover { text-decoration: underline; }
 
         .guest-option {
-            margin-top: 25px;
-            padding-top: 25px;
+            margin-top: 25px; padding-top: 25px;
             border-top: 1px solid var(--borde-claro);
             text-align: center;
         }
@@ -210,29 +147,22 @@
             border-radius: 10px;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: 0.3s;
         }
 
-        .guest-button:hover {
-            background: var(--azul-celeste);
-            transform: translateY(-2px);
-        }
+        .guest-button:hover { background: var(--azul-celeste); transform: translateY(-2px); }
 
         .loading {
             display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid #ffffff;
+            width: 20px; height: 20px;
+            border: 3px solid white;
             border-radius: 50%;
             border-top-color: transparent;
-            animation: spin 1s ease-in-out infinite;
+            animation: spin 1s linear infinite;
             margin-right: 10px;
-            vertical-align: middle;
         }
 
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
+        @keyframes spin { to { transform: rotate(360deg); } }
 
         .success-message {
             background: #38a169;
@@ -244,10 +174,7 @@
             display: none;
         }
 
-        .success-message.show {
-            display: block;
-            animation: fadeIn 0.5s ease;
-        }
+        .success-message.show { display: block; animation: fadeIn 0.5s ease; }
     </style>
 </head>
 <body>
@@ -262,7 +189,7 @@
             <button class="auth-tab" data-tab="register">Registrarse</button>
         </div>
 
-        <!-- Formulario de Login -->
+        <!-- LOGIN -->
         <form id="loginForm" class="auth-form active">
             <div class="form-group">
                 <label for="loginUsername">Usuario</label>
@@ -286,7 +213,7 @@
             </div>
         </form>
 
-        <!-- Formulario de Registro -->
+        <!-- REGISTRO -->
         <form id="registerForm" class="auth-form">
             <div class="form-group">
                 <label for="registerUsername">Usuario</label>
@@ -322,12 +249,10 @@
             </div>
         </form>
 
-        <!-- Mensaje de éxito -->
         <div class="success-message" id="successMessage">
             ¡Registro exitoso! Redirigiendo...
         </div>
 
-        <!-- Opción para continuar como invitado -->
         <div class="guest-option">
             <p>¿Quieres probar sin registrarte?</p>
             <button class="guest-button" id="guestButton">Continuar como Invitado</button>
