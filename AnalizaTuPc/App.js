@@ -1021,6 +1021,8 @@ const styles = {
     padding: 15,
     color: '#e0e0e0',
     fontSize: 16,
+    textAlign: 'center', // ← AÑADE ESTA LÍNEA
+    marginBottom: 15,
   },
   btn: {
     flexDirection: 'row',
