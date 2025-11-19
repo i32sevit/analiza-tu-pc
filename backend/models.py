@@ -4,6 +4,9 @@ from typing import List, Optional
 from datetime import datetime
 
 # Modelos para autenticación
+class TokenData(BaseModel):
+    username: Optional[str] = None
+    
 class UserCreate(BaseModel):
     username: str
     email: EmailStr
