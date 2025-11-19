@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AnalizaTuPC - Historial de análisis</title>
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --azul-celeste-claro: #add8e6;
+            --azul-celeste-medio: #87ceeb;
+            --azul-oscuro: #00008b;
+            --azul-acero: #4682b4;
+            --azul-alice: #f0f8ff;
+            --azul-casi-blanco: #f5faff;
+            --texto-oscuro: #2d3748;
+            --texto-claro: #718096;
+            --borde-claro: #e2e8f0;
+            --sombra-suave: 0 4px 10px rgba(0,0,0,0.08);
+            --sombra-media: 0 12px 30px rgba(0,0,0,0.15);
+        }
+
+        body {
+            margin: 0;
+            background: linear-gradient(135deg, var(--azul-celeste-claro), var(--azul-celeste-medio));
+            font-family: "Segoe UI", sans-serif;
+            min-height: 100vh;
+            color: var(--texto-oscuro);
+        }
+
+        /* Top bar */
+        .top-bar {
+            background: var(--azul-oscuro);
+            padding: 18px 35px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 20px;
+            box-shadow: var(--sombra-media);
+        }
+
+        .top-bar a {
+            color: white;
+            font-weight: 600;
+            padding: 10px 18px;
+            border-radius: 10px;
+            text-decoration: none;
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+
+        .top-bar a:hover {
+            background: white;
+            color: var(--azul-oscuro);
+        }
+
+        /* Main container */
+        .container {
+            max-width: 1100px;
+            margin: 40px auto;
+            padding: 25px;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2.8rem;
+            font-weight: 800;
+            color: var(--azul-oscuro);
+            margin-bottom: 20px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: var(--texto-claro);
+            font-size: 1.2rem;
+            margin-bottom: 40px;
+        }
+
+        /* Analysis card */
+        .analysis-card {
+            background: white;
+            padding: 25px;
+            border-radius: 18px;
+            border-left: 6px solid var(--azul-acero);
+            margin-bottom: 25px;
+            box-shadow: var(--sombra-suave);
+            transition: 0.25s;
+            overflow: hidden;
+        }
+
+        .analysis-card:hover {
+            transform: translateX(10px);
+            box-shadow: var(--sombra-media);
+        }
+
+        .analysis-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+
+        .analysis-id {
+            background: var(--azul-oscuro);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 25px;
+            font-weight: 700;
+        }
+
+        .analysis-score {
+            font-size: 2rem;
+            font-weight: 900;
+        }
+
+        .excelent { color: #38a169; }
+        .good { color: #3182ce; }
+        .regular { color: #d69e2e; }
+        .poor { color: #e53e3e; }
+
+        .hardware-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+            gap: 15px;
+        }
+
+        .hardware-item {
+            background: var(--azul-alice);
+            padding: 15px;
+            border-radius: 12px;
+            border-left: 4px solid var(--azul-acero);
+        }
+
+        .hardware-label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--texto-claro);
+        }
+
+        .hardware-value {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .links {
+            margin-top: 15px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .link-btn {
+            text-decoration: none;
+            padding: 10px 18px;
+            border-radius: 10px;
+            font-weight: 600;
+            background: var(--azul-oscuro);
+            color: white;
+            border: 2px solid transparent;
+        }
+
+        .link-btn:hover {
+            background: white;
+            color: var(--azul-oscuro);
+            border-color: var(--azul-oscuro);
+        }
+
+        .json-btn {
+            background: var(--azul-acero);
+        }
+
+        .json-btn:hover {
+            background: white;
+            color: var(--azul-acero);
+            border-color: var(--azul-acero);
+        }
+
+        .no-data {
+            text-align: center;
+            margin-top: 80px;
+            color: var(--texto-claro);
+        }
+
+        .no-data i {
+            font-size: 4rem;
+            opacity: 0.5;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="top-bar">
+        <a href="index.html"><i class="fas fa-home"></i> Inicio</a>
+        <a href="login.html" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</a>
+    </div>
+
+    <div class="container">
+        <h1><i class="fas fa-history"></i> Historial de análisis</h1>
+        <p class="subtitle">Aquí puedes ver todos tus análisis guardados en tu cuenta.</p>
+
+        <div id="history"></div>
+
+        <div id="no-data" class="no-data" style="display:none;">
+            <i class="fas fa-inbox"></i>
+            <h3>No hay análisis guardados</h3>
+            <p>Realiza un análisis para que aparezca aquí.</p>
+        </div>
+    </div>
+
+    <script>
+
+        function logout() {
+            localStorage.removeItem("access_token");
+        }
+
+        async function loadHistory() {
+            const container = document.getElementById("history");
+            const noData = document.getElementById("no-data");
+
+            const token = localStorage.getItem("token");
+
+            if (!token) {
+                container.innerHTML = "<p>No estás autenticado.</p>";
+                return;
+            }
+
+            try {
+                const res = await fetch("http://127.0.0.1:8000/api/analyses/history", {
+                    headers: {
+                        "Authorization": "Bearer " + token
+                    }
+                });
+
+                if (res.status === 401) {
+                    container.innerHTML = "<p>No estás autenticado.</p>";
+                    return;
+                }
+
+                const data = await res.json();
+
+                if (!data || data.length === 0) {
+                    noData.style.display = "block";
+                    return;
+                }
+
+                data.forEach(a => {
+                    const scoreClass =
+                        a.main_score >= 80 ? "excelent" :
+                        a.main_score >= 60 ? "good" :
+                        a.main_score >= 40 ? "regular" : "poor";
+
+                    container.innerHTML += `
+                        <div class="analysis-card">
+                            <div class="analysis-header">
+                                <div class="analysis-id">#${a.analysis_id}</div>
+                                <div class="analysis-score ${scoreClass}">${a.main_score}%</div>
+                            </div>
+
+                            <div class="hardware-grid">
+                                <div class="hardware-item">
+                                    <div class="hardware-label">CPU</div>
+                                    <div class="hardware-value">${a.cpu_model}</div>
+                                </div>
+                                <div class="hardware-item">
+                                    <div class="hardware-label">RAM</div>
+                                    <div class="hardware-value">${a.ram_gb} GB</div>
+                                </div>
+                                <div class="hardware-item">
+                                    <div class="hardware-label">GPU</div>
+                                    <div class="hardware-value">${a.gpu_model}</div>
+                                </div>
+                                <div class="hardware-item">
+                                    <div class="hardware-label">VRAM</div>
+                                    <div class="hardware-value">${a.gpu_vram_gb} GB</div>
+                                </div>
+                            </div>
+
+                            <div class="links">
+                                ${a.pdf_url ? `<a href="${a.pdf_url}" target="_blank" class="link-btn"><i class="fas fa-file-pdf"></i> PDF</a>` : ""}
+                                ${a.json_url ? `<a href="${a.json_url}" target="_blank" class="link-btn json-btn"><i class="fas fa-code"></i> JSON</a>` : ""}
+                            </div>
+
+                            <div class="analysis-meta" style="margin-top:10px; color:var(--texto-claro); font-size:0.85rem;">
+                                <i class="fas fa-clock"></i> ${new Date(a.created_at).toLocaleString()}
+                            </div>
+                        </div>
+                    `;
+                });
+
+            } catch (err) {
+                container.innerHTML = "<p>Error al cargar el historial.</p>";
+            }
+        }
+
+        loadHistory();
+    </script>
+
+</body>
+</html>

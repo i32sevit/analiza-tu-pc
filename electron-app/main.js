@@ -214,3 +214,18 @@ ipcMain.handle('get-user-data', () => {
   }
   return null;
 });
+
+ipcMain.handle("open-history", (event, token) => {
+    let historyWindow = new BrowserWindow({
+        width: 1200,
+        height: 800,
+        webPreferences: {
+            nodeIntegration: true,
+            contextIsolation: false
+        }
+    });
+
+    historyWindow.loadURL("http://localhost:8000/history", {
+        extraHeaders: `Authorization: Bearer ${token}`
+    });
+});

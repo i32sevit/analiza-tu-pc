@@ -107,7 +107,7 @@ def generate_guest_analysis_id():
     return int(datetime.datetime.now().timestamp())
 
 # -------------------------
-#   FUNCIONES DE SCORE (se mantienen igual)
+#   FUNCIONES DE SCORE 
 # -------------------------
 def score_system(info: dict):
     cpu = info.get('cpu_speed_ghz', 1.0) * info.get('cores', 1)
@@ -137,7 +137,7 @@ def score_system(info: dict):
     }
 
 # -------------------------
-#   CLASE PDF (se mantiene igual)
+#   CLASE PDF 
 # -------------------------
 class PDF(FPDF):
     def __init__(self, analysis_id: int):
@@ -249,7 +249,7 @@ class PDF(FPDF):
         self.ln(5)
 
 # -------------------------
-#   GENERACIÓN DEL PDF (se mantiene igual)
+#   GENERACIÓN DEL PDF 
 # -------------------------
 def create_pdf_report(sysinfo: dict, result: dict, analysis_id: int):
     pdf = PDF(analysis_id)
@@ -474,8 +474,10 @@ def get_score_color(score):
 # ENDPOINTS DE AUTENTICACIÓN 
 @app.post("/register", response_model=UserResponse)
 def register(user_data: UserCreate, db: Session = Depends(get_db)):
+
     existing_user = db.query(User).filter(
-    or_(User.username == user_data.username, User.email == user_data.email)
+        (func.lower(User.username) == user_data.username.lower()) |
+        (func.lower(User.email) == user_data.email.lower())
     ).first()
     
     if existing_user:
@@ -518,32 +520,45 @@ def login(login_data: UserLogin, db: Session = Depends(get_db)):
         "user": user
     }
 
+
 @app.get("/profile", response_model=UserResponse)
 def get_profile(current_user: User = Depends(get_current_user)):
     return current_user
 
-# ENDPOINTS DE ANÁLISIS
 @app.post("/api/analyze")
 def analyze(
-    sysinfo: SysInfo, 
+    sysinfo: SysInfo,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user_optional)
 ):
+    """
+    Endpoint universal:
+    - Invitado → análisis temporal sin guardar en BD
+    - Usuario registrado → análisis guardado en su historial
+    - Acepta datos manuales (CPU, RAM, GPU...)
+    - Acepta datos automáticos del frontend
+    """
+
     info = sysinfo.dict()
     result = score_system(info)
 
+    # -----------------------------
+    # 1️⃣ DETERMINAR SI ES INVITADO
+    # -----------------------------
     is_guest = current_user is None
     
     if is_guest:
-        analysis_id = generate_guest_analysis_id()
+        analysis_id = generate_guest_analysis_id()  # ID temporal único
         user_id = None
-        print(f"🔍 Análisis para usuario INVITADO - ID temporal: {analysis_id}")
+        print(f"🔍 Análisis para INVITADO - ID temporal generado: {analysis_id}")
     else:
-        user_analyses = db.query(SystemAnalysis).filter(SystemAnalysis.user_id == current_user.id).all()
         analysis_id = get_next_analysis_id(db)
         user_id = current_user.id
-        print(f"🔍 Análisis para usuario REGISTRADO {current_user.username} - ID: {analysis_id}")
+        print(f"🔍 Análisis para usuario {current_user.username} - ID asignado: {analysis_id}")
 
+    # -----------------------------
+    # 2️⃣ GENERAR PDF Y JSON
+    # -----------------------------
     pdf_filename = create_pdf_report(info, result, analysis_id)
 
     json_filename = f"analisis_{analysis_id:04d}.json"
@@ -561,26 +576,24 @@ def analyze(
     pdf_url = None
     json_url = None
 
+    # -----------------------------
+    # 3️⃣ SUBIR A DROPBOX (si existe token)
+    # -----------------------------
     if access_token and access_token != "tu_token_de_dropbox_aqui":
         try:
             pdf_dropbox_path = f"/AnalizaPC-Reports/{pdf_filename}"
-            pdf_url, pdf_error = upload_to_dropbox(access_token, pdf_filename, pdf_dropbox_path)
+            pdf_url, _ = upload_to_dropbox(access_token, pdf_filename, pdf_dropbox_path)
 
             json_dropbox_path = f"/AnalizaPC-Reports/{json_filename}"
-            json_url, json_error = upload_to_dropbox(access_token, json_filename, json_dropbox_path)
+            json_url, _ = upload_to_dropbox(access_token, json_filename, json_dropbox_path)
 
-            if pdf_error:
-                print(f"❌ Error subiendo PDF: {pdf_error}")
-            if json_error:
-                print(f"❌ Error subiendo JSON: {json_error}")
-            else:
-                print(f"✅ Archivos subidos a Dropbox")
+            print("📤 Archivos subidos correctamente a Dropbox")
         except Exception as e:
-            print(f"❌ Error en subida a Dropbox: {e}")
+            print(f"❌ Error subiendo a Dropbox: {e}")
 
-    else:
-        print("⚠️ Token Dropbox no configurado")
-
+    # -----------------------------
+    # 4️⃣ GUARDAR EN BD SOLO SI ES USUARIO REGISTRADO
+    # -----------------------------
     if not is_guest:
         db_analysis = SystemAnalysis(
             analysis_id=analysis_id,
@@ -602,16 +615,22 @@ def analyze(
         db.commit()
         db.refresh(db_analysis)
 
-        print(f"💾 Análisis guardado en BD con ID: {analysis_id} para usuario: {current_user.username}")
+        print(f"💾 Análisis guardado para usuario {current_user.username}")
     else:
-        print(f"📝 Análisis temporal generado para invitado - ID: {analysis_id}")
+        print(f"📝 Análisis invitado generado (NO guardado en BD)")
 
+    # -----------------------------
+    # 5️⃣ BORRAR ARCHIVOS LOCALES
+    # -----------------------------
     try:
         os.remove(pdf_filename)
         os.remove(json_filename)
     except:
         pass
 
+    # -----------------------------
+    # 6️⃣ RESPUESTA FINAL
+    # -----------------------------
     return {
         "status": "success",
         "analysis_id": analysis_id,
@@ -619,25 +638,25 @@ def analyze(
         "json_url": json_url,
         "result": result,
         "is_guest": is_guest,
-        "message": "Análisis completado correctamente" + (" (modo invitado)" if is_guest else ""),
+        "message": "Análisis completado correctamente" + (" (invitado)" if is_guest else ""),
         "version": "2.0.0"
     }
 
-# ENDPOINTS EXCLUSIVOS PARA USUARIOS REGISTRADOS
-@app.get("/api/analyses", response_model=List[dict])
-def get_user_analyses(
-    skip: int = 0,
-    limit: int = 10,
+@app.get("/api/analyses/history")
+def get_analysis_history(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    analyses = db.query(SystemAnalysis)\
-        .filter(SystemAnalysis.user_id == current_user.id)\
-        .order_by(SystemAnalysis.created_at.desc())\
-        .offset(skip)\
-        .limit(limit)\
+    """
+    Devuelve TODOS los análisis pertenecientes al usuario autenticado.
+    """
+    analyses = (
+        db.query(SystemAnalysis)
+        .filter(SystemAnalysis.user_id == current_user.id)
+        .order_by(SystemAnalysis.created_at.desc())
         .all()
-    
+    )
+
     return [
         {
             "analysis_id": a.analysis_id,
@@ -645,148 +664,19 @@ def get_user_analyses(
             "cpu_speed_ghz": a.cpu_speed_ghz,
             "cores": a.cores,
             "ram_gb": a.ram_gb,
+            "disk_type": a.disk_type,
             "gpu_model": a.gpu_model,
+            "gpu_vram_gb": a.gpu_vram_gb,
             "main_profile": a.main_profile,
             "main_score": a.main_score,
             "pdf_url": a.pdf_url,
-            "created_at": a.created_at.isoformat() if a.created_at else None
+            "json_url": a.json_url,
+            "created_at": a.created_at.isoformat(),
         }
         for a in analyses
     ]
 
-@app.get("/api/analyses/{analysis_id}")
-def get_analysis(
-    analysis_id: int,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    analysis = db.query(SystemAnalysis)\
-        .filter(
-            SystemAnalysis.analysis_id == analysis_id,
-            SystemAnalysis.user_id == current_user.id
-        )\
-        .first()
-    
-    if not analysis:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Analysis not found"
-        )
-    
-    return {
-        "status": "success",
-        "analysis": {
-            "analysis_id": analysis.analysis_id,
-            "cpu_model": analysis.cpu_model,
-            "cpu_speed_ghz": analysis.cpu_speed_ghz,
-            "cores": analysis.cores,
-            "ram_gb": analysis.ram_gb,
-            "disk_type": analysis.disk_type,
-            "gpu_model": analysis.gpu_model,
-            "gpu_vram_gb": analysis.gpu_vram_gb,
-            "main_profile": analysis.main_profile,
-            "main_score": analysis.main_score,
-            "pdf_url": analysis.pdf_url,
-            "json_url": analysis.json_url,
-            "created_at": analysis.created_at.isoformat() if analysis.created_at else None
-        }
-    }
 
-@app.get("/api/analyses/history", response_model=AnalysisHistory)
-def get_analysis_history(
-    skip: int = 0,
-    limit: int = 10,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    analyses = db.query(SystemAnalysis)\
-        .filter(SystemAnalysis.user_id == current_user.id)\
-        .order_by(SystemAnalysis.created_at.desc())\
-        .offset(skip)\
-        .limit(limit)\
-        .all()
-    
-    total_count = db.query(SystemAnalysis)\
-        .filter(SystemAnalysis.user_id == current_user.id)\
-        .count()
-    
-    analysis_list = [
-        {
-            "analysis_id": a.analysis_id,
-            "cpu_model": a.cpu_model,
-            "cpu_speed_ghz": a.cpu_speed_ghz,
-            "cores": a.cores,
-            "ram_gb": a.ram_gb,
-            "gpu_model": a.gpu_model,
-            "main_profile": a.main_profile,
-            "main_score": a.main_score,
-            "pdf_url": a.pdf_url,
-            "created_at": a.created_at.isoformat() if a.created_at else None
-        }
-        for a in analyses
-    ]
-    
-    return AnalysisHistory(analyses=analysis_list, total_count=total_count)
-
-# ENDPOINT PARA ANÁLISIS RÁPIDO
-@app.post("/api/quick-analyze")
-def quick_analyze(
-    sysinfo: SysInfo, 
-    db: Session = Depends(get_db)
-):
-    info = sysinfo.dict()
-    result = score_system(info)
-
-    analysis_id = generate_guest_analysis_id()
-    
-    print(f"🚀 Análisis RÁPIDO para INVITADO - ID temporal: {analysis_id}")
-
-    pdf_filename = create_pdf_report(info, result, analysis_id)
-
-    json_filename = f"analisis_{analysis_id:04d}.json"
-    with open(json_filename, "w", encoding="utf-8") as f:
-        json.dump({
-            "sysinfo": info,
-            "result": result,
-            "analysis_id": analysis_id,
-            "is_guest": True,
-            "timestamp": datetime.datetime.now().isoformat(),
-            "version": "2.0.0"
-        }, f, indent=2, ensure_ascii=False)
-
-    pdf_url = None
-    json_url = None
-
-    if access_token and access_token != "tu_token_de_dropbox_aqui":
-        try:
-            pdf_dropbox_path = f"/AnalizaPC-Reports/{pdf_filename}"
-            pdf_url, pdf_error = upload_to_dropbox(access_token, pdf_filename, pdf_dropbox_path)
-
-            json_dropbox_path = f"/AnalizaPC-Reports/{json_filename}"
-            json_url, json_error = upload_to_dropbox(access_token, json_filename, json_dropbox_path)
-
-            if not pdf_error and not json_error:
-                print(f"✅ Archivos subidos a Dropbox para análisis rápido")
-        except Exception as e:
-            print(f"❌ Error en subida a Dropbox: {e}")
-
-    try:
-        os.remove(pdf_filename)
-        os.remove(json_filename)
-    except:
-        pass
-
-    return {
-        "status": "success",
-        "analysis_id": analysis_id,
-        "pdf_url": pdf_url,
-        "json_url": json_url,
-        "result": result,
-        "is_guest": True,
-        "message": "Análisis rápido completado (modo invitado)",
-        "note": "Regístrate para guardar tu historial de análisis",
-        "version": "2.0.0"
-    }
 
 # ENDPOINTS PÚBLICOS
 @app.on_event("startup")
@@ -1653,6 +1543,356 @@ def get_dashboard(db: Session = Depends(get_db)):
     """
     
     return HTMLResponse(content=html_content)
+
+# ==================== HISTORIAL ====================
+@app.get("/history", response_class=HTMLResponse)
+def get_user_history(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    analyses = (
+        db.query(SystemAnalysis)
+        .filter(SystemAnalysis.user_id == current_user.id)
+        .order_by(SystemAnalysis.created_at.desc())
+        .all()
+    )
+
+    html = f"""
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<title>Historial de Análisis – AnalizaTuPC</title>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+<style>
+    :root {{
+        --azul-celeste-claro: #add8e6;
+        --azul-celeste-medio: #87ceeb;
+        --azul-oscuro: #00008b;
+        --azul-acero: #4682b4;
+        --azul-muy-claro: #c8e6ff;
+        --azul-alice: #f0f8ff;
+        --azul-casi-blanco: #f5faff;
+        --texto-oscuro: #2d3748;
+        --texto-medio: #4a5568;
+    }}
+
+    body {{
+        font-family: "Segoe UI", sans-serif;
+        background: var(--azul-alice);
+        padding: 30px;
+    }}
+
+    .container {{
+        max-width: 1200px;
+        margin: auto;
+    }}
+
+    .header {{
+        background: var(--azul-oscuro);
+        color: white;
+        padding: 35px;
+        border-radius: 20px;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+        text-align: center;
+        margin-bottom: 40px;
+    }}
+
+    .header h1 {{
+        font-size: 2.8em;
+        margin-bottom: 10px;
+    }}
+
+    .header p {{
+        opacity: 0.9;
+        font-size: 1.2em;
+    }}
+
+    .analysis-list {{
+        display: flex;
+        flex-direction: column;
+        gap: 25px;
+    }}
+
+    .analysis-card {{
+        background: white;
+        border-radius: 16px;
+        padding: 25px;
+        border-left: 6px solid var(--azul-acero);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        transition: 0.3s;
+    }}
+
+    .analysis-card:hover {{
+        transform: scale(1.02);
+        box-shadow: 0 10px 24px rgba(0,0,0,0.15);
+    }}
+
+    .card-header {{
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }}
+
+    .analysis-id {{
+        font-weight: 700;
+        font-size: 1.3em;
+        color: var(--azul-oscuro);
+    }}
+
+    .analysis-score {{
+        font-size: 2em;
+        font-weight: bold;
+    }}
+
+    .score-excelent {{ color: #38a169; }}
+    .score-good {{ color: #3182ce; }}
+    .score-regular {{ color: #d69e2e; }}
+    .score-poor {{ color: #e53e3e; }}
+
+    .specs {{
+        margin-top: 20px;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px,1fr));
+        gap: 15px;
+    }}
+
+    .spec {{
+        background: var(--azul-casi-blanco);
+        padding: 12px;
+        border-radius: 12px;
+    }}
+
+    .label {{
+        font-size: 0.9em;
+        color: var(--texto-medio);
+        text-transform: uppercase;
+        margin-bottom: 3px;
+    }}
+
+    .value {{
+        font-size: 1.1em;
+        font-weight: 600;
+    }}
+
+    .links {{
+        margin-top: 20px;
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+    }}
+
+    .btn {{
+        background: var(--azul-oscuro);
+        color: white;
+        padding: 10px 18px;
+        border-radius: 10px;
+        text-decoration: none;
+        transition: 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }}
+
+    .btn:hover {{
+        background: white;
+        color: var(--azul-oscuro);
+        border: 2px solid var(--azul-oscuro);
+    }}
+
+    .meta {{
+        margin-top: 12px;
+        font-size: 0.9em;
+        color: gray;
+        font-style: italic;
+    }}
+
+    .no-data {{
+        text-align: center;
+        padding: 70px 20px;
+        background: white;
+        border-radius: 20px;
+        font-size: 1.3em;
+        color: var(--texto-medio);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+    <div class="header">
+        <h1><i class="fas fa-history"></i> Historial de Análisis</h1>
+        <p>Registros guardados del usuario <strong>{current_user.username}</strong></p>
+    </div>
+
+    <div class="analysis-list">
+"""
+
+    # ---------------------
+    # SI NO HAY ANALISIS
+    # ---------------------
+    if not analyses:
+        html += """
+        <div class="no-data">
+            <i class="fas fa-folder-open" style="font-size:3em;"></i>
+            <p>No hay análisis guardados todavía.</p>
+        </div>
+        </div></body></html>
+        """
+        return HTMLResponse(html)
+
+    # ---------------------
+    # LISTADO DE ANALISIS
+    # ---------------------
+    for a in analyses:
+        html += f"""
+        <div class="analysis-card">
+            <div class="card-header">
+                <div class="analysis-id"><i class="fas fa-desktop"></i> Análisis #{a.analysis_id}</div>
+                <div class="analysis-score {get_score_class(a.main_score)}">{a.main_score}%</div>
+            </div>
+
+            <div class="specs">
+                <div class="spec">
+                    <div class="label">CPU</div>
+                    <div class="value">{a.cpu_model}</div>
+                </div>
+                <div class="spec">
+                    <div class="label">RAM</div>
+                    <div class="value">{a.ram_gb} GB</div>
+                </div>
+                <div class="spec">
+                    <div class="label">GPU</div>
+                    <div class="value">{a.gpu_model}</div>
+                </div>
+                <div class="spec">
+                    <div class="label">VRAM</div>
+                    <div class="value">{a.gpu_vram_gb} GB</div>
+                </div>
+            </div>
+
+            <div class="links">
+                {f'<a href="{a.pdf_url}" class="btn" target="_blank"><i class="fas fa-file-pdf"></i> PDF</a>' if a.pdf_url else ""}
+                {f'<a href="{a.json_url}" class="btn" target="_blank"><i class="fas fa-code"></i> JSON</a>' if a.json_url else ""}
+            </div>
+
+            <div class="meta">
+                <i class="fas fa-clock"></i> {a.created_at.strftime("%d/%m/%Y %H:%M")}
+            </div>
+        </div>
+        """
+
+    # CIERRE
+    html += """
+    </div>
+</div>
+</body>
+</html>
+"""
+    return HTMLResponse(html)
+    
+# ==================== ENDPOINTS DE BASE DE DATOS ====================
+
+@app.get("/api/analyses")
+def get_all_analyses(db: Session = Depends(get_db)):
+    """Obtener todos los análisis"""
+    try:
+        analyses = db.query(SystemAnalysis).order_by(SystemAnalysis.analysis_id.desc()).all()
+        
+        return {
+            "status": "success",
+            "total": len(analyses),
+            "analyses": [
+                {
+                    "analysis_id": a.analysis_id,
+                    "cpu_model": a.cpu_model,
+                    "cpu_speed_ghz": a.cpu_speed_ghz,
+                    "cores": a.cores,
+                    "ram_gb": a.ram_gb,
+                    "gpu_model": a.gpu_model,
+                    "main_profile": a.main_profile,
+                    "main_score": a.main_score,
+                    "pdf_url": a.pdf_url,
+                    "created_at": a.created_at.isoformat() if a.created_at else None
+                }
+                for a in analyses
+            ]
+        }
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+@app.get("/api/analyses/{analysis_id}")
+def get_analysis(analysis_id: int, db: Session = Depends(get_db)):
+    """Obtener un análisis específico por ID"""
+    try:
+        analysis = db.query(SystemAnalysis).filter(SystemAnalysis.analysis_id == analysis_id).first()
+        
+        if not analysis:
+            return {"status": "error", "message": "Análisis no encontrado"}
+        
+        return {
+            "status": "success",
+            "analysis": {
+                "analysis_id": analysis.analysis_id,
+                "cpu_model": analysis.cpu_model,
+                "cpu_speed_ghz": analysis.cpu_speed_ghz,
+                "cores": analysis.cores,
+                "ram_gb": analysis.ram_gb,
+                "disk_type": analysis.disk_type,
+                "gpu_model": analysis.gpu_model,
+                "gpu_vram_gb": analysis.gpu_vram_gb,
+                "main_profile": analysis.main_profile,
+                "main_score": analysis.main_score,
+                "pdf_url": analysis.pdf_url,
+                "json_url": analysis.json_url,
+                "created_at": analysis.created_at.isoformat() if analysis.created_at else None
+            }
+        }
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+@app.get("/api/stats")
+def get_stats(db: Session = Depends(get_db)):
+    """Estadísticas de los análisis"""
+    try:
+        total_analyses = db.query(SystemAnalysis).count()
+        
+        # Análisis por perfil
+        profiles = db.query(SystemAnalysis.main_profile).all()
+        profile_counts = {}
+        for profile in profiles:
+            profile_name = profile[0]
+            profile_counts[profile_name] = profile_counts.get(profile_name, 0) + 1
+        
+        # Promedio de puntuación
+        avg_score = db.query(func.avg(SystemAnalysis.main_score)).scalar()
+        
+        return {
+            "status": "success",
+            "total_analyses": total_analyses,
+            "average_score": round(avg_score, 2) if avg_score else 0,
+            "profiles_distribution": profile_counts
+        }
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+@app.delete("/api/analyses/{analysis_id}")
+def delete_analysis(analysis_id: int, db: Session = Depends(get_db)):
+    """Eliminar un análisis por ID"""
+    try:
+        analysis = db.query(SystemAnalysis).filter(SystemAnalysis.analysis_id == analysis_id).first()
+        
+        if not analysis:
+            return {"status": "error", "message": "Análisis no encontrado"}
+        
+        db.delete(analysis)
+        db.commit()
+        
+        return {"status": "success", "message": f"Análisis {analysis_id} eliminado correctamente"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
 
 if __name__ == "__main__":
     import uvicorn

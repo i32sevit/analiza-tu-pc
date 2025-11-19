@@ -62,3 +62,5 @@ btn.onclick = async () => {
         btn.disabled = false;
     }
 };
+
+ipcRenderer.invoke("open-history", localStorage.getItem("token"));
