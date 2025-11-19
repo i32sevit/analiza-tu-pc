@@ -777,30 +777,33 @@ const AnalysisCard = ({ onManualAnalysis, analyzing }) => {
             placeholder="Selecciona tu procesador"
           />
           
-          {/* CPU Speed y Núcleos */}
-          <View style={styles.inputRow}>
-            <View style={styles.inputHalf}>
-              <Text style={styles.label}>Velocidad CPU (GHz) *</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="ej: 3.5"
-                value={manualData.cpu_speed_ghz}
-                onChangeText={(text) => setManualData({...manualData, cpu_speed_ghz: text})}
-                keyboardType="numeric"
-                placeholderTextColor="#8b8b9d"
-              />
-            </View>
-            <View style={styles.inputHalf}>
-              <Text style={styles.label}>Núcleos *</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="ej: 6"
-                value={manualData.cores}
-                onChangeText={(text) => setManualData({...manualData, cores: text})}
-                keyboardType="numeric"
-                placeholderTextColor="#8b8b9d"
-              />
-            </View>
+          {/* CPU Speed - AHORA EN LÍNEA COMPLETA */}
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Velocidad CPU (GHz) *</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="ej: 3.5"
+              value={manualData.cpu_speed_ghz}
+              onChangeText={(text) => {
+                const normalizedText = text.replace(',', '.');
+                setManualData({...manualData, cpu_speed_ghz: normalizedText});
+              }}
+              keyboardType="numeric"
+              placeholderTextColor="#8b8b9d"
+            />
+          </View>
+
+          {/* Núcleos - AHORA EN LÍNEA COMPLETA */}
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Núcleos *</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="ej: 6"
+              value={manualData.cores}
+              onChangeText={(text) => setManualData({...manualData, cores: text})}
+              keyboardType="numeric"
+              placeholderTextColor="#8b8b9d"
+            />
           </View>
 
           {/* RAM */}
