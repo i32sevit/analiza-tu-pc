@@ -5,21 +5,26 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from datetime import datetime
 
-# Configuración de la base de datos - PostgreSQL para producción, SQLite para desarrollo
+# Obtener DATABASE_URL desde Render
 DATABASE_URL = os.getenv('DATABASE_URL')
 
-if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
-    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql+psycopg://", 1)
+# Convertir URL de Render al formato compatible con psycopg3
+if DATABASE_URL:
+    # Reemplazar postgres:// → postgresql+psycopg://
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql+psycopg://")
 
-if not DATABASE_URL:
+    # Reemplazar postgresql:// → postgresql+psycopg:// (si Render lo da en esta forma)
+    if DATABASE_URL.startswith("postgresql://") and "+psycopg" not in DATABASE_URL:
+        DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+psycopg://")
+
+else:
     # SQLite para desarrollo local
     DATABASE_URL = 'sqlite:///analizatupc.db'
 
-# Configurar el engine según la base de datos
+# Configurar el engine
 if DATABASE_URL.startswith("sqlite"):
     engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 else:
-    # PostgreSQL con psycopg3
     engine = create_engine(DATABASE_URL)
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
