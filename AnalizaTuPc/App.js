@@ -10,7 +10,9 @@ import {
   ActivityIndicator,
   Dimensions,
   SafeAreaView,
-  StatusBar
+  StatusBar,
+  Linking,
+  Share
 } from 'react-native';
 
 const { width: screenWidth } = Dimensions.get('window');
@@ -57,10 +59,17 @@ const authService = {
 const analysisService = {
   async analyzeSystem(data, token = null) {
     try {
+      console.log('🔍 Enviando análisis al servidor...');
       const headers = {
         'Content-Type': 'application/json',
       };
       
+      // SIEMPRE enviar como invitado para forzar Dropbox
+      const requestData = {
+        ...data,
+        is_guest: true // Forzar modo invitado para que siempre genere Dropbox
+      };
+
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
       }
@@ -68,15 +77,40 @@ const analysisService = {
       const response = await fetch(`${API_BASE}/api/analyze`, {
         method: 'POST',
         headers,
-        body: JSON.stringify(data),
+        body: JSON.stringify(requestData),
       });
 
+      console.log('📡 Respuesta del servidor:', response.status);
+
       if (response.ok) {
-        return await response.json();
+        const result = await response.json();
+        console.log('✅ Análisis exitoso:', {
+          hasPdfUrl: !!result.pdf_url,
+          hasJsonUrl: !!result.json_url,
+          pdfUrl: result.pdf_url,
+          jsonUrl: result.json_url,
+          fullResult: result
+        });
+        
+        // SIEMPRE devolver las URLs de Dropbox si están disponibles
+        if (result.pdf_url || result.json_url) {
+          return {
+            result: result.result || result,
+            pdf_url: result.pdf_url,
+            json_url: result.json_url,
+            is_guest: true // Marcar como invitado para mostrar Dropbox
+          };
+        }
+        
+        return result;
       } else {
+        const errorText = await response.text();
+        console.log('❌ Error del servidor:', errorText);
+        console.log('⚠️ Usando análisis local');
         return this.generateLocalAnalysis(data);
       }
     } catch (error) {
+      console.log('❌ Error en análisis:', error);
       return this.generateLocalAnalysis(data);
     }
   },
@@ -84,19 +118,16 @@ const analysisService = {
   generateLocalAnalysis(data) {
     let baseScore = 50;
     
-    // CPU Model Scoring
     if (data.cpu_model && (data.cpu_model.includes('i9') || data.cpu_model.includes('Ryzen 9'))) baseScore += 30;
     else if (data.cpu_model && (data.cpu_model.includes('i7') || data.cpu_model.includes('Ryzen 7'))) baseScore += 20;
     else if (data.cpu_model && (data.cpu_model.includes('i5') || data.cpu_model.includes('Ryzen 5'))) baseScore += 10;
     else if (data.cpu_model && (data.cpu_model.includes('i3') || data.cpu_model.includes('Ryzen 3'))) baseScore += 5;
     
-    // CPU Speed Scoring
     const cpuSpeed = parseFloat(data.cpu_speed_ghz) || 0;
     if (cpuSpeed >= 4.5) baseScore += 15;
     else if (cpuSpeed >= 3.5) baseScore += 10;
     else if (cpuSpeed >= 2.5) baseScore += 5;
     
-    // Cores Scoring
     const cores = parseInt(data.cores) || 0;
     if (cores >= 16) baseScore += 20;
     else if (cores >= 12) baseScore += 15;
@@ -104,26 +135,22 @@ const analysisService = {
     else if (cores >= 6) baseScore += 5;
     else if (cores >= 4) baseScore += 2;
     
-    // RAM Scoring
     const ram = parseInt(data.ram_gb) || 0;
     if (ram >= 32) baseScore += 20;
     else if (ram >= 16) baseScore += 15;
     else if (ram >= 8) baseScore += 10;
     else if (ram >= 4) baseScore += 5;
     
-    // Storage Scoring
     if (data.disk_type === 'NVMe') baseScore += 15;
     else if (data.disk_type === 'SSD') baseScore += 10;
     else if (data.disk_type === 'HDD') baseScore += 0;
     
-    // GPU Scoring
     if (data.gpu_model && (data.gpu_model.includes('RTX 40') || data.gpu_model.includes('RX 7900'))) baseScore += 25;
     else if (data.gpu_model && (data.gpu_model.includes('RTX 30') || data.gpu_model.includes('RX 6000'))) baseScore += 20;
     else if (data.gpu_model && (data.gpu_model.includes('RTX 20') || data.gpu_model.includes('RX 5000'))) baseScore += 15;
     else if (data.gpu_model && (data.gpu_model.includes('GTX 16') || data.gpu_model.includes('RX 500'))) baseScore += 10;
     else if (data.gpu_model && (data.gpu_model.includes('GTX 10') || data.gpu_model.includes('RX 400'))) baseScore += 5;
     
-    // VRAM Scoring
     const vram = parseInt(data.gpu_vram_gb) || 0;
     if (vram >= 12) baseScore += 10;
     else if (vram >= 8) baseScore += 7;
@@ -131,10 +158,8 @@ const analysisService = {
     else if (vram >= 4) baseScore += 3;
     else if (vram >= 2) baseScore += 1;
     
-    // Asegurar que el score esté entre 0 y 100
     baseScore = Math.max(0, Math.min(baseScore, 100));
     
-    // Calcular scores específicos por categoría
     const calculateCategoryScore = (base, multiplier, bonus = 0) => {
       let score = base * multiplier + bonus;
       return Math.max(0, Math.min(Math.round(score), 100));
@@ -158,10 +183,91 @@ const analysisService = {
             (data.gpu_model && (data.gpu_model.includes('RTX 30') || data.gpu_model.includes('RTX 40'))) ? 15 : 0)
         }
       },
-      is_guest: !token
+      is_guest: true, // SIEMPRE marcar como invitado para mostrar Dropbox
+      pdf_url: null, // En análisis local no hay PDF
+      json_url: null // En análisis local no hay JSON
     };
   } 
-}; 
+};
+
+// Servicio para Dropbox
+const dropboxService = {
+  async openDropboxReport(pdfUrl, jsonUrl) {
+    try {
+      if (pdfUrl) {
+        console.log('📁 Intentando abrir PDF:', pdfUrl);
+        const canOpen = await Linking.canOpenURL(pdfUrl);
+        if (canOpen) {
+          await Linking.openURL(pdfUrl);
+          return true;
+        } else {
+          console.log('❌ No se puede abrir el PDF');
+        }
+      }
+      
+      // Si no se puede abrir PDF, mostrar opciones
+      this.showReportOptions(pdfUrl, jsonUrl);
+      return true;
+    } catch (error) {
+      console.error('Error abriendo Dropbox:', error);
+      this.showReportOptions(pdfUrl, jsonUrl);
+      return false;
+    }
+  },
+
+  showReportOptions(pdfUrl, jsonUrl) {
+    const options = [];
+    
+    if (pdfUrl) {
+      options.push({
+        text: '📄 Abrir PDF en Navegador',
+        onPress: () => Linking.openURL(pdfUrl)
+      });
+    }
+    
+    if (jsonUrl) {
+      options.push({
+        text: '📊 Abrir JSON en Navegador', 
+        onPress: () => Linking.openURL(jsonUrl)
+      });
+    }
+    
+    options.push({
+      text: '📤 Compartir Enlace',
+      onPress: () => this.shareReport(pdfUrl || jsonUrl)
+    });
+    
+    options.push({
+      text: 'OK',
+      style: 'cancel'
+    });
+
+    Alert.alert(
+      '📁 Informe en Dropbox',
+      pdfUrl || jsonUrl 
+        ? 'Tu análisis se ha guardado en Dropbox. ¿Qué deseas hacer?'
+        : 'El informe se está procesando. Los enlaces estarán disponibles pronto.',
+      options
+    );
+  },
+
+  async shareReport(url) {
+    try {
+      if (!url) {
+        Alert.alert('Info', 'El enlace aún no está disponible');
+        return;
+      }
+      
+      await Share.share({
+        message: `📊 Mi análisis de PC - AnalizaTuPC\n\n${url}`,
+        title: 'Compartir Análisis de PC'
+      });
+    } catch (error) {
+      console.error('Error compartiendo:', error);
+      Alert.alert('Error', 'No se pudo compartir el enlace');
+    }
+  }
+};
 
 // Componente Header
 const Header = ({ user, onLogin, onLogout, onHistory }) => (
@@ -374,7 +480,7 @@ const AuthModal = ({ visible, onClose, onAuthSuccess }) => {
               <Text style={styles.modalSubtitle}>Ingresa a tu cuenta para guardar tu historial</Text>
               
               <TextInput
-                style={styles.input}
+                style={styles.authInput}
                 placeholder="Usuario"
                 value={formData.loginUsername}
                 onChangeText={(text) => setFormData({...formData, loginUsername: text})}
@@ -477,8 +583,8 @@ const AuthModal = ({ visible, onClose, onAuthSuccess }) => {
   );
 };
 
-// Componente ResultsScreen CORREGIDO
-const ResultsScreen = ({ analysisData, analysisResult, onBack }) => {
+// Componente ResultsScreen ACTUALIZADO
+const ResultsScreen = ({ analysisData, analysisResult, onBack, dropboxUrls }) => {
   const getScoreColor = (score) => {
     if (score >= 80) return '#4ade80';
     if (score >= 60) return '#fbbf24';
@@ -493,7 +599,6 @@ const ResultsScreen = ({ analysisData, analysisResult, onBack }) => {
     return 'Básico';
   };
 
-  // Convertir scores decimales a porcentajes enteros si es necesario
   const formatScore = (score) => {
     if (score <= 1) {
       return Math.round(score * 100);
@@ -501,13 +606,31 @@ const ResultsScreen = ({ analysisData, analysisResult, onBack }) => {
     return Math.round(score);
   };
 
-  // Mapear categorías a nombres consistentes
   const categoryMap = {
     'Gaming': 'Gaming',
-    'Diseño': 'Edición Video',
-    'Oficina': 'Ofimática',
-    'Desarrollo': 'Virtualización',
-    'Streaming': 'ML Ligero'
+    'Edición Video': 'Edición Video',
+    'Ofimática': 'Ofimática',
+    'Virtualización': 'Virtualización',
+    'ML Ligero': 'ML Ligero'
+  };
+
+  const handleOpenDropbox = () => {
+    if (dropboxUrls?.pdf_url) {
+      dropboxService.openDropboxReport(dropboxUrls.pdf_url, dropboxUrls.json_url);
+    } else {
+      Alert.alert(
+        'Información', 
+        'El informe se está procesando. Intenta nuevamente en unos segundos.'
+      );
+    }
+  };
+
+  const handleShareReport = async () => {
+    if (dropboxUrls?.pdf_url) {
+      await dropboxService.shareReport(dropboxUrls.pdf_url);
+    } else {
+      Alert.alert('Información', 'El informe aún no está disponible para compartir.');
+    }
   };
 
   return (
@@ -521,6 +644,62 @@ const ResultsScreen = ({ analysisData, analysisResult, onBack }) => {
       </View>
 
       <ScrollView style={styles.resultsContent}>
+        {/* Sección Dropbox - SIEMPRE visible */}
+        <View style={styles.dropboxCard}>
+          <Text style={styles.sectionTitle}>📁 Informe en Dropbox</Text>
+          <Text style={styles.dropboxDescription}>
+            {dropboxUrls?.pdf_url 
+              ? 'Tu análisis se ha guardado automáticamente en Dropbox'
+              : 'Tu análisis se está procesando y se guardará en Dropbox...'
+            }
+          </Text>
+          
+          <View style={styles.dropboxButtons}>
+            <TouchableOpacity 
+              style={[
+                styles.dropboxButton,
+                !dropboxUrls?.pdf_url && styles.dropboxButtonDisabled
+              ]}
+              onPress={handleOpenDropbox}
+              disabled={!dropboxUrls?.pdf_url}
+            >
+              <Text style={styles.dropboxButtonIcon}>📄</Text>
+              <Text style={styles.dropboxButtonText}>
+                {dropboxUrls?.pdf_url ? 'Abrir Informe' : 'Procesando...'}
+              </Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={[
+                styles.dropboxButton, 
+                styles.shareButton,
+                !dropboxUrls?.pdf_url && styles.dropboxButtonDisabled
+              ]}
+              onPress={handleShareReport}
+              disabled={!dropboxUrls?.pdf_url}
+            >
+              <Text style={styles.dropboxButtonIcon}>📤</Text>
+              <Text style={styles.dropboxButtonText}>Compartir</Text>
+            </TouchableOpacity>
+          </View>
+          
+          {dropboxUrls?.pdf_url && (
+            <View style={styles.dropboxLinks}>
+              <Text style={styles.dropboxLinkLabel}>Enlaces de Dropbox:</Text>
+              {dropboxUrls.pdf_url && (
+                <Text style={styles.dropboxLink} numberOfLines={2}>
+                  📎 PDF: {dropboxUrls.pdf_url}
+                </Text>
+              )}
+              {dropboxUrls.json_url && (
+                <Text style={styles.dropboxLink} numberOfLines={2}>
+                  📊 JSON: {dropboxUrls.json_url}
+                </Text>
+              )}
+            </View>
+          )}
+        </View>
+
         {/* Tarjeta de Puntuación Principal */}
         <View style={styles.mainScoreCard}>
           <View style={styles.scoreCircle}>
@@ -541,7 +720,7 @@ const ResultsScreen = ({ analysisData, analysisResult, onBack }) => {
           </View>
         </View>
 
-        {/* Especificaciones del Sistema */}
+        {/* Especificaciones Analizadas */}
         <View style={styles.specsCard}>
           <Text style={styles.sectionTitle}>Especificaciones Analizadas</Text>
           <View style={styles.specsGrid}>
@@ -572,7 +751,7 @@ const ResultsScreen = ({ analysisData, analysisResult, onBack }) => {
           </View>
         </View>
 
-        {/* Puntuaciones por Categoría - COMPLETAMENTE CORREGIDO */}
+        {/* Rendimiento por Actividad */}
         <View style={styles.scoresCard}>
           <Text style={styles.sectionTitle}>Rendimiento por Actividad</Text>
           <View style={styles.scoresList}>
@@ -777,7 +956,7 @@ const AnalysisCard = ({ onManualAnalysis, analyzing }) => {
             placeholder="Selecciona tu procesador"
           />
           
-          {/* CPU Speed - AHORA EN LÍNEA COMPLETA */}
+          {/* CPU Speed */}
           <View style={styles.inputContainer}>
             <Text style={styles.label}>Velocidad CPU (GHz) *</Text>
             <TextInput
@@ -793,7 +972,7 @@ const AnalysisCard = ({ onManualAnalysis, analyzing }) => {
             />
           </View>
 
-          {/* Núcleos - AHORA EN LÍNEA COMPLETA */}
+          {/* Núcleos */}
           <View style={styles.inputContainer}>
             <Text style={styles.label}>Núcleos *</Text>
             <TextInput
@@ -997,15 +1176,8 @@ const styles = {
   scrollContent: {
     flex: 1,
   },
-  inputRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  inputContainer: {
     marginBottom: 15,
-    gap: 10,
-    alignItems: 'flex-start',
-  },
-  inputHalf: {
-    flex: 1,
   },
   label: {
     color: '#e0e0e0',
@@ -1021,8 +1193,7 @@ const styles = {
     padding: 15,
     color: '#e0e0e0',
     fontSize: 16,
-    textAlign: 'center', // ← AÑADE ESTA LÍNEA
-    marginBottom: 15,
+    textAlign: 'center',
   },
   btn: {
     flexDirection: 'row',
@@ -1198,6 +1369,17 @@ const styles = {
     textAlign: 'center',
     fontSize: 14,
   },
+  authInput: {
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 10,
+    padding: 15,
+    color: '#e0e0e0',
+    fontSize: 16,
+    width: '100%',
+    marginBottom: 15,
+  },
   btnModal: {
     backgroundColor: '#4cc9f0',
     padding: 16,
@@ -1252,6 +1434,70 @@ const styles = {
   resultsContent: {
     flex: 1,
     padding: 20,
+  },
+  // Estilos para Dropbox
+  dropboxCard: {
+    backgroundColor: 'rgba(0, 123, 255, 0.1)',
+    borderRadius: 20,
+    padding: 25,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 123, 255, 0.3)',
+  },
+  dropboxDescription: {
+    color: '#8b8b9d',
+    fontSize: 14,
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  dropboxButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 15,
+    marginBottom: 15,
+  },
+  dropboxButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#007bff',
+    padding: 15,
+    borderRadius: 12,
+    gap: 10,
+  },
+  dropboxButtonDisabled: {
+    backgroundColor: '#6c757d',
+    opacity: 0.6,
+  },
+  shareButton: {
+    backgroundColor: '#28a745',
+  },
+  dropboxButtonIcon: {
+    fontSize: 18,
+    color: '#fff',
+  },
+  dropboxButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  dropboxLinks: {
+    marginTop: 15,
+    paddingTop: 15,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.1)',
+  },
+  dropboxLinkLabel: {
+    color: '#e0e0e0',
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 10,
+  },
+  dropboxLink: {
+    color: '#8b8b9d',
+    fontSize: 12,
+    marginBottom: 5,
   },
   mainScoreCard: {
     backgroundColor: 'rgba(255,255,255,0.05)',
@@ -1335,7 +1581,7 @@ const styles = {
     fontSize: 14,
     fontWeight: '500',
   },
-    scoresCard: {
+  scoresCard: {
     backgroundColor: 'rgba(255,255,255,0.05)',
     borderRadius: 20,
     padding: 25,
@@ -1402,7 +1648,7 @@ const styles = {
   },
 };
 
-// Componente principal
+// Componente principal ACTUALIZADO
 export default function App() {
   const [currentScreen, setCurrentScreen] = useState('home');
   const [user, setUser] = useState(null);
@@ -1410,6 +1656,7 @@ export default function App() {
   const [analyzing, setAnalyzing] = useState(false);
   const [analysisData, setAnalysisData] = useState(null);
   const [analysisResult, setAnalysisResult] = useState(null);
+  const [dropboxUrls, setDropboxUrls] = useState(null);
 
   const handleManualAnalysis = async (data) => {
     setAnalyzing(true);
@@ -1419,6 +1666,31 @@ export default function App() {
       setAnalyzing(false);
       setAnalysisData(data);
       setAnalysisResult(result.result || result);
+      
+      // SIEMPRE guardar URLs de Dropbox si están disponibles
+      if (result.pdf_url || result.json_url) {
+        setDropboxUrls({
+          pdf_url: result.pdf_url,
+          json_url: result.json_url
+        });
+        
+        console.log('📁 URLs de Dropbox recibidas:', {
+          pdf_url: result.pdf_url,
+          json_url: result.json_url
+        });
+        
+        // Mostrar mensaje de éxito para TODOS los usuarios
+        setTimeout(() => {
+          Alert.alert(
+            '✅ Análisis Completado', 
+            'Tu informe se ha guardado automáticamente en Dropbox',
+            [{ text: 'OK' }]
+          );
+        }, 500);
+      } else {
+        console.log('⚠️ No se recibieron URLs de Dropbox');
+      }
+      
       setCurrentScreen('results');
     } catch (error) {
       setAnalyzing(false);
@@ -1432,6 +1704,7 @@ export default function App() {
 
   const handleLogout = () => {
     setUser(null);
+    setDropboxUrls(null);
   };
 
   if (currentScreen === 'results') {
@@ -1441,6 +1714,7 @@ export default function App() {
         <ResultsScreen
           analysisData={analysisData}
           analysisResult={analysisResult}
+          dropboxUrls={dropboxUrls}
           onBack={() => setCurrentScreen('home')}
         />
       </SafeAreaView>
