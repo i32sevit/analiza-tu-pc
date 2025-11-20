@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 from database import get_db, SystemAnalysis, create_tables, get_next_analysis_id
 import datetime
+from datetime import timezone, timedelta
 import json
 import os
 from dropbox_upload import upload_to_dropbox, create_dropbox_folder_structure
@@ -136,8 +137,11 @@ class PDF(FPDF):
         self.line(10, self.get_y(), 200, self.get_y())
         self.ln(5)
         
-        # Información del footer CON EL ID DEL ANÁLISIS
-        self.cell(0, 6, f"Reporte generado el {datetime.datetime.now().strftime('%d/%m/%Y')} a las {datetime.datetime.now().strftime('%H:%M')}", align="C")
+        # Obtener hora local corregida (UTC+1 para España)
+        local_time = datetime.datetime.now(timezone(timedelta(hours=1)))
+        
+        # Información del footer CON HORA CORREGIDA
+        self.cell(0, 6, f"Reporte generado el {local_time.strftime('%d/%m/%Y')} a las {local_time.strftime('%H:%M')}", align="C")
         self.ln(4)
         self.cell(0, 6, f"Página {self.page_no()}", align="C")
         self.ln(4)
@@ -498,7 +502,7 @@ def analyze(sysinfo: SysInfo, db: Session = Depends(get_db)):
             "sysinfo": info,
             "result": result,
             "analysis_id": analysis_id,
-            "timestamp": datetime.datetime.now().isoformat(),
+            "timestamp": datetime.datetime.now(timezone(timedelta(hours=1))).isoformat(),
             "version": "2.0.0"
         }, f, indent=2, ensure_ascii=False)
 
@@ -614,6 +618,9 @@ def get_dashboard(db: Session = Depends(get_db)):
         timeline_labels.append(f"#{analysis.analysis_id}")
         timeline_scores.append(analysis.main_score)
         timeline_colors.append(get_score_color(analysis.main_score))
+
+    # Obtener hora actual corregida para el footer del dashboard
+    current_time = datetime.datetime.now(timezone(timedelta(hours=1))).strftime("%d/%m/%Y %H:%M")
 
     html_content = f"""
     <!DOCTYPE html>
@@ -922,7 +929,7 @@ def get_dashboard(db: Session = Depends(get_db)):
                 padding: 12px 25px;
                 border-radius: 25px;
                 font-weight: 600;
-                font-size: 1em;
+                font-size: 1.em;
                 margin: 15px 0;
             }}
             
@@ -1212,7 +1219,7 @@ def get_dashboard(db: Session = Depends(get_db)):
                         <i class="fas fa-rocket"></i> Documentación API
                     </a>
                 </div>
-                <p>AnalizaTuPC Dashboard Corporativo • {datetime.datetime.now().strftime("%d/%m/%Y %H:%M")}</p>
+                <p>AnalizaTuPC Dashboard Corporativo • {current_time}</p>
             </footer>
         </div>
         
