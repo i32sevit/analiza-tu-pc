@@ -1410,11 +1410,462 @@ def get_dashboard(db: Session = Depends(get_db)):
     
     return HTMLResponse(content=html_content)
 
-# ==================== ENDPOINTS DE BASE DE DATOS ====================
+# ==================== ENDPOINT /api/analyses CON FORMATO BONITO ====================
 
-@app.get("/api/analyses")
-def get_all_analyses(db: Session = Depends(get_db)):
-    """Obtener todos los análisis"""
+@app.get("/api/analyses", response_class=HTMLResponse)
+def get_all_analyses_html(db: Session = Depends(get_db)):
+    """Endpoint /api/analyses con formato HTML bonito"""
+    try:
+        analyses = db.query(SystemAnalysis).order_by(SystemAnalysis.analysis_id.desc()).all()
+        
+        html_content = f"""
+        <!DOCTYPE html>
+        <html lang="es">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>AnalizaTuPC - Lista de Análisis</title>
+            <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+            <style>
+                :root {{
+                    /* PALETA IDÉNTICA A LOS PDFs */
+                    --azul-celeste-claro: #add8e6;
+                    --azul-celeste-medio: #87ceeb;
+                    --azul-oscuro: #00008b;
+                    --azul-acero: #4682b4;
+                    --azul-muy-claro: #c8e6ff;
+                    --azul-alice: #f0f8ff;
+                    --azul-casi-blanco: #f5faff;
+                    --texto-oscuro: #2d3748;
+                    --texto-medio: #4a5568;
+                    --texto-claro: #718096;
+                    --borde-claro: #e2e8f0;
+                    --sombra-suave: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+                    --sombra-media: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+                }}
+                
+                * {{
+                    margin: 0;
+                    padding: 0;
+                    box-sizing: border-box;
+                }}
+                
+                body {{
+                    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+                    background: linear-gradient(135deg, var(--azul-celeste-claro) 0%, var(--azul-celeste-medio) 100%);
+                    min-height: 100vh;
+                    color: var(--texto-oscuro);
+                    line-height: 1.6;
+                    padding: 20px;
+                }}
+                
+                .container {{
+                    max-width: 1200px;
+                    margin: 0 auto;
+                }}
+                
+                /* HEADER */
+                .header {{
+                    background: var(--azul-oscuro);
+                    color: white;
+                    padding: 30px;
+                    border-radius: 20px;
+                    margin-bottom: 30px;
+                    box-shadow: var(--sombra-media);
+                    text-align: center;
+                }}
+                
+                .header h1 {{
+                    font-size: 2.5em;
+                    font-weight: 700;
+                    margin-bottom: 10px;
+                }}
+                
+                .header .subtitle {{
+                    font-size: 1.2em;
+                    opacity: 0.9;
+                }}
+                
+                /* STATS BAR */
+                .stats-bar {{
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                    gap: 20px;
+                    margin-bottom: 30px;
+                }}
+                
+                .stat-item {{
+                    background: white;
+                    padding: 20px;
+                    border-radius: 15px;
+                    text-align: center;
+                    box-shadow: var(--sombra-suave);
+                    border-left: 4px solid var(--azul-acero);
+                }}
+                
+                .stat-number {{
+                    font-size: 2em;
+                    font-weight: 800;
+                    color: var(--azul-oscuro);
+                    margin-bottom: 5px;
+                }}
+                
+                .stat-label {{
+                    color: var(--texto-medio);
+                    font-size: 0.9em;
+                    text-transform: uppercase;
+                    letter-spacing: 0.5px;
+                }}
+                
+                /* ANALYSIS CARDS */
+                .analysis-grid {{
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+                    gap: 25px;
+                }}
+                
+                .analysis-card {{
+                    background: white;
+                    border-radius: 16px;
+                    padding: 25px;
+                    box-shadow: var(--sombra-media);
+                    border: 1px solid var(--borde-claro);
+                    transition: all 0.3s ease;
+                    position: relative;
+                    overflow: hidden;
+                }}
+                
+                .analysis-card::before {{
+                    content: '';
+                    position: absolute;
+                    left: 0;
+                    top: 0;
+                    height: 100%;
+                    width: 6px;
+                    background: var(--azul-acero);
+                }}
+                
+                .analysis-card:hover {{
+                    transform: translateY(-5px);
+                    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+                }}
+                
+                .analysis-header {{
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 20px;
+                    padding-bottom: 15px;
+                    border-bottom: 2px solid var(--azul-alice);
+                }}
+                
+                .analysis-id {{
+                    background: var(--azul-oscuro);
+                    color: white;
+                    padding: 8px 20px;
+                    border-radius: 20px;
+                    font-weight: 700;
+                    font-size: 1em;
+                }}
+                
+                .analysis-score {{
+                    font-size: 1.8em;
+                    font-weight: 800;
+                }}
+                
+                .score-excelent {{ color: #38a169; }}
+                .score-good {{ color: #3182ce; }}
+                .score-regular {{ color: #d69e2e; }}
+                .score-poor {{ color: #e53e3e; }}
+                
+                .hardware-info {{
+                    margin-bottom: 20px;
+                }}
+                
+                .hardware-row {{
+                    display: flex;
+                    justify-content: space-between;
+                    margin-bottom: 8px;
+                    padding: 8px 0;
+                    border-bottom: 1px solid var(--azul-alice);
+                }}
+                
+                .hardware-label {{
+                    font-weight: 600;
+                    color: var(--texto-medio);
+                    font-size: 0.9em;
+                }}
+                
+                .hardware-value {{
+                    color: var(--texto-oscuro);
+                    font-weight: 500;
+                    text-align: right;
+                }}
+                
+                .profile-section {{
+                    background: linear-gradient(135deg, var(--azul-celeste-medio), var(--azul-oscuro));
+                    color: white;
+                    padding: 15px;
+                    border-radius: 10px;
+                    margin: 15px 0;
+                    text-align: center;
+                }}
+                
+                .profile-badge {{
+                    font-weight: 600;
+                    font-size: 1.1em;
+                }}
+                
+                .links-section {{
+                    display: flex;
+                    gap: 12px;
+                    margin-top: 20px;
+                    flex-wrap: wrap;
+                }}
+                
+                .analysis-link {{
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 6px;
+                    background: var(--azul-oscuro);
+                    color: white;
+                    padding: 10px 18px;
+                    border-radius: 8px;
+                    text-decoration: none;
+                    font-weight: 500;
+                    font-size: 0.9em;
+                    transition: all 0.3s ease;
+                    border: 2px solid transparent;
+                }}
+                
+                .analysis-link:hover {{
+                    background: white;
+                    color: var(--azul-oscuro);
+                    border-color: var(--azul-oscuro);
+                    transform: translateY(-2px);
+                }}
+                
+                .analysis-link.json {{
+                    background: var(--azul-acero);
+                }}
+                
+                .analysis-link.json:hover {{
+                    background: white;
+                    color: var(--azul-acero);
+                    border-color: var(--azul-acero);
+                }}
+                
+                .analysis-meta {{
+                    margin-top: 15px;
+                    color: var(--texto-claro);
+                    font-size: 0.85em;
+                    font-style: italic;
+                    text-align: center;
+                    border-top: 1px solid var(--borde-claro);
+                    padding-top: 12px;
+                }}
+                
+                /* NO DATA */
+                .no-data {{
+                    text-align: center;
+                    padding: 60px 30px;
+                    color: var(--texto-claro);
+                    background: white;
+                    border-radius: 16px;
+                    box-shadow: var(--sombra-suave);
+                }}
+                
+                .no-data i {{
+                    font-size: 3em;
+                    margin-bottom: 15px;
+                    opacity: 0.5;
+                }}
+                
+                .no-data h3 {{
+                    font-size: 1.3em;
+                    margin-bottom: 10px;
+                    color: var(--texto-medio);
+                }}
+                
+                /* FOOTER */
+                .footer {{
+                    text-align: center;
+                    margin-top: 40px;
+                    padding: 20px;
+                    color: white;
+                    opacity: 0.9;
+                }}
+                
+                .api-links {{
+                    display: flex;
+                    justify-content: center;
+                    gap: 15px;
+                    margin-top: 20px;
+                    flex-wrap: wrap;
+                }}
+                
+                .api-link {{
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 6px;
+                    background: rgba(255, 255, 255, 0.2);
+                    color: white;
+                    padding: 10px 18px;
+                    border-radius: 8px;
+                    text-decoration: none;
+                    transition: all 0.3s ease;
+                    border: 1px solid rgba(255, 255, 255, 0.3);
+                    font-size: 0.9em;
+                }}
+                
+                .api-link:hover {{
+                    background: rgba(255, 255, 255, 0.3);
+                    transform: translateY(-2px);
+                }}
+                
+                /* RESPONSIVE */
+                @media (max-width: 768px) {{
+                    .analysis-grid {{
+                        grid-template-columns: 1fr;
+                    }}
+                    
+                    .stats-bar {{
+                        grid-template-columns: repeat(2, 1fr);
+                    }}
+                    
+                    .analysis-header {{
+                        flex-direction: column;
+                        gap: 12px;
+                        align-items: flex-start;
+                    }}
+                    
+                    .links-section {{
+                        justify-content: center;
+                    }}
+                }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <!-- HEADER -->
+                <header class="header">
+                    <h1><i class="fas fa-list-alt"></i> Lista de Análisis</h1>
+                    <p class="subtitle">Todos los análisis de sistemas realizados</p>
+                </header>
+                
+                <!-- STATS BAR -->
+                <div class="stats-bar">
+                    <div class="stat-item">
+                        <div class="stat-number">{len(analyses)}</div>
+                        <div class="stat-label">Total Análisis</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">{db.query(func.avg(SystemAnalysis.main_score)).scalar() or 0:.1f}%</div>
+                        <div class="stat-label">Puntuación Media</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">{len(set(a.main_profile for a in analyses))}</div>
+                        <div class="stat-label">Perfiles Únicos</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">{max([a.analysis_id for a in analyses]) if analyses else 0}</div>
+                        <div class="stat-label">Último ID</div>
+                    </div>
+                </div>
+                
+                <!-- ANALYSIS GRID -->
+                <div class="analysis-grid">
+                    {"".join([f"""
+                    <div class="analysis-card">
+                        <div class="analysis-header">
+                            <div class="analysis-id">
+                                <i class="fas fa-desktop"></i> Análisis #{analysis.analysis_id}
+                            </div>
+                            <div class="analysis-score {get_score_class(analysis.main_score)}">
+                                {analysis.main_score}%
+                            </div>
+                        </div>
+                        
+                        <div class="hardware-info">
+                            <div class="hardware-row">
+                                <span class="hardware-label">Procesador:</span>
+                                <span class="hardware-value">{analysis.cpu_model or "No especificado"}</span>
+                            </div>
+                            <div class="hardware-row">
+                                <span class="hardware-label">Núcleos:</span>
+                                <span class="hardware-value">{analysis.cores}</span>
+                            </div>
+                            <div class="hardware-row">
+                                <span class="hardware-label">RAM:</span>
+                                <span class="hardware-value">{analysis.ram_gb} GB</span>
+                            </div>
+                            <div class="hardware-row">
+                                <span class="hardware-label">GPU:</span>
+                                <span class="hardware-value">{analysis.gpu_model or "No especificado"}</span>
+                            </div>
+                            <div class="hardware-row">
+                                <span class="hardware-label">VRAM:</span>
+                                <span class="hardware-value">{analysis.gpu_vram_gb} GB</span>
+                            </div>
+                            <div class="hardware-row">
+                                <span class="hardware-label">Almacenamiento:</span>
+                                <span class="hardware-value">{analysis.disk_type}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="profile-section">
+                            <div class="profile-badge">
+                                <i class="fas fa-bullseye"></i> Perfil Recomendado: {analysis.main_profile}
+                            </div>
+                        </div>
+                        
+                        <div class="links-section">
+                            {"<a href='"+analysis.pdf_url+"' class='analysis-link' target='_blank'><i class='fas fa-file-pdf'></i> PDF</a>" if analysis.pdf_url else ""}
+                            {"<a href='"+analysis.json_url+"' class='analysis-link json' target='_blank'><i class='fas fa-code'></i> JSON</a>" if analysis.json_url else ""}
+                        </div>
+                        
+                        <div class="analysis-meta">
+                            <i class="fas fa-clock"></i> Generado el {analysis.created_at.strftime("%d/%m/%Y a las %H:%M") if analysis.created_at else "Fecha no disponible"}
+                        </div>
+                    </div>
+                    """ for analysis in analyses]) if analyses else '''
+                    <div class="no-data">
+                        <i class="fas fa-inbox"></i>
+                        <h3>No hay análisis disponibles</h3>
+                        <p>Realiza el primer análisis para ver los datos en esta lista</p>
+                    </div>
+                    '''}
+                </div>
+                
+                <!-- FOOTER -->
+                <footer class="footer">
+                    <div class="api-links">
+                        <a href="/dashboard" class="api-link">
+                            <i class="fas fa-tachometer-alt"></i> Dashboard
+                        </a>
+                        <a href="/" class="api-link">
+                            <i class="fas fa-home"></i> Inicio
+                        </a>
+                        <a href="/api/stats" class="api-link">
+                            <i class="fas fa-chart-bar"></i> Estadísticas API
+                        </a>
+                    </div>
+                    <p>AnalizaTuPC - Lista de Análisis • {datetime.datetime.now(timezone(timedelta(hours=1))).strftime("%d/%m/%Y %H:%M")}</p>
+                </footer>
+            </div>
+        </body>
+        </html>
+        """
+        
+        return HTMLResponse(content=html_content)
+    except Exception as e:
+        return HTMLResponse(content=f"<h1>Error</h1><p>{str(e)}</p>")
+
+# ==================== ENDPOINTS DE BASE DE DATOS (JSON) ====================
+
+@app.get("/api/analyses/json")
+def get_all_analyses_json(db: Session = Depends(get_db)):
+    """Obtener todos los análisis en formato JSON"""
     try:
         analyses = db.query(SystemAnalysis).order_by(SystemAnalysis.analysis_id.desc()).all()
         
