@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=1200, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AnalizaTuPc - Análisis Profesional de Hardware</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -796,19 +796,6 @@
             <h1 class="title">AnalizaTuPc</h1>
             <p class="subtitle">Análisis profesional de hardware para determinar el rendimiento de tu equipo en diferentes perfiles de uso</p>
         </header>
-
-        <!-- USER MENU -->
-        <div id="user-menu" style="
-            position: absolute;
-            top: 25px;
-            right: 30px;
-            display: flex;
-            gap: 18px;
-            font-size: 1rem;
-        ">
-
-        </div>
-
 
         <main>
             <div class="card">
@@ -1632,40 +1619,6 @@
                 gpuVramInput.value = '8';
             }
         });
-    </script>
-
-    <script>
-    // =========================
-    //  MENÚ DE USUARIO
-    // =========================
-
-    function updateUserMenu() {
-        const userMenu = document.getElementById("user-menu");
-        const user = localStorage.getItem("user"); // guardado al iniciar sesión
-
-        if (!user) {
-            // Usuario invitado
-            userMenu.innerHTML = `
-                <a href="login.html" style="color: var(--light); text-decoration:none;">Iniciar sesión</a>
-                <a href="register.html" style="color: var(--primary); font-weight:600; text-decoration:none;">Registrarse</a>
-            `;
-        } else {
-            // Usuario registrado
-            userMenu.innerHTML = `
-                <a href="history.html" style="color: var(--success); font-weight:600; text-decoration:none;">Historial</a>
-                <a href="#" id="logout-btn" style="color: var(--warning); text-decoration:none;">Cerrar sesión</a>
-            `;
-
-            // Evento cerrar sesión
-            document.getElementById("logout-btn").addEventListener("click", () => {
-                localStorage.removeItem("user");
-                localStorage.removeItem("token");
-                window.location.href = "index.html";
-            });
-        }
-    }
-
-    updateUserMenu();
     </script>
 </body>
 </html>

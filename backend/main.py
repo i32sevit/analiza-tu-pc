@@ -1,33 +1,24 @@
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from pydantic import BaseModel, EmailStr, ConfigDict  # ACTUALIZADO: añadir ConfigDict
+from pydantic import BaseModel
 from fpdf import FPDF
 from sqlalchemy.orm import Session
-from sqlalchemy import func, or_
-from database import (
-    get_db, create_tables, get_next_analysis_id, User, SystemAnalysis  # AÑADIDO: User, SystemAnalysis
-)
-from auth import create_access_token, get_password_hash, verify_password, get_current_user, ACCESS_TOKEN_EXPIRE_MINUTES
+from sqlalchemy import func
+from database import get_db, SystemAnalysis, create_tables, get_next_analysis_id
 import datetime
 import json
 import os
 from dropbox_upload import upload_to_dropbox, create_dropbox_folder_structure
 from dotenv import load_dotenv
-from typing import List, Optional
-from jose import JWTError, jwt
-from datetime import timedelta
 
 # Cargar variables de entorno
 load_dotenv()
 access_token = os.getenv("DROPBOX_ACCESS_TOKEN")
-SECRET_KEY = os.getenv("SECRET_KEY", "tu_clave_secreta_muy_segura_aqui_cambiar_en_produccion")
-ALGORITHM = "HS256"
 
 app = FastAPI(title="AnalizaTuPC API", version="2.0.0")
 
-print("🚀 CARGANDO VERSIÓN NUEVA MEJORADA CON AUTENTICACIÓN- " + datetime.datetime.now().strftime("%H:%M:%S"))
+print("🚀 CARGANDO VERSIÓN NUEVA MEJORADA - " + datetime.datetime.now().strftime("%H:%M:%S"))
 
 # CORS
 app.add_middleware(
@@ -39,7 +30,7 @@ app.add_middleware(
 )
 
 # -------------------------
-#   MODELO DE ENTRADA (ACTUALIZADO)
+#   MODELO DE ENTRADA
 # -------------------------
 class SysInfo(BaseModel):
     cpu_model: str = ""
@@ -50,64 +41,8 @@ class SysInfo(BaseModel):
     gpu_model: str = ""
     gpu_vram_gb: float = 0.0
 
-class UserCreate(BaseModel):
-    username: str
-    email: EmailStr
-    password: str
-
-class UserLogin(BaseModel):
-    username: str
-    password: str
-
-# ACTUALIZADO: Nueva sintaxis Pydantic v2
-class UserResponse(BaseModel):
-    model_config = ConfigDict(from_attributes=True)  # NUEVA SINTÁXIS
-    
-    id: int
-    username: str
-    email: str
-    created_at: datetime.datetime
-
-class Token(BaseModel):
-    access_token: str
-    token_type: str
-    user: UserResponse
-
-class AnalysisHistory(BaseModel):
-    analyses: List[dict]
-    total_count: int
-
 # -------------------------
-#   FUNCIONES AUXILIARES PARA USUARIOS NO REGISTRADOS
-# -------------------------
-def get_current_user_optional(
-    credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer(auto_error=False)),
-    db: Session = Depends(get_db)
-):
-    """
-    Función opcional para obtener el usuario actual.
-    Si no hay token o es inválido, retorna None.
-    """
-    if credentials is None:
-        return None
-    
-    try:
-        payload = jwt.decode(credentials.credentials, SECRET_KEY, algorithms=[ALGORITHM])
-        username: str = payload.get("sub")
-        if username is None:
-            return None
-        
-        user = db.query(User).filter(User.username == username).first()
-        return user
-    except JWTError:
-        return None
-
-def generate_guest_analysis_id():
-    """Genera un ID temporal para análisis de invitados"""
-    return int(datetime.datetime.now().timestamp())
-
-# -------------------------
-#   FUNCIONES DE SCORE 
+#   FUNCIONES DE SCORE
 # -------------------------
 def score_system(info: dict):
     cpu = info.get('cpu_speed_ghz', 1.0) * info.get('cores', 1)
@@ -137,7 +72,7 @@ def score_system(info: dict):
     }
 
 # -------------------------
-#   CLASE PDF 
+#   PDF SUPER ELEGANTE - COLORES MÁS CLAROS
 # -------------------------
 class PDF(FPDF):
     def __init__(self, analysis_id: int):
@@ -146,67 +81,82 @@ class PDF(FPDF):
     
     def header(self):
         # ENCABEZADO CON AZUL CELESTE
-        self.set_fill_color(173, 216, 230)
+        # Fondo con azul celeste
+        self.set_fill_color(173, 216, 230)  # Azul celeste claro
         self.rect(0, 0, 210, 45, 'F')
         
-        self.set_fill_color(135, 206, 235)
+        # Efecto de gradiente (simulado con rectángulos superpuestos)
+        self.set_fill_color(135, 206, 235)  # Azul celeste medio
         self.rect(0, 0, 210, 15, 'F')
         
+        # TÍTULO PRINCIPAL
         self.set_font("Arial", "B", 28)
-        self.set_text_color(0, 0, 139)
+        self.set_text_color(0, 0, 139)  # Azul oscuro para contraste
         
-        self.set_text_color(70, 130, 180)
+        # Efecto de sombra para el título
+        self.set_text_color(70, 130, 180)  # Azul acero para sombra
         self.cell(0, 28, "AnalizaTuPc", ln=True, align="C")
         
+        # Título principal (sobre la sombra)
         self.set_y(20)
-        self.set_text_color(0, 0, 139)
+        self.set_text_color(0, 0, 139)  # Azul oscuro principal
         self.set_font("Arial", "B", 28)
         self.cell(0, 8, "AnalizaTuPc", ln=True, align="C")
         
+        # Subtítulo elegante
         self.set_y(32)
         self.set_font("Arial", "I", 12)
-        self.set_text_color(0, 0, 100)
+        self.set_text_color(0, 0, 100)  # Azul oscuro
         self.cell(0, 8, "ANÁLISIS PROFESIONAL DE HARDWARE", ln=True, align="C")
         
-        self.set_draw_color(0, 0, 139)
+        # LÍNEA DECORATIVA MEJORADA
+        self.set_draw_color(0, 0, 139)  # Azul oscuro
         self.set_line_width(1.5)
         self.line(30, 42, 180, 42)
         
+        # Elementos decorativos en las esquinas
         self.set_draw_color(0, 0, 139)
         self.set_line_width(1)
+        # Esquina superior izquierda
         self.line(10, 10, 25, 10)
         self.line(10, 10, 10, 25)
+        # Esquina superior derecha
         self.line(185, 10, 200, 10)
         self.line(200, 10, 200, 25)
         
         self.ln(20)
 
     def footer(self):
-        self.set_y(-25)
+        self.set_y(-25)  # Más espacio para el footer
         self.set_font("Arial", "I", 9)
         self.set_text_color(100, 100, 100)
         
+        # Línea separadora
         self.set_draw_color(200, 200, 200)
         self.line(10, self.get_y(), 200, self.get_y())
         self.ln(5)
         
+        # Información del footer CON EL ID DEL ANÁLISIS
         self.cell(0, 6, f"Reporte generado el {datetime.datetime.now().strftime('%d/%m/%Y')} a las {datetime.datetime.now().strftime('%H:%M')}", align="C")
         self.ln(4)
         self.cell(0, 6, f"Página {self.page_no()}", align="C")
         self.ln(4)
-        
+        # ID DEL ANÁLISIS SIEMPRE EN EL FOOTER
         self.set_font("Arial", "B", 9)
-        self.set_text_color(70, 130, 180)
+        self.set_text_color(70, 130, 180)  # Azul acero
         self.cell(0, 6, f"ID del análisis: {self.analysis_id}", align="C")
 
     def add_section_title(self, title):
         self.ln(12)
         self.set_font("Arial", "B", 18)
-        self.set_text_color(255, 255, 255)
-        self.set_fill_color(135, 206, 235)
+        self.set_text_color(255, 255, 255)  # Texto blanco
+        self.set_fill_color(135, 206, 235)  # Azul celeste para fondo
+        
+        # Borde redondeado simulado
         self.cell(0, 14, f" {title.upper()} ", ln=True, fill=True, align='L')
         
-        self.set_draw_color(0, 0, 139)
+        # Línea decorativa debajo del título
+        self.set_draw_color(0, 0, 139)  # Azul oscuro
         self.set_line_width(0.8)
         self.line(15, self.get_y() - 2, 60, self.get_y() - 2)
         self.ln(10)
@@ -228,100 +178,113 @@ class PDF(FPDF):
     def add_score_meter(self, profile, score, rank):
         self.set_font("Arial", "B", 12)
         
+        # COLORES MÁS CLAROS Y SUAVES para las puntuaciones
         if score >= 80:
-            color = (200, 230, 255)
+            color = (200, 230, 255)  # Azul muy claro y suave - EXCELENTE
             label = "EXCELENTE"
         elif score >= 60:
-            color = (220, 240, 255)
+            color = (220, 240, 255)  # Azul casi blanco - BUENO
             label = "BUENO"
         elif score >= 40:
-            color = (240, 248, 255)
+            color = (240, 248, 255)  # Azul alice muy claro - REGULAR
             label = "REGULAR"
         else:
-            color = (245, 250, 255)
+            color = (245, 250, 255)  # Casi blanco con tono azul - MEJORABLE
             label = "MEJORABLE"
         
+        # Tarjeta de puntuación con borde sutil
         self.set_fill_color(color[0], color[1], color[2])
-        self.set_text_color(0, 0, 0)
-        self.set_draw_color(200, 200, 200)
-        self.set_line_width(0.2)
+        self.set_text_color(0, 0, 0)  # Texto negro para mejor contraste
+        self.set_draw_color(200, 200, 200)  # Borde gris claro
+        self.set_line_width(0.2)  # Borde más delgado
         self.cell(0, 10, f" {label} - {profile}: {score}% ({rank})", border=1, ln=True, fill=True)
         self.ln(5)
 
 # -------------------------
-#   GENERACIÓN DEL PDF 
+#   GENERACIÓN DEL PDF ELEGANTE
 # -------------------------
 def create_pdf_report(sysinfo: dict, result: dict, analysis_id: int):
     pdf = PDF(analysis_id)
     pdf.add_page()
 
-    # PORTADA
-    pdf.set_fill_color(240, 248, 255)
+    # PORTADA CON AZUL CELESTE
+    # Fondo de portada
+    pdf.set_fill_color(240, 248, 255)  # Azul alice muy claro
     pdf.rect(0, 45, 210, 160, 'F')
     
+    # TÍTULO PRINCIPAL DE PORTADA
     pdf.set_y(60)
     pdf.set_font("Arial", "B", 32)
-    pdf.set_text_color(70, 130, 180)
+    pdf.set_text_color(70, 130, 180)  # Azul acero
     
-    pdf.set_text_color(100, 149, 237)
+    # Efecto de sombra para el título principal
+    pdf.set_text_color(100, 149, 237)  # Azul cornflower para sombra
     pdf.cell(0, 15, "INFORME PROFESIONAL", ln=True, align="C")
-    pdf.set_text_color(70, 130, 180)
+    pdf.set_text_color(70, 130, 180)  # Azul acero principal
     pdf.set_y(75)
     pdf.cell(0, 15, "INFORME PROFESIONAL", ln=True, align="C")
     
+    # Subtítulo elegante
     pdf.set_y(100)
     pdf.set_font("Arial", "I", 18)
     pdf.set_text_color(100, 100, 100)
     pdf.cell(0, 10, "Análisis Completo de Hardware", ln=True, align="C")
     
-    pdf.set_draw_color(135, 206, 235)
+    # Línea decorativa doble en azules
+    pdf.set_draw_color(135, 206, 235)  # Azul celeste
     pdf.set_line_width(1)
     pdf.line(50, 115, 160, 115)
-    pdf.set_draw_color(0, 0, 139)
+    pdf.set_draw_color(0, 0, 139)  # Azul oscuro
     pdf.set_line_width(0.5)
     pdf.line(55, 117, 155, 117)
     
     pdf.ln(40)
     
-    # PERFIL PRINCIPAL
-    pdf.set_fill_color(200, 230, 255)
-    pdf.set_draw_color(173, 216, 230)
+    # PERFIL PRINCIPAL DESTACADO CON AZUL CELESTE
+    pdf.set_fill_color(200, 230, 255)  # Azul muy claro y suave
+    pdf.set_draw_color(173, 216, 230)  # Azul celeste claro para borde
     pdf.set_line_width(1)
     
+    # Sombra del recuadro (más sutil)
     pdf.set_fill_color(220, 220, 220)
     pdf.rect(52, pdf.get_y() + 2, 106, 54, 'F')
     
-    pdf.set_fill_color(200, 230, 255)
+    # Recuadro principal
+    pdf.set_fill_color(200, 230, 255)  # Azul muy claro y suave
     pdf.rect(50, pdf.get_y(), 106, 50, 'F')
     
+    # Contenido del recuadro
     pdf.set_y(pdf.get_y() + 8)
     pdf.set_font("Arial", "B", 16)
-    pdf.set_text_color(0, 0, 139)
+    pdf.set_text_color(0, 0, 139)  # Azul oscuro
     pdf.cell(0, 8, "PERFIL RECOMENDADO", ln=True, align="C")
     
     pdf.ln(5)
     pdf.set_font("Arial", "B", 24)
-    pdf.set_text_color(0, 0, 100)
+    pdf.set_text_color(0, 0, 100)  # Azul muy oscuro
     pdf.cell(0, 12, f"{result['main_profile']}", ln=True, align="C")
     
     pdf.set_font("Arial", "B", 20)
-    pdf.set_text_color(70, 130, 180)
+    pdf.set_text_color(70, 130, 180)  # Azul acero
     pdf.cell(0, 10, f"{result['main_score']}% DE EFICIENCIA", ln=True, align="C")
     
     pdf.ln(40)
 
-    # DETALLES TÉCNICOS
+    # NUEVA PÁGINA - DETALLES TÉCNICOS
     pdf.add_page()
     
+    # SECCIÓN: ESPECIFICACIONES DEL SISTEMA EN TABLA
     pdf.add_section_title("Especificaciones del Sistema")
     
-    pdf.set_fill_color(200, 230, 255)
+    # Crear tabla elegante para especificaciones CON AZUL CELESTE
+    pdf.set_fill_color(200, 230, 255)  # Azul muy claro para cabecera
     pdf.set_font("Arial", "B", 12)
-    pdf.set_text_color(0, 0, 0)
+    pdf.set_text_color(0, 0, 0)  # Texto negro para mejor contraste
     pdf.cell(80, 10, "COMPONENTE", border=1, fill=True, align='C')
     pdf.cell(0, 10, "ESPECIFICACIÓN", border=1, fill=True, align='C')
     pdf.ln()
     
+    # Datos de la tabla
     specs_data = [
         ("Procesador (CPU)", f"{sysinfo.get('cpu_model', 'No detectado')}"),
         ("Núcleos", f"{sysinfo.get('cores', '?')} núcleos"),
@@ -334,16 +297,22 @@ def create_pdf_report(sysinfo: dict, result: dict, analysis_id: int):
     
     pdf.set_font("Arial", "", 10)
     for i, (component, spec) in enumerate(specs_data):
-        fill_color = (245, 250, 255) if i % 2 == 0 else (255, 255, 255)
+        # Fondo alternado para mejor lectura
+        fill_color = (245, 250, 255) if i % 2 == 0 else (255, 255, 255)  # Azul muy claro alternado
         pdf.set_fill_color(*fill_color)
         
+        # Componente
         pdf.set_text_color(0, 0, 0)
         pdf.cell(80, 10, f"   {component}", border=1, fill=True)
+        
+        # Especificación
         pdf.cell(0, 10, spec, border=1, fill=True, align='C')
         pdf.ln()
     
+    # SECCIÓN: RESULTADOS DEL ANÁLISIS
     pdf.add_section_title("Resultados del Análisis")
     
+    # Ordenar perfiles por puntuación
     sorted_scores = sorted(result['scores'].items(), key=lambda x: x[1], reverse=True)
     
     for i, (profile, score) in enumerate(sorted_scores):
@@ -351,37 +320,43 @@ def create_pdf_report(sysinfo: dict, result: dict, analysis_id: int):
         rank = f"#{i+1}"
         pdf.add_score_meter(profile, score_percent, rank)
     
+    # SECCIÓN: TABLA DETALLADA DE PUNTUACIONES
     pdf.add_section_title("Tabla de Puntuaciones Detalladas")
     
-    pdf.set_fill_color(200, 230, 255)
+    # Cabecera de tabla CON AZUL MUY CLARO
+    pdf.set_fill_color(200, 230, 255)  # Azul muy claro
     pdf.set_font("Arial", "B", 11)
-    pdf.set_text_color(0, 0, 0)
+    pdf.set_text_color(0, 0, 0)  # Texto negro
     pdf.cell(100, 10, "PERFIL DE USO", border=1, fill=True, align='C')
     pdf.cell(45, 10, "PUNTUACIÓN", border=1, fill=True, align='C')
     pdf.cell(0, 10, "CLASIFICACIÓN", border=1, fill=True, align='C')
     pdf.ln()
     
+    # Filas de tabla
     pdf.set_font("Arial", "", 10)
     for i, (profile, score) in enumerate(sorted_scores):
         score_percent = round(score * 100, 1)
         
-        fill_color = (245, 250, 255) if i % 2 == 0 else (255, 255, 255)
+        # Fondo alternado muy suave
+        fill_color = (245, 250, 255) if i % 2 == 0 else (255, 255, 255)  # Azul muy claro alternado
         pdf.set_fill_color(*fill_color)
         
+        # Perfil
         pdf.set_text_color(0, 0, 0)
         pdf.cell(100, 10, f"   {profile}", border=1, fill=True)
         
+        # Puntuación con color EN TONOS AZULES MUY CLAROS
         if score_percent >= 80:
-            text_color = (0, 0, 139)
+            text_color = (0, 0, 139)  # Azul oscuro para contraste
             classification = "Excelente"
         elif score_percent >= 60:
-            text_color = (70, 130, 180)
+            text_color = (70, 130, 180)  # Azul acero
             classification = "Bueno"
         elif score_percent >= 40:
-            text_color = (100, 149, 237)
+            text_color = (100, 149, 237)  # Azul cornflower
             classification = "Regular"
         else:
-            text_color = (135, 206, 235)
+            text_color = (135, 206, 235)  # Azul celeste
             classification = "Mejorable"
         
         pdf.set_text_color(*text_color)
@@ -390,32 +365,39 @@ def create_pdf_report(sysinfo: dict, result: dict, analysis_id: int):
         pdf.cell(0, 10, classification, border=1, fill=True, align='C')
         pdf.ln()
 
+    # SECCIÓN: RECOMENDACIONES
     pdf.add_section_title("Recomendaciones y Observaciones")
     
+    # Análisis de componentes para recomendaciones
     recommendations = []
     
+    # Análisis de CPU
     cpu_model = sysinfo.get('cpu_model', '').lower()
     if any(x in cpu_model for x in ['i3', 'ryzen 3']):
         recommendations.append("Considera actualizar a un procesador de gama media para mejor rendimiento")
     elif any(x in cpu_model for x in ['i9', 'ryzen 9']):
         recommendations.append("Tu procesador es excelente para cualquier tarea demandante")
     
+    # Análisis de RAM
     ram_gb = sysinfo.get('ram_gb', 0)
     if ram_gb < 8:
         recommendations.append("Se recomienda aumentar la RAM a al menos 8GB para multitarea")
     elif ram_gb >= 32:
         recommendations.append("Tienes suficiente RAM incluso para tareas muy demandantes")
     
+    # Análisis de almacenamiento
     disk_type = sysinfo.get('disk_type', '').lower()
     if disk_type == 'hdd':
         recommendations.append("Cambiar a SSD mejorará drásticamente los tiempos de carga")
     elif disk_type == 'nvme':
         recommendations.append("Tu almacenamiento NVMe es óptimo para máximo rendimiento")
     
+    # Análisis de GPU
     gpu_vram = sysinfo.get('gpu_vram_gb', 0)
     if gpu_vram < 4:
         recommendations.append("Considera una GPU con más VRAM para gaming y aplicaciones gráficas")
     
+    # Recomendaciones generales basadas en puntuación principal
     main_score = result['main_score']
     if main_score >= 80:
         recommendations.append("Tu sistema está excelentemente equilibrado para la mayoría de tareas")
@@ -427,9 +409,11 @@ def create_pdf_report(sysinfo: dict, result: dict, analysis_id: int):
         recommendations.append("Se recomiendan mejoras de hardware para un rendimiento óptimo")
         recommendations.append("Prioriza actualizar los componentes con menor puntuación")
     
+    # Añadir recomendaciones generales
     recommendations.append("Realiza mantenimiento regular del sistema")
     recommendations.append("Mantén el sistema operativo actualizado")
     
+    # Escribir recomendaciones
     pdf.set_font("Arial", "", 10)
     pdf.set_text_color(80, 80, 80)
     
@@ -438,7 +422,8 @@ def create_pdf_report(sysinfo: dict, result: dict, analysis_id: int):
         pdf.multi_cell(0, 8, f" {rec}")
         pdf.ln(2)
 
-    pdf_filename = f"analisis_{analysis_id:04d}.pdf"
+    # Guardar PDF CON NUEVO NOMBRE
+    pdf_filename = f"analisis_{analysis_id:04d}.pdf"  # Ej: analisis_0001.pdf, analisis_0002.pdf
     pdf.output(pdf_filename)
 
     print(f"✅ PDF elegante generado: {pdf_filename}")
@@ -448,6 +433,7 @@ def create_pdf_report(sysinfo: dict, result: dict, analysis_id: int):
 #   FUNCIONES AUXILIARES DASHBOARD
 # -------------------------
 def get_score_class(score):
+    """Devuelve la clase CSS según la puntuación"""
     if score >= 80:
         return "score-excelent"
     elif score >= 60:
@@ -458,117 +444,60 @@ def get_score_class(score):
         return "score-poor"
 
 def get_score_color(score):
+    """Devuelve color hexadecimal según puntuación"""
     if score >= 80:
-        return "#38a169"
+        return "#38a169"  # Verde
     elif score >= 60:
-        return "#3182ce"
+        return "#3182ce"  # Azul
     elif score >= 40:
-        return "#d69e2e"
+        return "#d69e2e"  # Amarillo
     else:
-        return "#e53e3e"
+        return "#e53e3e"  # Rojo
 
 # -------------------------
 #   API ENDPOINTS
 # -------------------------
+@app.on_event("startup")
+async def startup_event():
+    if access_token:
+        create_dropbox_folder_structure(access_token)
+        print("✅ Dropbox configurado")
+    
+    # Crear tablas si no existen
+    create_tables()
+    print("✅ Base de datos configurada")
 
-# ENDPOINTS DE AUTENTICACIÓN 
-@app.post("/register", response_model=UserResponse)
-def register(user_data: UserCreate, db: Session = Depends(get_db)):
-
-    existing_user = db.query(User).filter(
-        (func.lower(User.username) == user_data.username.lower()) |
-        (func.lower(User.email) == user_data.email.lower())
-    ).first()
-    
-    if existing_user:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Username or email already registered"
-        )
-    
-    hashed_password = get_password_hash(user_data.password)
-    db_user = User(
-        username=user_data.username,
-        email=user_data.email,
-        hashed_password=hashed_password
-    )
-    
-    db.add(db_user)
-    db.commit()
-    db.refresh(db_user)
-    
-    return db_user
-
-@app.post("/login", response_model=Token)
-def login(login_data: UserLogin, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.username == login_data.username).first()
-    
-    if not user or not verify_password(login_data.password, user.hashed_password):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password"
-        )
-    
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(
-        data={"sub": user.username}, expires_delta=access_token_expires
-    )
-    
-    return {
-        "access_token": access_token,
-        "token_type": "bearer",
-        "user": user
-    }
-
-
-@app.get("/profile", response_model=UserResponse)
-def get_profile(current_user: User = Depends(get_current_user)):
-    return current_user
+@app.get("/")
+def read_root():
+    return {"message": "AnalizaTuPC API v2.0 funcionando", "version": "2.0.0"}
 
 @app.post("/api/analyze")
-def analyze(
-    sysinfo: SysInfo,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user_optional)
-):
-    """
-    Endpoint universal:
-    - Invitado → análisis temporal sin guardar en BD
-    - Usuario registrado → análisis guardado en su historial
-    - Acepta datos manuales (CPU, RAM, GPU...)
-    - Acepta datos automáticos del frontend
-    """
-
+def analyze(sysinfo: SysInfo, db: Session = Depends(get_db)):
     info = sysinfo.dict()
     result = score_system(info)
 
-    # -----------------------------
-    # 1️⃣ DETERMINAR SI ES INVITADO
-    # -----------------------------
-    is_guest = current_user is None
-    
-    if is_guest:
-        analysis_id = generate_guest_analysis_id()  # ID temporal único
-        user_id = None
-        print(f"🔍 Análisis para INVITADO - ID temporal generado: {analysis_id}")
-    else:
-        analysis_id = get_next_analysis_id(db)
-        user_id = current_user.id
-        print(f"🔍 Análisis para usuario {current_user.username} - ID asignado: {analysis_id}")
+    # DEBUG: Ver qué hay en la base de datos
+    print("🔍 === DEBUG INICIO ===")
+    all_analyses = db.query(SystemAnalysis).all()
+    print(f"🔍 ANALISIS EN BD: {len(all_analyses)} registros")
+    for analysis in all_analyses:
+        print(f"   - ID: {analysis.analysis_id}, CPU: {analysis.cpu_model}, Score: {analysis.main_score}%")
 
-    # -----------------------------
-    # 2️⃣ GENERAR PDF Y JSON
-    # -----------------------------
+    # OBTENER EL PRÓXIMO ID
+    analysis_id = get_next_analysis_id(db)
+    print(f"📊 NUEVO ID CALCULADO: {analysis_id}")
+    print("🔍 === DEBUG FIN ===")
+    
+    # Crear PDF ELEGANTE con el ID
     pdf_filename = create_pdf_report(info, result, analysis_id)
 
-    json_filename = f"analisis_{analysis_id:04d}.json"
+    # Guardar JSON
+    json_filename = f"analisis_{analysis_id:04d}.json"  # Mismo nombre base
     with open(json_filename, "w", encoding="utf-8") as f:
         json.dump({
             "sysinfo": info,
             "result": result,
             "analysis_id": analysis_id,
-            "user_id": user_id,
-            "is_guest": is_guest,
             "timestamp": datetime.datetime.now().isoformat(),
             "version": "2.0.0"
         }, f, indent=2, ensure_ascii=False)
@@ -576,133 +505,63 @@ def analyze(
     pdf_url = None
     json_url = None
 
-    # -----------------------------
-    # 3️⃣ SUBIR A DROPBOX (si existe token)
-    # -----------------------------
     if access_token and access_token != "tu_token_de_dropbox_aqui":
         try:
             pdf_dropbox_path = f"/AnalizaPC-Reports/{pdf_filename}"
-            pdf_url, _ = upload_to_dropbox(access_token, pdf_filename, pdf_dropbox_path)
+            pdf_url, pdf_error = upload_to_dropbox(access_token, pdf_filename, pdf_dropbox_path)
 
             json_dropbox_path = f"/AnalizaPC-Reports/{json_filename}"
-            json_url, _ = upload_to_dropbox(access_token, json_filename, json_dropbox_path)
+            json_url, json_error = upload_to_dropbox(access_token, json_filename, json_dropbox_path)
 
-            print("📤 Archivos subidos correctamente a Dropbox")
+            if pdf_error:
+                print(f"❌ Error subiendo PDF: {pdf_error}")
+            if json_error:
+                print(f"❌ Error subiendo JSON: {json_error}")
+            else:
+                print(f"✅ Archivos subidos a Dropbox")
         except Exception as e:
-            print(f"❌ Error subiendo a Dropbox: {e}")
+            print(f"❌ Error en subida a Dropbox: {e}")
 
-    # -----------------------------
-    # 4️⃣ GUARDAR EN BD SOLO SI ES USUARIO REGISTRADO
-    # -----------------------------
-    if not is_guest:
-        db_analysis = SystemAnalysis(
-            analysis_id=analysis_id,
-            cpu_model=info.get('cpu_model', ''),
-            cpu_speed_ghz=info.get('cpu_speed_ghz', 0),
-            cores=info.get('cores', 0),
-            ram_gb=info.get('ram_gb', 0),
-            disk_type=info.get('disk_type', ''),
-            gpu_model=info.get('gpu_model', ''),
-            gpu_vram_gb=info.get('gpu_vram_gb', 0),
-            main_profile=result['main_profile'],
-            main_score=result['main_score'],
-            pdf_url=pdf_url,
-            json_url=json_url,
-            user_id=user_id
-        )
-        
-        db.add(db_analysis)
-        db.commit()
-        db.refresh(db_analysis)
-
-        print(f"💾 Análisis guardado para usuario {current_user.username}")
     else:
-        print(f"📝 Análisis invitado generado (NO guardado en BD)")
+        print("⚠️ Token Dropbox no configurado")
 
-    # -----------------------------
-    # 5️⃣ BORRAR ARCHIVOS LOCALES
-    # -----------------------------
+    # GUARDAR EN BASE DE DATOS
+    db_analysis = SystemAnalysis(
+        analysis_id=analysis_id,
+        cpu_model=info.get('cpu_model', ''),
+        cpu_speed_ghz=info.get('cpu_speed_ghz', 0),
+        cores=info.get('cores', 0),
+        ram_gb=info.get('ram_gb', 0),
+        disk_type=info.get('disk_type', ''),
+        gpu_model=info.get('gpu_model', ''),
+        gpu_vram_gb=info.get('gpu_vram_gb', 0),
+        main_profile=result['main_profile'],
+        main_score=result['main_score'],
+        pdf_url=pdf_url,
+        json_url=json_url
+    )
+    
+    db.add(db_analysis)
+    db.commit()
+    db.refresh(db_analysis)
+
+    print(f"💾 Análisis guardado en BD con ID: {analysis_id}")
+
+    # Limpiar archivos locales
     try:
         os.remove(pdf_filename)
         os.remove(json_filename)
     except:
         pass
 
-    # -----------------------------
-    # 6️⃣ RESPUESTA FINAL
-    # -----------------------------
     return {
         "status": "success",
         "analysis_id": analysis_id,
         "pdf_url": pdf_url,
         "json_url": json_url,
         "result": result,
-        "is_guest": is_guest,
-        "message": "Análisis completado correctamente" + (" (invitado)" if is_guest else ""),
+        "message": "Análisis completado correctamente",
         "version": "2.0.0"
-    }
-
-@app.get("/api/analyses/history")
-def get_analysis_history(
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    """
-    Devuelve TODOS los análisis pertenecientes al usuario autenticado.
-    """
-    analyses = (
-        db.query(SystemAnalysis)
-        .filter(SystemAnalysis.user_id == current_user.id)
-        .order_by(SystemAnalysis.created_at.desc())
-        .all()
-    )
-
-    return [
-        {
-            "analysis_id": a.analysis_id,
-            "cpu_model": a.cpu_model,
-            "cpu_speed_ghz": a.cpu_speed_ghz,
-            "cores": a.cores,
-            "ram_gb": a.ram_gb,
-            "disk_type": a.disk_type,
-            "gpu_model": a.gpu_model,
-            "gpu_vram_gb": a.gpu_vram_gb,
-            "main_profile": a.main_profile,
-            "main_score": a.main_score,
-            "pdf_url": a.pdf_url,
-            "json_url": a.json_url,
-            "created_at": a.created_at.isoformat(),
-        }
-        for a in analyses
-    ]
-
-
-
-# ENDPOINTS PÚBLICOS
-@app.on_event("startup")
-async def startup_event():
-    if access_token:
-        create_dropbox_folder_structure(access_token)
-        print("✅ Dropbox configurado")
-    
-    create_tables()
-    print("✅ Base de datos configurada")
-
-@app.get("/")
-def read_root():
-    return {
-        "message": "AnalizaTuPC API v2.0 funcionando", 
-        "version": "2.0.0",
-        "features": {
-            "auth_required": "Análisis con historial persistente",
-            "no_auth": "Análisis rápido sin registro",
-            "endpoints": {
-                "POST /api/analyze": "Análisis (con/sin autenticación)",
-                "POST /api/quick-analyze": "Análisis rápido sin autenticación",
-                "POST /register": "Registro de usuario",
-                "POST /login": "Inicio de sesión"
-            }
-        }
     }
 
 # ==================== DASHBOARD EMPRESARIAL ELEGANTE ====================
@@ -1544,255 +1403,6 @@ def get_dashboard(db: Session = Depends(get_db)):
     
     return HTMLResponse(content=html_content)
 
-# ==================== HISTORIAL ====================
-@app.get("/history", response_class=HTMLResponse)
-def get_user_history(
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    analyses = (
-        db.query(SystemAnalysis)
-        .filter(SystemAnalysis.user_id == current_user.id)
-        .order_by(SystemAnalysis.created_at.desc())
-        .all()
-    )
-
-    html = f"""
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8" />
-<title>Historial de Análisis – AnalizaTuPC</title>
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
-<style>
-    :root {{
-        --azul-celeste-claro: #add8e6;
-        --azul-celeste-medio: #87ceeb;
-        --azul-oscuro: #00008b;
-        --azul-acero: #4682b4;
-        --azul-muy-claro: #c8e6ff;
-        --azul-alice: #f0f8ff;
-        --azul-casi-blanco: #f5faff;
-        --texto-oscuro: #2d3748;
-        --texto-medio: #4a5568;
-    }}
-
-    body {{
-        font-family: "Segoe UI", sans-serif;
-        background: var(--azul-alice);
-        padding: 30px;
-    }}
-
-    .container {{
-        max-width: 1200px;
-        margin: auto;
-    }}
-
-    .header {{
-        background: var(--azul-oscuro);
-        color: white;
-        padding: 35px;
-        border-radius: 20px;
-        box-shadow: 0 8px 20px rgba(0,0,0,0.2);
-        text-align: center;
-        margin-bottom: 40px;
-    }}
-
-    .header h1 {{
-        font-size: 2.8em;
-        margin-bottom: 10px;
-    }}
-
-    .header p {{
-        opacity: 0.9;
-        font-size: 1.2em;
-    }}
-
-    .analysis-list {{
-        display: flex;
-        flex-direction: column;
-        gap: 25px;
-    }}
-
-    .analysis-card {{
-        background: white;
-        border-radius: 16px;
-        padding: 25px;
-        border-left: 6px solid var(--azul-acero);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-        transition: 0.3s;
-    }}
-
-    .analysis-card:hover {{
-        transform: scale(1.02);
-        box-shadow: 0 10px 24px rgba(0,0,0,0.15);
-    }}
-
-    .card-header {{
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }}
-
-    .analysis-id {{
-        font-weight: 700;
-        font-size: 1.3em;
-        color: var(--azul-oscuro);
-    }}
-
-    .analysis-score {{
-        font-size: 2em;
-        font-weight: bold;
-    }}
-
-    .score-excelent {{ color: #38a169; }}
-    .score-good {{ color: #3182ce; }}
-    .score-regular {{ color: #d69e2e; }}
-    .score-poor {{ color: #e53e3e; }}
-
-    .specs {{
-        margin-top: 20px;
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px,1fr));
-        gap: 15px;
-    }}
-
-    .spec {{
-        background: var(--azul-casi-blanco);
-        padding: 12px;
-        border-radius: 12px;
-    }}
-
-    .label {{
-        font-size: 0.9em;
-        color: var(--texto-medio);
-        text-transform: uppercase;
-        margin-bottom: 3px;
-    }}
-
-    .value {{
-        font-size: 1.1em;
-        font-weight: 600;
-    }}
-
-    .links {{
-        margin-top: 20px;
-        display: flex;
-        gap: 12px;
-        flex-wrap: wrap;
-    }}
-
-    .btn {{
-        background: var(--azul-oscuro);
-        color: white;
-        padding: 10px 18px;
-        border-radius: 10px;
-        text-decoration: none;
-        transition: 0.2s;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-    }}
-
-    .btn:hover {{
-        background: white;
-        color: var(--azul-oscuro);
-        border: 2px solid var(--azul-oscuro);
-    }}
-
-    .meta {{
-        margin-top: 12px;
-        font-size: 0.9em;
-        color: gray;
-        font-style: italic;
-    }}
-
-    .no-data {{
-        text-align: center;
-        padding: 70px 20px;
-        background: white;
-        border-radius: 20px;
-        font-size: 1.3em;
-        color: var(--texto-medio);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    }}
-</style>
-</head>
-
-<body>
-<div class="container">
-
-    <div class="header">
-        <h1><i class="fas fa-history"></i> Historial de Análisis</h1>
-        <p>Registros guardados del usuario <strong>{current_user.username}</strong></p>
-    </div>
-
-    <div class="analysis-list">
-"""
-
-    # ---------------------
-    # SI NO HAY ANALISIS
-    # ---------------------
-    if not analyses:
-        html += """
-        <div class="no-data">
-            <i class="fas fa-folder-open" style="font-size:3em;"></i>
-            <p>No hay análisis guardados todavía.</p>
-        </div>
-        </div></body></html>
-        """
-        return HTMLResponse(html)
-
-    # ---------------------
-    # LISTADO DE ANALISIS
-    # ---------------------
-    for a in analyses:
-        html += f"""
-        <div class="analysis-card">
-            <div class="card-header">
-                <div class="analysis-id"><i class="fas fa-desktop"></i> Análisis #{a.analysis_id}</div>
-                <div class="analysis-score {get_score_class(a.main_score)}">{a.main_score}%</div>
-            </div>
-
-            <div class="specs">
-                <div class="spec">
-                    <div class="label">CPU</div>
-                    <div class="value">{a.cpu_model}</div>
-                </div>
-                <div class="spec">
-                    <div class="label">RAM</div>
-                    <div class="value">{a.ram_gb} GB</div>
-                </div>
-                <div class="spec">
-                    <div class="label">GPU</div>
-                    <div class="value">{a.gpu_model}</div>
-                </div>
-                <div class="spec">
-                    <div class="label">VRAM</div>
-                    <div class="value">{a.gpu_vram_gb} GB</div>
-                </div>
-            </div>
-
-            <div class="links">
-                {f'<a href="{a.pdf_url}" class="btn" target="_blank"><i class="fas fa-file-pdf"></i> PDF</a>' if a.pdf_url else ""}
-                {f'<a href="{a.json_url}" class="btn" target="_blank"><i class="fas fa-code"></i> JSON</a>' if a.json_url else ""}
-            </div>
-
-            <div class="meta">
-                <i class="fas fa-clock"></i> {a.created_at.strftime("%d/%m/%Y %H:%M")}
-            </div>
-        </div>
-        """
-
-    # CIERRE
-    html += """
-    </div>
-</div>
-</body>
-</html>
-"""
-    return HTMLResponse(html)
-    
 # ==================== ENDPOINTS DE BASE DE DATOS ====================
 
 @app.get("/api/analyses")
