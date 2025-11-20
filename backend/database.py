@@ -9,16 +9,18 @@ from datetime import datetime
 DATABASE_URL = os.getenv('DATABASE_URL')
 
 if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
-    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql+psycopg://", 1)
 
 if not DATABASE_URL:
     # SQLite para desarrollo local
     DATABASE_URL = 'sqlite:///analizatupc.db'
 
-engine = create_engine(
-    DATABASE_URL,
-    connect_args={"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
-)
+# Configurar el engine según la base de datos
+if DATABASE_URL.startswith("sqlite"):
+    engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+else:
+    # PostgreSQL con psycopg3
+    engine = create_engine(DATABASE_URL)
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
@@ -37,8 +39,8 @@ class SystemAnalysis(Base):
     gpu_vram_gb = Column(Float)
     main_profile = Column(String)
     main_score = Column(Float)
-    pdf_url = Column(String)
-    json_url = Column(String)
+    pdf_url = Column(String, nullable=True)
+    json_url = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
 def create_tables():
