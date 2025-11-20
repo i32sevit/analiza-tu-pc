@@ -1926,17 +1926,27 @@ def get_analysis(analysis_id: int, db: Session = Depends(get_db)):
 
 @app.get("/api/stats")
 def get_stats(db: Session = Depends(get_db)):
-    """Estadísticas de los análisis - VERSIÓN ESPECÍFICA"""
+    """Estadísticas de los análisis - VERSIÓN CORREGIDA QUE CONSULTA LA BD"""
     try:
-        # Datos específicos que necesitas
+        # CONSULTAR DATOS REALES DE LA BASE DE DATOS
+        total_analyses = db.query(SystemAnalysis).count()
+        
+        # Calcular promedio real
+        avg_score_result = db.query(func.avg(SystemAnalysis.main_score)).scalar()
+        average_score = round(avg_score_result, 2) if avg_score_result else 0.0
+        
+        # Distribución real de perfiles
+        profiles = db.query(SystemAnalysis.main_profile).all()
+        profiles_distribution = {}
+        for profile in profiles:
+            profile_name = profile[0]
+            profiles_distribution[profile_name] = profiles_distribution.get(profile_name, 0) + 1
+        
         return {
             "status": "success",
-            "total_analyses": 4,
-            "average_score": 54.95,
-            "profiles_distribution": {
-                "Ofimática": 3,
-                "ML Ligero": 1
-            }
+            "total_analyses": total_analyses,
+            "average_score": average_score,
+            "profiles_distribution": profiles_distribution
         }
     except Exception as e:
         return {"status": "error", "message": str(e)}
