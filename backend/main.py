@@ -471,12 +471,631 @@ async def startup_event():
     create_tables()
     print("✅ Base de datos configurada")
 
-@app.get("/")
+@app.get("/", response_class=HTMLResponse)
 def read_root():
-    return {
-        "message": "AnalizaTuPC API v2.0 funcionando", 
-        "version": "2.0.0"
-    }
+    """Página de inicio elegante con el mismo estilo del dashboard"""
+    
+    # Obtener hora actual corregida para el footer
+    current_time = datetime.datetime.now(timezone(timedelta(hours=1))).strftime("%d/%m/%Y %H:%M")
+    
+    html_content = f"""
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>AnalizaTuPC API - Plataforma de Análisis de Hardware</title>
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+        <style>
+            :root {{
+                /* PALETA IDÉNTICA A LOS PDFs */
+                --azul-celeste-claro: #add8e6;
+                --azul-celeste-medio: #87ceeb;
+                --azul-oscuro: #00008b;
+                --azul-acero: #4682b4;
+                --azul-muy-claro: #c8e6ff;
+                --azul-alice: #f0f8ff;
+                --azul-casi-blanco: #f5faff;
+                --texto-oscuro: #2d3748;
+                --texto-medio: #4a5568;
+                --texto-claro: #718096;
+                --borde-claro: #e2e8f0;
+                --sombra-suave: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+                --sombra-media: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+                --sombra-intensa: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            }}
+            
+            * {{
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }}
+            
+            body {{
+                font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+                background: linear-gradient(135deg, var(--azul-celeste-claro) 0%, var(--azul-celeste-medio) 100%);
+                min-height: 100vh;
+                color: var(--texto-oscuro);
+                line-height: 1.6;
+            }}
+            
+            .container {{
+                max-width: 1200px;
+                margin: 0 auto;
+                padding: 40px 20px;
+            }}
+            
+            /* HERO SECTION */
+            .hero-section {{
+                background: var(--azul-oscuro);
+                color: white;
+                padding: 80px 40px;
+                border-radius: 30px;
+                margin-bottom: 50px;
+                box-shadow: var(--sombra-intensa);
+                position: relative;
+                overflow: hidden;
+                text-align: center;
+            }}
+            
+            .hero-section::before {{
+                content: '';
+                position: absolute;
+                top: 0;
+                right: 0;
+                width: 400px;
+                height: 400px;
+                background: var(--azul-acero);
+                border-radius: 50%;
+                transform: translate(200px, -200px);
+                opacity: 0.1;
+            }}
+            
+            .hero-section::after {{
+                content: '';
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                width: 300px;
+                height: 300px;
+                background: var(--azul-celeste-medio);
+                border-radius: 50%;
+                transform: translate(-150px, 150px);
+                opacity: 0.1;
+            }}
+            
+            .hero-content {{
+                position: relative;
+                z-index: 2;
+            }}
+            
+            .hero-icon {{
+                font-size: 4em;
+                margin-bottom: 20px;
+                color: var(--azul-celeste-claro);
+            }}
+            
+            .hero-title {{
+                font-size: 3.5em;
+                font-weight: 800;
+                margin-bottom: 15px;
+                letter-spacing: -1px;
+            }}
+            
+            .hero-subtitle {{
+                font-size: 1.4em;
+                opacity: 0.9;
+                margin-bottom: 30px;
+                font-weight: 300;
+            }}
+            
+            .version-badge {{
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                background: rgba(255, 255, 255, 0.2);
+                color: white;
+                padding: 12px 24px;
+                border-radius: 25px;
+                font-size: 1.1em;
+                border: 1px solid rgba(255, 255, 255, 0.3);
+            }}
+            
+            /* FEATURES GRID */
+            .features-section {{
+                margin-bottom: 50px;
+            }}
+            
+            .section-title {{
+                font-size: 2.5em;
+                font-weight: 700;
+                color: var(--azul-oscuro);
+                margin-bottom: 40px;
+                text-align: center;
+                position: relative;
+            }}
+            
+            .section-title::after {{
+                content: '';
+                position: absolute;
+                bottom: -10px;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 100px;
+                height: 4px;
+                background: linear-gradient(90deg, var(--azul-celeste-medio), var(--azul-oscuro));
+                border-radius: 2px;
+            }}
+            
+            .features-grid {{
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+                gap: 30px;
+            }}
+            
+            .feature-card {{
+                background: white;
+                padding: 40px 30px;
+                border-radius: 20px;
+                box-shadow: var(--sombra-media);
+                text-align: center;
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                border: 1px solid var(--borde-claro);
+                position: relative;
+                overflow: hidden;
+            }}
+            
+            .feature-card::before {{
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 4px;
+                background: linear-gradient(90deg, var(--azul-celeste-medio), var(--azul-oscuro));
+            }}
+            
+            .feature-card:hover {{
+                transform: translateY(-10px);
+                box-shadow: var(--sombra-intensa);
+            }}
+            
+            .feature-icon {{
+                font-size: 3em;
+                color: var(--azul-oscuro);
+                margin-bottom: 20px;
+                opacity: 0.9;
+            }}
+            
+            .feature-title {{
+                font-size: 1.5em;
+                font-weight: 700;
+                color: var(--azul-oscuro);
+                margin-bottom: 15px;
+            }}
+            
+            .feature-description {{
+                color: var(--texto-medio);
+                font-size: 1.1em;
+                line-height: 1.6;
+            }}
+            
+            /* API ENDPOINTS SECTION */
+            .endpoints-section {{
+                background: white;
+                border-radius: 20px;
+                padding: 50px 40px;
+                box-shadow: var(--sombra-media);
+                border: 1px solid var(--borde-claro);
+                margin-bottom: 50px;
+            }}
+            
+            .endpoints-grid {{
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                gap: 25px;
+                margin-top: 30px;
+            }}
+            
+            .endpoint-card {{
+                background: var(--azul-casi-blanco);
+                border: 1px solid var(--azul-muy-claro);
+                border-radius: 15px;
+                padding: 25px;
+                transition: all 0.3s ease;
+                position: relative;
+                overflow: hidden;
+            }}
+            
+            .endpoint-card::before {{
+                content: '';
+                position: absolute;
+                left: 0;
+                top: 0;
+                height: 100%;
+                width: 6px;
+                background: var(--azul-acero);
+            }}
+            
+            .endpoint-card:hover {{
+                transform: translateX(8px);
+                border-color: var(--azul-celeste-medio);
+            }}
+            
+            .endpoint-method {{
+                display: inline-block;
+                background: var(--azul-oscuro);
+                color: white;
+                padding: 6px 15px;
+                border-radius: 20px;
+                font-weight: 700;
+                font-size: 0.9em;
+                margin-bottom: 15px;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            }}
+            
+            .endpoint-method.get {{ background: #38a169; }}
+            .endpoint-method.post {{ background: #3182ce; }}
+            .endpoint-method.delete {{ background: #e53e3e; }}
+            
+            .endpoint-path {{
+                font-family: 'Monaco', 'Consolas', monospace;
+                font-size: 1.1em;
+                font-weight: 600;
+                color: var(--texto-oscuro);
+                margin-bottom: 10px;
+                word-break: break-all;
+            }}
+            
+            .endpoint-description {{
+                color: var(--texto-medio);
+                font-size: 0.95em;
+                line-height: 1.5;
+            }}
+            
+            /* QUICK ACTIONS */
+            .actions-section {{
+                text-align: center;
+                margin-bottom: 50px;
+            }}
+            
+            .actions-grid {{
+                display: flex;
+                justify-content: center;
+                gap: 20px;
+                margin-top: 30px;
+                flex-wrap: wrap;
+            }}
+            
+            .action-button {{
+                display: inline-flex;
+                align-items: center;
+                gap: 12px;
+                background: var(--azul-oscuro);
+                color: white;
+                padding: 18px 35px;
+                border-radius: 15px;
+                text-decoration: none;
+                font-weight: 600;
+                font-size: 1.1em;
+                transition: all 0.3s ease;
+                border: 2px solid transparent;
+                box-shadow: var(--sombra-suave);
+            }}
+            
+            .action-button:hover {{
+                background: white;
+                color: var(--azul-oscuro);
+                border-color: var(--azul-oscuro);
+                transform: translateY(-3px);
+                box-shadow: var(--sombra-media);
+            }}
+            
+            .action-button.secondary {{
+                background: var(--azul-acero);
+            }}
+            
+            .action-button.secondary:hover {{
+                background: white;
+                color: var(--azul-acero);
+                border-color: var(--azul-acero);
+            }}
+            
+            .action-button.success {{
+                background: #38a169;
+            }}
+            
+            .action-button.success:hover {{
+                background: white;
+                color: #38a169;
+                border-color: #38a169;
+            }}
+            
+            /* FOOTER */
+            .footer {{
+                text-align: center;
+                margin-top: 60px;
+                padding: 40px 20px;
+                color: white;
+                opacity: 0.9;
+            }}
+            
+            .api-status {{
+                display: inline-flex;
+                align-items: center;
+                gap: 10px;
+                background: rgba(255, 255, 255, 0.2);
+                color: white;
+                padding: 15px 30px;
+                border-radius: 25px;
+                margin-bottom: 20px;
+                border: 1px solid rgba(255, 255, 255, 0.3);
+            }}
+            
+            .status-indicator {{
+                width: 12px;
+                height: 12px;
+                background: #48bb78;
+                border-radius: 50%;
+                animation: pulse 2s infinite;
+            }}
+            
+            @keyframes pulse {{
+                0% {{ opacity: 1; }}
+                50% {{ opacity: 0.5; }}
+                100% {{ opacity: 1; }}
+            }}
+            
+            .footer-links {{
+                display: flex;
+                justify-content: center;
+                gap: 20px;
+                margin-top: 25px;
+                flex-wrap: wrap;
+            }}
+            
+            .footer-link {{
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                background: rgba(255, 255, 255, 0.1);
+                color: white;
+                padding: 10px 20px;
+                border-radius: 10px;
+                text-decoration: none;
+                transition: all 0.3s ease;
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                font-size: 0.9em;
+            }}
+            
+            .footer-link:hover {{
+                background: rgba(255, 255, 255, 0.2);
+                transform: translateY(-2px);
+            }}
+            
+            /* RESPONSIVE */
+            @media (max-width: 768px) {{
+                .container {{
+                    padding: 20px 15px;
+                }}
+                
+                .hero-section {{
+                    padding: 50px 25px;
+                }}
+                
+                .hero-title {{
+                    font-size: 2.5em;
+                }}
+                
+                .hero-subtitle {{
+                    font-size: 1.2em;
+                }}
+                
+                .features-grid {{
+                    grid-template-columns: 1fr;
+                }}
+                
+                .endpoints-grid {{
+                    grid-template-columns: 1fr;
+                }}
+                
+                .actions-grid {{
+                    flex-direction: column;
+                    align-items: center;
+                }}
+                
+                .action-button {{
+                    width: 100%;
+                    max-width: 300px;
+                    justify-content: center;
+                }}
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <!-- HERO SECTION -->
+            <section class="hero-section">
+                <div class="hero-content">
+                    <div class="hero-icon">
+                        <i class="fas fa-rocket"></i>
+                    </div>
+                    <h1 class="hero-title">AnalizaTuPC API</h1>
+                    <p class="hero-subtitle">Plataforma profesional de análisis y evaluación de hardware</p>
+                    <div class="version-badge">
+                        <i class="fas fa-code-branch"></i>
+                        Versión 2.0.0
+                    </div>
+                </div>
+            </section>
+            
+            <!-- FEATURES SECTION -->
+            <section class="features-section">
+                <h2 class="section-title">Características Principales</h2>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-microchip"></i>
+                        </div>
+                        <h3 class="feature-title">Análisis Completo</h3>
+                        <p class="feature-description">
+                            Evaluación profesional de CPU, GPU, RAM y almacenamiento con algoritmos avanzados
+                        </p>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-file-pdf"></i>
+                        </div>
+                        <h3 class="feature-title">Reportes PDF</h3>
+                        <p class="feature-description">
+                            Generación automática de informes PDF elegantes con recomendaciones personalizadas
+                        </p>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <h3 class="feature-title">Dashboard Interactivo</h3>
+                        <p class="feature-description">
+                            Panel de control empresarial con métricas en tiempo real y gráficos interactivos
+                        </p>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- API ENDPOINTS SECTION -->
+            <section class="endpoints-section">
+                <h2 class="section-title">Endpoints de la API</h2>
+                <div class="endpoints-grid">
+                    <div class="endpoint-card">
+                        <span class="endpoint-method post">POST</span>
+                        <div class="endpoint-path">/api/analyze</div>
+                        <p class="endpoint-description">
+                            Analiza el hardware del sistema y genera reportes PDF/JSON con recomendaciones personalizadas.
+                        </p>
+                    </div>
+                    
+                    <div class="endpoint-card">
+                        <span class="endpoint-method get">GET</span>
+                        <div class="endpoint-path">/dashboard</div>
+                        <p class="endpoint-description">
+                            Dashboard empresarial interactivo con estadísticas, gráficos y análisis detallados.
+                        </p>
+                    </div>
+                    
+                    <div class="endpoint-card">
+                        <span class="endpoint-method get">GET</span>
+                        <div class="endpoint-path">/api/analyses</div>
+                        <p class="endpoint-description">
+                            Lista completa de todos los análisis realizados con interfaz visual elegante.
+                        </p>
+                    </div>
+                    
+                    <div class="endpoint-card">
+                        <span class="endpoint-method get">GET</span>
+                        <div class="endpoint-path">/api/stats</div>
+                        <p class="endpoint-description">
+                            Estadísticas globales en formato JSON: total de análisis, puntuación promedio y distribución.
+                        </p>
+                    </div>
+                    
+                    <div class="endpoint-card">
+                        <span class="endpoint-method get">GET</span>
+                        <div class="endpoint-path">/api/analyses/json</div>
+                        <p class="endpoint-description">
+                            Todos los análisis en formato JSON para integración con otras aplicaciones.
+                        </p>
+                    </div>
+                    
+                    <div class="endpoint-card">
+                        <span class="endpoint-method delete">DELETE</span>
+                        <div class="endpoint-path">/api/analyses/&#123;id&#125;</div>
+                        <p class="endpoint-description">
+                            Elimina un análisis específico por ID. Requiere autenticación.
+                        </p>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- QUICK ACTIONS SECTION -->
+            <section class="actions-section">
+                <h2 class="section-title">Acciones Rápidas</h2>
+                <div class="actions-grid">
+                    <a href="/dashboard" class="action-button">
+                        <i class="fas fa-tachometer-alt"></i>
+                        Ir al Dashboard
+                    </a>
+                    <a href="/api/analyses" class="action-button secondary">
+                        <i class="fas fa-list-alt"></i>
+                        Ver Análisis
+                    </a>
+                    <a href="/api/stats" class="action-button success">
+                        <i class="fas fa-chart-bar"></i>
+                        Ver Estadísticas
+                    </a>
+                </div>
+            </section>
+            
+            <!-- FOOTER -->
+            <footer class="footer">
+                <div class="api-status">
+                    <div class="status-indicator"></div>
+                    <span>API funcionando correctamente</span>
+                </div>
+                <p>AnalizaTuPC API v2.0 • Plataforma de análisis de hardware profesional</p>
+                <div class="footer-links">
+                    <a href="/api/docs" class="footer-link">
+                        <i class="fas fa-book"></i> Documentación
+                    </a>
+                    <a href="/api/analyses/json" class="footer-link">
+                        <i class="fas fa-code"></i> API JSON
+                    </a>
+                    <a href="https://github.com/tu-usuario/analizatupc" class="footer-link">
+                        <i class="fab fa-github"></i> GitHub
+                    </a>
+                </div>
+                <p style="margin-top: 20px; font-size: 0.9em; opacity: 0.7;">
+                    {current_time} • Desarrollado con FastAPI y Python
+                </p>
+            </footer>
+        </div>
+        
+        <script>
+            // Efectos de hover mejorados
+            document.querySelectorAll('.feature-card, .endpoint-card').forEach(card => {{
+                card.addEventListener('mouseenter', function() {{
+                    this.style.transform = this.classList.contains('feature-card') 
+                        ? 'translateY(-12px)' 
+                        : 'translateX(10px)';
+                }});
+                
+                card.addEventListener('mouseleave', function() {{
+                    this.style.transform = 'translateY(0)';
+                }});
+            }});
+            
+            // Smooth scroll para enlaces internos
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {{
+                anchor.addEventListener('click', function (e) {{
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {{
+                        target.scrollIntoView({{
+                            behavior: 'smooth',
+                            block: 'start'
+                        }});
+                    }}
+                }});
+            }});
+        </script>
+    </body>
+    </html>
+    """
+    
+    return HTMLResponse(content=html_content)
 
 @app.post("/api/analyze")
 def analyze(sysinfo: SysInfo, db: Session = Depends(get_db)):
