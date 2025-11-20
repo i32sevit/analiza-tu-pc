@@ -47,11 +47,14 @@ function createMainWindow() {
     width: 1200,
     height: 800,
     show: false,
+    resizable: true,  
+    minWidth: 800,   
+    minHeight: 600, 
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
       enableRemoteModule: true,
-      webSecurity: false // ← AÑADIR ESTA LÍNEA
+      webSecurity: false
     }
   });
 
