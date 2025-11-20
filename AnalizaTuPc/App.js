@@ -20,44 +20,8 @@ const { width: screenWidth } = Dimensions.get('window');
 // Servicios
 const API_BASE = 'https://analizatupc-backend.onrender.com';
 
-const authService = {
-  async login(username, password) {
-    try {
-      const response = await fetch(`${API_BASE}/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ username, password }),
-      });
-      
-      if (!response.ok) throw new Error('Error en login');
-      return await response.json();
-    } catch (error) {
-      throw new Error('Error en el inicio de sesión');
-    }
-  },
-
-  async register(username, email, password) {
-    try {
-      const response = await fetch(`${API_BASE}/register`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ username, email, password }),
-      });
-      
-      if (!response.ok) throw new Error('Error en registro');
-      return await response.json();
-    } catch (error) {
-      throw new Error('Error en el registro');
-    }
-  },
-};
-
 const analysisService = {
-  async analyzeSystem(data, token = null) {
+  async analyzeSystem(data) {
     try {
       console.log('🔍 Enviando análisis al servidor...');
       const headers = {
@@ -69,10 +33,6 @@ const analysisService = {
         ...data,
         is_guest: true // Forzar modo invitado para que siempre genere Dropbox
       };
-
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
 
       const response = await fetch(`${API_BASE}/api/analyze`, {
         method: 'POST',
@@ -269,43 +229,14 @@ const dropboxService = {
   }
 };
 
-// Componente Header
-const Header = ({ user, onLogin, onLogout, onHistory }) => (
+// Componente Header SIMPLIFICADO
+const Header = () => (
   <View style={styles.header}>
     <View style={styles.logoContainer}>
       <View style={styles.logoIcon}>
         <Text style={styles.logoText}>💻</Text>
       </View>
       <Text style={styles.title}>AnalizaTuPc</Text>
-    </View>
-    
-    <View style={styles.userBar}>
-      {user ? (
-        <>
-          <TouchableOpacity style={styles.userInfo} onPress={onHistory}>
-            <View style={styles.userAvatar}>
-              <Text style={styles.avatarText}>
-                {user.username?.charAt(0)?.toUpperCase() || 'U'}
-              </Text>
-            </View>
-            <Text style={styles.userName}>{user.username}</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity style={styles.iconButton} onPress={onHistory}>
-            <Text style={styles.iconText}>🕒</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity style={styles.iconButton} onPress={onLogout}>
-            <Text style={styles.iconText}>🚪</Text>
-          </TouchableOpacity>
-        </>
-      ) : (
-        <View style={styles.authButtons}>
-          <TouchableOpacity style={styles.authButton} onPress={onLogin}>
-            <Text style={styles.authButtonText}>Iniciar Sesión</Text>
-          </TouchableOpacity>
-        </View>
-      )}
     </View>
   </View>
 );
@@ -385,201 +316,6 @@ const CustomPicker = ({
         </TouchableOpacity>
       </Modal>
     </View>
-  );
-};
-
-// Componente AuthModal
-const AuthModal = ({ visible, onClose, onAuthSuccess }) => {
-  const [activeTab, setActiveTab] = useState('login');
-  const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    loginUsername: '',
-    loginPassword: '',
-    registerUsername: '',
-    registerEmail: '',
-    registerPassword: '',
-    registerConfirmPassword: ''
-  });
-
-  const handleLogin = async () => {
-    if (!formData.loginUsername || !formData.loginPassword) {
-      Alert.alert('Error', 'Completa todos los campos');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const result = await authService.login(formData.loginUsername, formData.loginPassword);
-      onAuthSuccess(result.user);
-      onClose();
-    } catch (error) {
-      Alert.alert('Error', error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleRegister = async () => {
-    if (!formData.registerUsername || !formData.registerEmail || !formData.registerPassword) {
-      Alert.alert('Error', 'Completa todos los campos');
-      return;
-    }
-
-    if (formData.registerPassword !== formData.registerConfirmPassword) {
-      Alert.alert('Error', 'Las contraseñas no coinciden');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      await authService.register(
-        formData.registerUsername,
-        formData.registerEmail,
-        formData.registerPassword
-      );
-      const result = await authService.login(formData.registerUsername, formData.registerPassword);
-      onAuthSuccess(result.user);
-      onClose();
-    } catch (error) {
-      Alert.alert('Error', error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <Modal visible={visible} animationType="slide" transparent>
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalContent}>
-          <TouchableOpacity style={styles.modalClose} onPress={onClose}>
-            <Text style={styles.modalCloseText}>✕</Text>
-          </TouchableOpacity>
-
-          <View style={styles.authTabs}>
-            <TouchableOpacity 
-              style={[styles.authTab, activeTab === 'login' && styles.authTabActive]}
-              onPress={() => setActiveTab('login')}
-            >
-              <Text style={[styles.authTabText, activeTab === 'login' && styles.authTabTextActive]}>
-                Iniciar Sesión
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={[styles.authTab, activeTab === 'register' && styles.authTabActive]}
-              onPress={() => setActiveTab('register')}
-            >
-              <Text style={[styles.authTabText, activeTab === 'register' && styles.authTabTextActive]}>
-                Registrarse
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          {activeTab === 'login' && (
-            <View style={styles.authForm}>
-              <Text style={styles.modalTitle}>Bienvenido de nuevo</Text>
-              <Text style={styles.modalSubtitle}>Ingresa a tu cuenta para guardar tu historial</Text>
-              
-              <TextInput
-                style={styles.authInput}
-                placeholder="Usuario"
-                value={formData.loginUsername}
-                onChangeText={(text) => setFormData({...formData, loginUsername: text})}
-                placeholderTextColor="#8b8b9d"
-              />
-              
-              <TextInput
-                style={styles.input}
-                placeholder="Contraseña"
-                value={formData.loginPassword}
-                onChangeText={(text) => setFormData({...formData, loginPassword: text})}
-                secureTextEntry
-                placeholderTextColor="#8b8b9d"
-              />
-              
-              <TouchableOpacity 
-                style={styles.btnModal}
-                onPress={handleLogin}
-                disabled={loading}
-              >
-                {loading ? (
-                  <ActivityIndicator color="#fff" />
-                ) : (
-                  <Text style={styles.btnModalText}>Iniciar Sesión</Text>
-                )}
-              </TouchableOpacity>
-              
-              <Text style={styles.authFooter}>
-                ¿No tienes cuenta?{' '}
-                <Text style={styles.authLink} onPress={() => setActiveTab('register')}>
-                  Regístrate aquí
-                </Text>
-              </Text>
-            </View>
-          )}
-
-          {activeTab === 'register' && (
-            <View style={styles.authForm}>
-              <Text style={styles.modalTitle}>Crear Cuenta</Text>
-              <Text style={styles.modalSubtitle}>Regístrate para guardar tu historial</Text>
-              
-              <TextInput
-                style={styles.input}
-                placeholder="Usuario"
-                value={formData.registerUsername}
-                onChangeText={(text) => setFormData({...formData, registerUsername: text})}
-                placeholderTextColor="#8b8b9d"
-              />
-              
-              <TextInput
-                style={styles.input}
-                placeholder="Email"
-                value={formData.registerEmail}
-                onChangeText={(text) => setFormData({...formData, registerEmail: text})}
-                keyboardType="email-address"
-                placeholderTextColor="#8b8b9d"
-              />
-              
-              <TextInput
-                style={styles.input}
-                placeholder="Contraseña"
-                value={formData.registerPassword}
-                onChangeText={(text) => setFormData({...formData, registerPassword: text})}
-                secureTextEntry
-                placeholderTextColor="#8b8b9d"
-              />
-              
-              <TextInput
-                style={styles.input}
-                placeholder="Confirmar Contraseña"
-                value={formData.registerConfirmPassword}
-                onChangeText={(text) => setFormData({...formData, registerConfirmPassword: text})}
-                secureTextEntry
-                placeholderTextColor="#8b8b9d"
-              />
-              
-              <TouchableOpacity 
-                style={styles.btnModal}
-                onPress={handleRegister}
-                disabled={loading}
-              >
-                {loading ? (
-                  <ActivityIndicator color="#fff" />
-                ) : (
-                  <Text style={styles.btnModalText}>Crear Cuenta</Text>
-                )}
-              </TouchableOpacity>
-              
-              <Text style={styles.authFooter}>
-                ¿Ya tienes cuenta?{' '}
-                <Text style={styles.authLink} onPress={() => setActiveTab('login')}>
-                  Inicia sesión aquí
-                </Text>
-              </Text>
-            </View>
-          )}
-        </View>
-      </View>
-    </Modal>
   );
 };
 
@@ -1041,7 +777,7 @@ const AnalysisCard = ({ onManualAnalysis, analyzing }) => {
   );
 };
 
-// ESTILOS
+// ESTILOS (se mantienen iguales)
 const styles = {
   container: {
     flex: 1,
@@ -1079,62 +815,6 @@ const styles = {
     fontSize: 28,
     fontWeight: 'bold',
     color: '#4cc9f0',
-  },
-  userBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  userInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    padding: 8,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
-  },
-  userAvatar: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#4cc9f0',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 8,
-  },
-  avatarText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 14,
-  },
-  userName: {
-    color: '#e0e0e0',
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  iconButton: {
-    padding: 8,
-  },
-  iconText: {
-    fontSize: 18,
-  },
-  authButtons: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-  authButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    backgroundColor: 'rgba(76,201,240,0.1)',
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
-  },
-  authButtonText: {
-    color: '#e0e0e0',
-    fontSize: 14,
-    fontWeight: '500',
   },
   card: {
     backgroundColor: 'rgba(255,255,255,0.05)',
@@ -1310,98 +990,6 @@ const styles = {
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
-  },
-  modalContent: {
-    backgroundColor: '#1a1a2e',
-    borderRadius: 20,
-    padding: 25,
-    width: '90%',
-    maxWidth: 400,
-    borderWidth: 2,
-    borderColor: '#4cc9f0',
-  },
-  modalClose: {
-    alignSelf: 'flex-end',
-    padding: 5,
-  },
-  modalCloseText: {
-    color: '#8b8b9d',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  authTabs: {
-    flexDirection: 'row',
-    marginBottom: 20,
-    backgroundColor: 'rgba(0,0,0,0.3)',
-    borderRadius: 10,
-    padding: 4,
-  },
-  authTab: {
-    flex: 1,
-    paddingVertical: 12,
-    alignItems: 'center',
-    borderRadius: 8,
-  },
-  authTabActive: {
-    backgroundColor: '#4cc9f0',
-  },
-  authTabText: {
-    color: '#8b8b9d',
-    fontWeight: '500',
-  },
-  authTabTextActive: {
-    color: '#fff',
-    fontWeight: 'bold',
-  },
-  authForm: {
-    alignItems: 'center',
-  },
-  modalTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#e0e0e0',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  modalSubtitle: {
-    color: '#8b8b9d',
-    marginBottom: 25,
-    textAlign: 'center',
-    fontSize: 14,
-  },
-  authInput: {
-    backgroundColor: 'rgba(0,0,0,0.3)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
-    borderRadius: 10,
-    padding: 15,
-    color: '#e0e0e0',
-    fontSize: 16,
-    width: '100%',
-    marginBottom: 15,
-  },
-  btnModal: {
-    backgroundColor: '#4cc9f0',
-    padding: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-    width: '100%',
-    marginTop: 10,
-    marginBottom: 20,
-  },
-  btnModalText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  authFooter: {
-    color: '#8b8b9d',
-    textAlign: 'center',
-    fontSize: 14,
-  },
-  authLink: {
-    color: '#4cc9f0',
-    fontWeight: '500',
   },
   // Results Screen Styles
   resultsContainer: {
@@ -1648,11 +1236,9 @@ const styles = {
   },
 };
 
-// Componente principal ACTUALIZADO
+// Componente principal SIMPLIFICADO
 export default function App() {
   const [currentScreen, setCurrentScreen] = useState('home');
-  const [user, setUser] = useState(null);
-  const [showAuthModal, setShowAuthModal] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
   const [analysisData, setAnalysisData] = useState(null);
   const [analysisResult, setAnalysisResult] = useState(null);
@@ -1662,7 +1248,7 @@ export default function App() {
     setAnalyzing(true);
     
     try {
-      const result = await analysisService.analyzeSystem(data, user?.token);
+      const result = await analysisService.analyzeSystem(data);
       setAnalyzing(false);
       setAnalysisData(data);
       setAnalysisResult(result.result || result);
@@ -1679,7 +1265,7 @@ export default function App() {
           json_url: result.json_url
         });
         
-        // Mostrar mensaje de éxito para TODOS los usuarios
+        // Mostrar mensaje de éxito
         setTimeout(() => {
           Alert.alert(
             '✅ Análisis Completado', 
@@ -1696,15 +1282,6 @@ export default function App() {
       setAnalyzing(false);
       Alert.alert('Error', 'No se pudo completar el análisis');
     }
-  };
-
-  const handleAuthSuccess = (userData) => {
-    setUser(userData);
-  };
-
-  const handleLogout = () => {
-    setUser(null);
-    setDropboxUrls(null);
   };
 
   if (currentScreen === 'results') {
@@ -1725,24 +1302,13 @@ export default function App() {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" />
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <Header 
-          user={user}
-          onLogin={() => setShowAuthModal(true)}
-          onLogout={handleLogout}
-          onHistory={() => Alert.alert('Historial', 'Funcionalidad en desarrollo')}
-        />
+        <Header />
         
         <AnalysisCard
           onManualAnalysis={handleManualAnalysis}
           analyzing={analyzing}
         />
       </ScrollView>
-
-      <AuthModal
-        visible={showAuthModal}
-        onClose={() => setShowAuthModal(false)}
-        onAuthSuccess={handleAuthSuccess}
-      />
     </SafeAreaView>
   );
 }
