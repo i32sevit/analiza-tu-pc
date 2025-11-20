@@ -1,11 +1,25 @@
 # backend/database.py
+import os
 from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from datetime import datetime
 
-# SQLite database - se creará en la carpeta backend
-engine = create_engine('sqlite:///analizatupc.db', connect_args={"check_same_thread": False})
+# Configuración de la base de datos - PostgreSQL para producción, SQLite para desarrollo
+DATABASE_URL = os.getenv('DATABASE_URL')
+
+if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
+if not DATABASE_URL:
+    # SQLite para desarrollo local
+    DATABASE_URL = 'sqlite:///analizatupc.db'
+
+engine = create_engine(
+    DATABASE_URL,
+    connect_args={"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
+)
+
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
