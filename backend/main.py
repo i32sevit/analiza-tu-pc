@@ -1032,10 +1032,6 @@ def read_root():
                         <i class="fas fa-list-alt"></i>
                         Ver Análisis
                     </a>
-                    <a href="/api/stats" class="action-button success">
-                        <i class="fas fa-chart-bar"></i>
-                        Ver Estadísticas
-                    </a>
                 </div>
             </section>
             
@@ -1047,13 +1043,7 @@ def read_root():
                 </div>
                 <p>AnalizaTuPC API v2.0 • Plataforma de análisis de hardware profesional</p>
                 <div class="footer-links">
-                    <a href="/api/docs" class="footer-link">
-                        <i class="fas fa-book"></i> Documentación
-                    </a>
-                    <a href="/api/analyses/json" class="footer-link">
-                        <i class="fas fa-code"></i> API JSON
-                    </a>
-                    <a href="https://github.com/tu-usuario/analizatupc" class="footer-link">
+                    <a href="https://github.com/i32sevit/analiza-tu-pc" class="footer-link">
                         <i class="fab fa-github"></i> GitHub
                     </a>
                 </div>
