@@ -1,6 +1,6 @@
 # AnalizaTuPc
 
-Sistema distribuido multiplataforma para análisis de hardware de ordenadores.
+Sistema distribuido multiplataforma para analizar el hardware de ordenadores.
 
 ## ⚠️ Requisitos Previos
 
