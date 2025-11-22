@@ -50,7 +50,7 @@ Para abrir en el navegador:
 |------------|---------------------|-----------------|---------------------|
 | **Móvil** | NO | SÍ | SÍ |
 | **Escritorio** | SÍ | SÍ | SÍ |
-| **Web** | SÍ | SÍ | SÍ |
+| **Web** | NO | SÍ | SÍ |
 
 ## URLs Importantes
 
