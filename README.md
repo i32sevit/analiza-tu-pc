@@ -2,7 +2,7 @@
 
 Sistema distribuido multiplataforma para analizar el hardware de ordenadores.
 
-## ⚠️ Requisitos Previos
+## Requisitos Previos
 
 ### Backend en Render
 - **Primero activar** el backend en Render: `https://analizatupc-backend.onrender.com`
@@ -12,7 +12,7 @@ Sistema distribuido multiplataforma para analizar el hardware de ordenadores.
 DROPBOX_ACCESS_TOKEN=tu_token_aqui
 ```
 
-## 🚀 Instalación y Ejecución
+## Instalación y Ejecución
 
 ### Backend Local
 ```bash
@@ -34,20 +34,20 @@ npm install
 npm start
 ```
 
-## 📱 Plataformas Soportadas
+## Plataformas Soportadas
 
 | Plataforma | Detección Automática | Análisis Manual | Guardado en Dropbox |
 |------------|---------------------|-----------------|---------------------|
-| **Móvil** | ❌ | ✅ | ✅ |
-| **Escritorio** | ✅ | ✅ | ✅ |
+| **Móvil** | NO | SÍ | SÍ |
+| **Escritorio** | SÍ | SÍ | SÍ |
 
-## 🔗 URLs Importantes
+## URLs Importantes
 
 - **Backend Principal:** `https://analizatupc-backend.onrender.com`
 - **Dashboard:** `/dashboard`
 - **Documentación API:** `/docs`
 
-## 📝 Notas
+## Notas
 
 - El backend en Render debe estar activo para análisis completos.
 - La aplicación móvil puede funcionar offline con análisis básico, pero no se guardan los informes en Dropbox.
