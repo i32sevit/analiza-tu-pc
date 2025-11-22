@@ -7,7 +7,7 @@ Sistema distribuido multiplataforma para analizar el hardware de ordenadores.
 ### Backend en Render
 - **Primero activar** el backend en Render: `https://analizatupc-backend.onrender.com`
 - Actualizar `DROPBOX_ACCESS_TOKEN` en el apartado Environment de Render
-- Crear archivo `.env` en la carpeta backend con:
+- Crear archivo `.env` en /backend/.venv con:
 ```
 DROPBOX_ACCESS_TOKEN=tu_token_aqui
 ```
