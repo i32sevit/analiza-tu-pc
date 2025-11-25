@@ -66,3 +66,9 @@ Para abrir en el navegador:
 - Actualizar el token de Dropbox si expira.
 - **Para móvil:** Es necesario tener instalada la app **Expo Go** y escanear el QR generado.
 - **Para web:** Después de `npx expo start`, presionar **W** para abrir en el navegador en `localhost:8081`.
+
+## Autores
+
+- Francisco Millán Bustamante
+- María Rosa Águilar
+- Teresa Serrano Villalba
